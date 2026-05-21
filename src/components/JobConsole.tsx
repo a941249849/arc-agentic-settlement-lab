@@ -269,14 +269,12 @@ export default function JobConsole() {
   const { jobs, loading, error, refresh } = useJobs();
   const [showCreate, setShowCreate] = useState(false);
 
-  function handleCreated(job: ArcSettlementJob) {
-    void job;
+  function handleCreated() {
     refresh();
     setShowCreate(false);
   }
 
-  function handleUpdate(updated: ArcSettlementJob) {
-    void updated;
+  function handleUpdate() {
     refresh();
   }
 

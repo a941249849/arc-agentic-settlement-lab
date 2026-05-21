@@ -5,6 +5,7 @@ This file is a compact local context pack for engineering agents that may not be
 Use it together with:
 
 - [Arc Agentic Settlement Lab plan](./ARC_AGENTIC_SETTLEMENT_LAB_PLAN.md)
+- [Arc Discord and X research notes](./ARC_DISCORD_X_RESEARCH_NOTES.md)
 - Arc docs index: https://docs.arc.io/llms.txt
 
 Do not treat this file as a replacement for final live verification. If web access is available, refresh official docs before shipping chain-interacting code.
@@ -292,6 +293,58 @@ MVP handling:
 - Phase 1/2 should show App Kit as a planned funding/monetization layer.
 - Do not implement App Kit execution unless credentials and funded wallet flow are available.
 
+## Circle Agent Stack And Gateway Nanopayments
+
+Recent Arc/Circle announcements position Agent Stack as financial infrastructure for autonomous economic actors.
+
+Components to account for in product design:
+
+- Agent Wallets for controlled access to USDC.
+- Agent Marketplace for discovering services.
+- Circle CLI for repeatable financial actions.
+- Gateway nanopayments for gas-efficient paid API and data-product access.
+- Circle Skills for agent-oriented builder workflows.
+
+Engineering handling:
+
+- Phase 1/2 should expose this as a capability map, not as a fake live payment.
+- A later nanopayment path must verify buyer funding, seller acceptance, and a real payment receipt.
+- Treat x402, MPP, AP2, and nanopayments as payment-negotiation/funding layers that can feed into Arc settlement receipts.
+
+Useful URLs:
+
+- https://agents.circle.com
+- https://www.circle.com/blog/introducing-circle-agent-stack-financial-infrastructure-for-the-agentic-economy
+- https://developers.circle.com/gateway/nanopayments
+
+## Embedded Wallets And Policy Signing
+
+Arc has highlighted Dynamic and Turnkey as wallet/signing infrastructure for builders.
+
+Product implications:
+
+- browser-extension-only UX is not enough for public or enterprise users;
+- user onboarding should eventually support embedded wallets;
+- settlement flows should model roles and approvals;
+- backend-assisted actions should be narrowed by policy, not unlimited signing authority.
+
+Phase 1/2 handling:
+
+- represent the roles in data and UI:
+  - client;
+  - provider or agent;
+  - evaluator;
+  - optional treasury approver.
+- do not implement live delegated signing until a provider is chosen and tested.
+
+Useful URLs:
+
+- https://docs.arc.io/arc/tools/account-abstraction
+- https://www.dynamic.xyz/docs/overview/authentication/dynamic-auth/auth-methods
+- https://www.dynamic.xyz/docs/react/wallets/embedded-wallets/mpc/setup
+- https://www.dynamic.xyz/docs/recipes/integrations/swaps/circle-gateway
+- https://community.arc.network/home/blogs/arc-turnkey-wallet-and-signing-infrastructure-for-builders-on-arc
+
 ## Stablecoin FX Context
 
 Official page:
@@ -303,6 +356,8 @@ Arc's Stablecoin FX direction emphasizes:
 - real-time settlement;
 - transparent pricing;
 - multi-stablecoin pairs such as USDC and EURC;
+- QCAD as a CAD-denominated stablecoin rail on Arc Testnet;
+- CAD/USD settlement corridor use cases;
 - predictable USDC-denominated fees;
 - crosschain liquidity through App Kit bridge and swap;
 - fee monetization.
@@ -312,6 +367,7 @@ MVP handling:
 - StableFX should be later phase or research-only in the first delivery.
 - The immediate Arc Agentic Settlement Lab should focus on agent job settlement, not FX.
 - Add StableFX only after the ERC-8183 lifecycle is stable.
+- QCAD should be treated as a Phase 6 extension unless official execution steps are verified.
 
 ## Recommended Local Implementation Order
 
@@ -325,12 +381,13 @@ If an engineering agent cannot browse the internet, implement in this order:
    - in-memory job store;
    - offchain lifecycle state machine;
    - deterministic receipt export.
-4. Keep live transaction controls disabled unless required environment variables exist.
-5. Add clear labels:
+4. Include capability mapping for Agent Stack, nanopayments, App Kit, Dynamic/Turnkey, and StableFX without pretending those integrations are live.
+5. Keep live transaction controls disabled unless required environment variables exist.
+6. Add clear labels:
    - `Blueprint`;
    - `Simulated`;
    - `Onchain verified`.
-6. Require real tx hashes before marking anything as onchain settled.
+7. Require real tx hashes before marking anything as onchain settled.
 
 ## Acceptance Criteria For Phase 1/2
 
@@ -370,3 +427,5 @@ If an engineering agent cannot browse the internet, implement in this order:
 - App Kit supported blockchains: https://docs.arc.io/app-kit/references/supported-blockchains.md
 - Unified Balance: https://docs.arc.io/app-kit/unified-balance.md
 - Stablecoin FX: https://docs.arc.io/build/stablecoin-fx.md
+- Circle Agent Stack: https://agents.circle.com
+- Gateway Nanopayments: https://developers.circle.com/gateway/nanopayments

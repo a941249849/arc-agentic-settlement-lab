@@ -12,6 +12,7 @@ agent identity -> job creation -> USDC escrow -> deliverable proof -> evaluator 
 
 - [Arc Agentic Settlement Lab plan](docs/ARC_AGENTIC_SETTLEMENT_LAB_PLAN.md)
 - [Arc official context for engineering](docs/ARC_OFFICIAL_CONTEXT_FOR_ENGINEERING.md)
+- [Arc Discord and X research notes](docs/ARC_DISCORD_X_RESEARCH_NOTES.md)
 - [Engineering handoff](docs/ENGINEERING_HANDOFF.md)
 
 ## Initial Build Boundary

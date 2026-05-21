@@ -16,7 +16,9 @@ This directly maps to Arc's current public builder direction:
 - machine-to-machine payments;
 - real-time agent coordination;
 - programmable USDC settlement;
+- Circle Agent Stack, Agent Wallets, Agent Marketplace, and nanopayments;
 - App Kit flows for bridge, send, swap, unified balance, and monetization;
+- Dynamic and Turnkey style embedded wallet / policy signing infrastructure;
 - StableFX and multi-currency stablecoin finance.
 
 ## Strategic Positioning
@@ -31,31 +33,49 @@ Recent Arc messaging points toward production-style financial applications rathe
    - real-time agent coordination;
    - agentic finance infrastructure.
 
-2. **App Kits**
+2. **Circle Agent Stack and nanopayments**
+   - Agent Wallets for controlled USDC access;
+   - Agent Marketplace for service discovery;
+   - Circle CLI for repeatable financial actions;
+   - Gateway nanopayments for paid APIs, data products, and agent-to-service payments;
+   - x402 / MPP / AP2 as adjacent payment-negotiation protocols.
+
+3. **App Kits**
    - bridge USDC across supported chains;
    - send stablecoins;
    - add swap functionality;
    - support chain-abstracted balances;
    - configure built-in monetization.
 
-3. **StableFX and multi-currency stablecoin finance**
-   - USDC, EURC, QCAD, and other stablecoin rails;
-   - onchain FX settlement;
-   - payments, treasury, and settlement workflows.
+4. **Embedded wallet and signing infrastructure**
+   - email, SMS, social, passkey, and external-wallet onboarding;
+   - non-custodial embedded wallets;
+   - policy-based signing controls;
+   - delegated backend-assisted actions;
+   - role-based treasury, payout, and approval flows.
 
-4. **Developer grants**
+5. **StableFX and multi-currency stablecoin finance**
+   - USDC, EURC, QCAD, and other regulated stablecoin rails;
+   - onchain FX settlement;
+   - CAD/USD and other settlement corridors;
+   - payments, treasury, payroll, B2B settlement, and cross-border workflows.
+
+6. **Developer grants**
    - Arc Testnet;
    - Circle Developer Platform;
    - Agentic Economy;
    - StableFX;
    - Borrowing and Lending.
+   - strong integrations;
+   - clear paths to users and usage;
+   - expanded USDC utility.
 
 ### Product Wedge
 
 The clearest wedge is:
 
 ```text
-Agent job marketplace + Arc USDC escrow + deliverable receipts + optional App Kit funding path
+Agent job marketplace + Arc USDC escrow + deliverable receipts + optional Agent Stack / App Kit funding path
 ```
 
 This is more aligned with Arc than a generic transfer UI because it uses Arc's differentiators:
@@ -64,6 +84,7 @@ This is more aligned with Arc than a generic transfer UI because it uses Arc's d
 - deterministic finality;
 - programmable settlement;
 - Circle Wallets / Circle Developer Platform;
+- Agent Wallets, Agent Marketplace, and Gateway nanopayments;
 - ERC-8004 agent identity;
 - ERC-8183 job lifecycle;
 - App Kit monetization and liquidity primitives.
@@ -145,6 +166,14 @@ A user creates a paid research or execution job for an AI agent. The job is fund
 6. **App Kit Funding Path**
    - Show optional bridge/send/swap/unified balance path.
    - MVP can expose this as a planned integration until App Kit credentials and wallet flow are configured.
+
+7. **Agent Stack Readiness**
+   - Show how the workflow can later connect to Agent Wallets, Agent Marketplace discovery, and Gateway nanopayments.
+   - Keep this as a capability map in Phase 1/2 unless official credentials and funded flows are available.
+
+8. **Wallet Policy Readiness**
+   - Show role separation between client, provider, evaluator, and optional treasury approver.
+   - Map future Dynamic/Turnkey integration for embedded wallets and policy-scoped signing.
 
 ## Architecture
 
@@ -246,6 +275,29 @@ Implement Path A as the primary grant-aligned path.
 Keep Path B as a fallback developer mode.
 ```
 
+#### Path C: Agent Stack / Gateway Nanopayments
+
+Use Circle Agent Stack and Gateway nanopayments for paid service access or usage-based job funding.
+
+Pros:
+
+- directly aligned with Arc's current agentic economy messaging;
+- fits paid APIs, data products, and agent-to-service payments;
+- can connect this project back to the existing AgentPay / MPP work.
+
+Cons:
+
+- requires Gateway/nanopayment account setup;
+- not a replacement for ERC-8183 escrow settlement;
+- easy to overclaim if the app only simulates payment authorizations.
+
+Recommended handling:
+
+```text
+Model this as a future funding layer.
+Do not block Phase 1/2 on nanopayment execution.
+```
+
 ## Arc Official Primitives To Map
 
 ### ERC-8004 Agent Identity
@@ -312,6 +364,40 @@ MVP requirement:
 
 - include an App Kit funding panel as a blueprint;
 - do not claim live App Kit execution until `KIT_KEY`, adapter setup, and funded wallet flow are verified.
+
+### Circle Agent Stack / Gateway Nanopayments
+
+Recent Arc announcements point builders toward Agent Wallets, Agent Marketplace, Circle CLI, and Gateway nanopayments.
+
+Use this for:
+
+- paid service discovery;
+- usage-based job funding;
+- agent-to-service payments;
+- connecting x402 or MPP-style paid endpoints to Arc settlement receipts.
+
+MVP requirement:
+
+- include this as a roadmap/capability map;
+- do not fake nanopayment receipts;
+- if implemented later, require a funded Gateway buyer/seller flow and verifiable payment receipt.
+
+### Embedded Wallets And Policy-Based Signing
+
+Arc is highlighting Dynamic and Turnkey integrations for onboarding, embedded wallets, account abstraction, and policy-scoped signing.
+
+Use this for:
+
+- onboarding non-crypto users;
+- client/provider/evaluator role separation;
+- delegated backend-assisted actions;
+- treasury approvals;
+- safer scheduled payouts or settlement automation.
+
+MVP requirement:
+
+- represent roles clearly in the data model and UI;
+- keep live signing disabled until a provider integration is chosen and verified.
 
 ### StableFX / Multi-Currency Settlement
 
@@ -390,10 +476,13 @@ Acceptance:
 - UI shows identity/reputation status;
 - job receipt includes agent identity reference.
 
-### Phase 5: App Kit Funding
+### Phase 5: Agent Stack, Wallet Policy, And App Kit Funding
 
 Deliverables:
 
+- Agent Wallet or embedded wallet integration path;
+- policy-scoped signing / approval design;
+- optional Gateway nanopayment-funded job path;
 - bridge/send/swap/unified balance path;
 - optional app monetization fee;
 - stable funding path into the ERC-8183 job.
@@ -401,14 +490,16 @@ Deliverables:
 Acceptance:
 
 - App Kit call completes on testnet;
+- wallet policy and signing boundaries are explicit;
 - user sees funding source, destination, amount, and tx reference;
 - receipt binds funding path to job settlement.
 
-### Phase 6: StableFX Extension
+### Phase 6: StableFX / QCAD Extension
 
 Deliverables:
 
 - QCAD/EURC/USDC scenario;
+- CAD/USD settlement corridor scenario;
 - offchain quote / onchain PvP settlement research;
 - treasury or cross-border payout framing.
 
@@ -463,10 +554,13 @@ Outline:
 2. Arc's agentic economy direction.
 3. ERC-8004: agent identity and reputation.
 4. ERC-8183: job escrow and settlement.
-5. App Kit: funding, liquidity, and monetization.
-6. Demo walkthrough: create job -> fund escrow -> submit deliverable -> settle -> export receipt.
-7. Comparison with Tempo MPP and x402.
-8. What still needs production hardening.
+5. Circle Agent Stack: Agent Wallets, Agent Marketplace, and nanopayments.
+6. App Kit: funding, liquidity, and monetization.
+7. Wallet policy: embedded wallets, approvals, and delegated signing.
+8. Demo walkthrough: create job -> fund escrow -> submit deliverable -> settle -> export receipt.
+9. Comparison with Tempo MPP and x402.
+10. StableFX/QCAD as the multi-currency extension.
+11. What still needs production hardening.
 
 ## Risks And Boundaries
 
@@ -506,6 +600,7 @@ This gives a coherent public artifact quickly and creates a stable base for Circ
 ## References
 
 - Arc Agentic Economy: https://docs.arc.io/build/agentic-economy.md
+- Arc Discord and X Research Notes: ./ARC_DISCORD_X_RESEARCH_NOTES.md
 - Register your first AI agent: https://docs.arc.io/arc/tutorials/register-your-first-ai-agent.md
 - Create your first ERC-8183 job: https://docs.arc.io/arc/tutorials/create-your-first-erc-8183-job.md
 - Arc App Kit: https://docs.arc.io/app-kit.md

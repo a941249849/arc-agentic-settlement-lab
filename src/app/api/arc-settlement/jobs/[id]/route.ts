@@ -2,7 +2,7 @@
 // PATCH /api/arc-settlement/jobs/[id]  – update job status / deliverable hash
 
 import { NextRequest, NextResponse } from "next/server";
-import { jobStore, isValidTransition } from "@/lib/job-store";
+import { jobStore, isValidTransition, VALID_TRANSITIONS } from "@/lib/job-store";
 import type { JobStatus } from "@/lib/types";
 
 type Params = { params: Promise<{ id: string }> };
@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json(
         {
           error: `Invalid transition: ${job.status} → ${body.status}`,
-          validTransitions: [],
+          validTransitions: VALID_TRANSITIONS[job.status],
         },
         { status: 422 }
       );

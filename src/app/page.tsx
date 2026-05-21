@@ -1,17 +1,8 @@
 // Overview page – Arc Agentic Settlement Lab
-// Server component: fetches blueprint data at render time.
+// Server component: reads the local blueprint directly.
 
 import Link from "next/link";
-import type { ArcSettlementBlueprint } from "@/lib/types";
-
-async function getBlueprint(): Promise<ArcSettlementBlueprint> {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const res = await fetch(`${base}/api/arc-settlement`, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`Failed to load blueprint: HTTP ${res.status}`);
-  }
-  return res.json();
-}
+import { arcSettlementBlueprint } from "@/lib/arc-blueprint";
 
 const LIFECYCLE_STEPS = [
   {
@@ -64,7 +55,7 @@ const CAPABILITY_LABELS: Record<string, string> = {
 };
 
 export default async function OverviewPage() {
-  const blueprint = await getBlueprint();
+  const blueprint = arcSettlementBlueprint;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 space-y-12">

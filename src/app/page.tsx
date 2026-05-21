@@ -7,6 +7,9 @@ import type { ArcSettlementBlueprint } from "@/lib/types";
 async function getBlueprint(): Promise<ArcSettlementBlueprint> {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const res = await fetch(`${base}/api/arc-settlement`, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Failed to load blueprint: HTTP ${res.status}`);
+  }
   return res.json();
 }
 

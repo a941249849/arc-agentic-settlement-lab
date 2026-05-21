@@ -23,7 +23,7 @@ export function useJobs() {
         setJobs(data);
         setError(null);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Unknown error"))
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to fetch jobs: unknown error"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,7 +39,7 @@ export function useJobs() {
       })
       .catch((e) => {
         if (!cancelled)
-          setError(e instanceof Error ? e.message : "Unknown error");
+          setError(e instanceof Error ? e.message : "Failed to fetch jobs: unknown error");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

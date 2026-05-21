@@ -16,9 +16,9 @@ interface CreateFormProps {
 
 function CreateJobForm({ onCreated }: CreateFormProps) {
   const [form, setForm] = useState({
-    clientAddress: "0xClient0000000000000000000000000000000001",
-    providerAddress: "0xProvider000000000000000000000000000000002",
-    evaluatorAddress: "0xEvaluator0000000000000000000000000000003",
+    clientAddress: "0x1111111111111111111111111111111111111111",
+    providerAddress: "0x2222222222222222222222222222222222222222",
+    evaluatorAddress: "0x3333333333333333333333333333333333333333",
     amount: "25.00",
     description: "",
   });
@@ -52,8 +52,11 @@ function CreateJobForm({ onCreated }: CreateFormProps) {
           ] as const
         ).map(({ id, label }) => (
           <div key={id} className="space-y-1">
-            <label className="block text-xs text-gray-400">{label}</label>
+            <label htmlFor={id} className="block text-xs text-gray-400">
+              {label}
+            </label>
             <input
+              id={id}
               value={form[id]}
               onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
               className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm font-mono focus:outline-none focus:border-blue-500"
@@ -63,8 +66,11 @@ function CreateJobForm({ onCreated }: CreateFormProps) {
         ))}
       </div>
       <div className="space-y-1">
-        <label className="block text-xs text-gray-400">Job Description</label>
+        <label htmlFor="description" className="block text-xs text-gray-400">
+          Job Description
+        </label>
         <textarea
+          id="description"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           rows={2}
@@ -341,6 +347,8 @@ export default function JobConsole() {
             <code>0x0747EEf0706327138c69792bF28Cd525089e4583</code>)
           </li>
           <li>🔷 Circle Wallets integration for server-driven escrow funding</li>
+          <li>🔷 Agent Stack / Gateway nanopayments as a future funding layer</li>
+          <li>🔷 Dynamic or Turnkey-style embedded wallet and policy signing path</li>
           <li>🔷 App Kit bridge / send / swap for chain-abstracted funding</li>
           <li>🔷 ERC-8004 agent identity registration</li>
         </ul>

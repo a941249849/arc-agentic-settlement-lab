@@ -59,6 +59,24 @@ const blueprint: ArcSettlementBlueprint = {
         "IdentityRegistry, ReputationRegistry, ValidationRegistry calls. Planned for Phase 4.",
     },
     {
+      name: "Circle Agent Stack",
+      status: "blueprint",
+      description:
+        "Agent Wallets, Agent Marketplace, Circle CLI, and agent-oriented USDC workflows. Planned after the offchain lifecycle is stable.",
+    },
+    {
+      name: "Gateway nanopayments",
+      status: "blueprint",
+      description:
+        "Gas-efficient paid API, data-product, and agent-to-service payment layer. Requires real buyer/seller setup before live use.",
+    },
+    {
+      name: "Embedded wallet and policy signing",
+      status: "blueprint",
+      description:
+        "Dynamic or Turnkey-style onboarding, account abstraction, delegated signing, and role-based settlement approvals.",
+    },
+    {
       name: "App Kit funding path",
       status: "blueprint",
       description:

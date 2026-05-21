@@ -282,8 +282,8 @@ export default async function OverviewPage() {
               { phase: "Phase 1/2", label: "Product shell + offchain lifecycle", done: true },
               { phase: "Phase 3", label: "Arc Testnet ERC-8183 execution", done: false },
               { phase: "Phase 4", label: "ERC-8004 agent identity", done: false },
-              { phase: "Phase 5", label: "App Kit funding path", done: false },
-              { phase: "Phase 6", label: "StableFX multi-currency", done: false },
+              { phase: "Phase 5", label: "Agent Stack, wallet policy, and App Kit funding", done: false },
+              { phase: "Phase 6", label: "StableFX / QCAD multi-currency", done: false },
             ].map((r) => (
               <div key={r.phase} className="flex items-center gap-2">
                 <span className={r.done ? "text-green-400" : "text-gray-600"}>

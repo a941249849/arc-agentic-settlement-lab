@@ -14,9 +14,9 @@ function seed() {
 
   const demo: Omit<ArcSettlementJob, "id"> = {
     status: "open",
-    clientAddress: "0xClient0000000000000000000000000000000001",
-    providerAddress: "0xProvider000000000000000000000000000000002",
-    evaluatorAddress: "0xEvaluator0000000000000000000000000000003",
+    clientAddress: "0x1111111111111111111111111111111111111111",
+    providerAddress: "0x2222222222222222222222222222222222222222",
+    evaluatorAddress: "0x3333333333333333333333333333333333333333",
     amount: "25.00",
     currency: "USDC",
     description: "Research report: Arc agentic economy ecosystem overview",

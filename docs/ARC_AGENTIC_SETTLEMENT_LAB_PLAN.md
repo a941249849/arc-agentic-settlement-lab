@@ -444,13 +444,13 @@ MVP requirement:
 
 ### StableFX / Multi-Currency Settlement
 
-StableFX is relevant as a second-phase module:
+StableFX is relevant as a later multi-currency extension:
 
 ```text
 client pays in QCAD/EURC -> FX quote/settlement -> provider receives USDC
 ```
 
-MVP should mention this as Phase 2, not include it in the first shipped scope unless the official SDK/API path is fully available.
+The first public proof should not depend on StableFX. Keep it as Phase 6 unless the official execution path is fully available and stable on testnet.
 
 ## Implementation Phases
 
@@ -633,18 +633,17 @@ Reviewers should check:
 7. Can the MVP be completed without blocking on StableFX?
 8. Is App Kit treated as a funding/monetization layer rather than unrelated decoration?
 
-## Recommended First Engineering Task
+## Recommended Next Engineering Task
 
-Build Phase 1 and Phase 2 only:
+Update the existing Phase 1 scaffold so it matches the strategy-review corrections before adding live chain execution:
 
-- add `Arc Settlement Lab` tab;
-- add `/api/arc-settlement`;
-- implement in-memory job lifecycle;
-- implement receipt export;
-- add docs and acceptance criteria;
-- avoid real wallet execution until the lifecycle UX is complete.
+- add `budgeted` / `setBudget` to the offchain lifecycle;
+- update receipt schema and UI copy for `setBudget`;
+- add `arc-escrow` differentiation to the public app copy;
+- separate Agent Stack / x402 / nanopayments from ERC-8183 job settlement in the UI;
+- keep Phase 1 explicitly labeled as scaffold, not final public proof.
 
-This gives a coherent public artifact quickly and creates a stable base for Circle Wallets / ERC-8183 integration.
+After that, plan Phase 2 as live ERC-8004 agent registration, then Phase 3 as live ERC-8183 execution with Arcscan links.
 
 ## References
 

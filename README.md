@@ -8,6 +8,34 @@ The project models a buyer agent purchasing a report, dataset, API result, or se
 buyer agent -> ERC-8004 identity -> ERC-8183 job -> provider budget -> USDC escrow -> deliverable proof -> evaluator approval -> settlement receipt
 ```
 
+## For Challenge Judges
+
+**Verdict: READY WITH CHANGES**
+
+| Resource | URL |
+| --- | --- |
+| Live demo | https://arc-agentic-settlement-lab.vercel.app |
+| Challenge pack | https://arc-agentic-settlement-lab.vercel.app/challenge |
+| Job console | https://arc-agentic-settlement-lab.vercel.app/jobs |
+| Agent identity | https://arc-agentic-settlement-lab.vercel.app/identity |
+| API blueprint | https://arc-agentic-settlement-lab.vercel.app/api/arc-settlement |
+| Arcscan | https://testnet.arcscan.app |
+
+**Track:** Best Agentic Economy Experience on Arc
+
+**What is live and verifiable:**
+- USDC on Arc — settlement asset and gas rail throughout the lifecycle.
+- ERC-8004 agent identity reads — `ownerOf` and `tokenURI` from Arc Testnet IdentityRegistry (`0x8004A818BFB912233c491871b3d84c89A494BD9e`).
+- ERC-8183 AgenticCommerce lifecycle — calldata preparation for all six actions (`createJob`, `setBudget`, `approve`, `fund`, `submit`, `complete`) and wallet tx submission via the deployed contract (`0x0747EEf0706327138c69792bF28Cd525089e4583`).
+- Deterministic receipt export — JSON and Markdown with SHA-256 receipt hash and deliverable hash binding.
+
+**What is not claimed as live:**
+- Circle Wallets, Gateway / Nanopayments, CCTP / Bridge Kit, USYC, StableFX.
+
+**Remaining gates before final submission:**
+1. Complete one end-to-end wallet-signed Arc Testnet run and record tx hashes.
+2. Record a short demo video (job console, identity read, receipt export).
+
 ## Live Links
 
 - Demo: https://arc-agentic-settlement-lab.vercel.app

@@ -83,7 +83,7 @@ export default function OverviewPage() {
           <div className="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-blue-900/40 border border-blue-700 text-blue-300 text-sm">
             <span>The Stablecoins Commerce Stack Challenge</span>
             <span className="text-blue-600">/</span>
-            <span>Agentic Economy Track</span>
+            <span>Best Agentic Economy Experience on Arc</span>
           </div>
           <div className="space-y-3">
             <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
@@ -154,7 +154,7 @@ export default function OverviewPage() {
         </div>
         <div className="grid md:grid-cols-4 gap-4">
           {[
-            ["Track", "Agentic Economy Experience on Arc"],
+            ["Track", "Best Agentic Economy Experience on Arc"],
             ["Use case", "AI agent buys reports, APIs, data, or services"],
             ["Settlement", "USDC escrow with tx evidence and receipts"],
             ["Review angle", "Budget control, auditability, and developer feedback"],

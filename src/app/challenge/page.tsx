@@ -6,6 +6,11 @@ export const metadata: Metadata = {
     "Submission-oriented overview for The Stablecoins Commerce Stack Challenge: track fit, architecture, Circle product feedback, and remaining evidence gates.",
 };
 
+const LIVE_DEMO_URL = "https://arc-agentic-settlement-lab.vercel.app";
+const ARCSCAN_URL = "https://testnet.arcscan.app";
+const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
+const AGENTIC_COMMERCE_CONTRACT = "0x0747EEf0706327138c69792bF28Cd525089e4583";
+
 const PRODUCTS = [
   {
     name: "USDC",
@@ -51,7 +56,8 @@ const REQUIREMENTS = [
   ["Circle products used on Arc", "USDC live; Wallets/Gateway/Nanopayments documented as next integration"],
   ["Functional MVP", "Frontend, backend APIs, Arc identity reads, ERC-8183 tx builder, receipts"],
   ["Architecture diagram", "Included below and in docs"],
-  ["Video demonstration", "Pending final wallet run and recording"],
+  ["Video demonstration", "⚠️ Pending — required before final submission"],
+  ["Arc Testnet tx evidence", "⚠️ Pending — complete one end-to-end wallet-signed run"],
   ["GitHub repository", "Public repo with setup, boundaries, and docs"],
   ["Demo URL", "Vercel production deployment"],
   ["Circle Product Feedback", "Included on this page and in docs"],
@@ -113,6 +119,69 @@ export default function ChallengePage() {
           service with USDC on Arc, verifies agent identity, uses a budgeted job lifecycle, and
           produces a receipt that can be reviewed by users, builders, or program judges.
         </p>
+        <div className="flex flex-wrap gap-3 pt-1">
+          <a
+            href={LIVE_DEMO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-1.5 rounded bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
+          >
+            Live Demo ↗
+          </a>
+          <a
+            href={`${LIVE_DEMO_URL}/jobs`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-1.5 rounded border border-gray-600 text-gray-300 text-sm hover:bg-gray-800 transition-colors"
+          >
+            Job Console ↗
+          </a>
+          <a
+            href={ARCSCAN_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-1.5 rounded border border-gray-700 text-gray-400 text-sm hover:bg-gray-800 transition-colors"
+          >
+            Arcscan ↗
+          </a>
+          <a
+            href="https://github.com/a941249849/arc-agentic-settlement-lab"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-1.5 rounded border border-gray-700 text-gray-400 text-sm hover:bg-gray-800 transition-colors"
+          >
+            GitHub ↗
+          </a>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-amber-800 bg-amber-950/20 p-5 space-y-3">
+        <div className="flex items-center gap-3">
+          <span className="px-2 py-0.5 rounded border border-amber-600 text-amber-300 text-xs font-semibold">READY WITH CHANGES</span>
+          <span className="text-sm font-semibold text-white">Submission verdict</span>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <div className="text-amber-300 font-semibold mb-1">Top blockers before submission</div>
+            <ul className="list-disc list-inside text-amber-200/70 space-y-1">
+              <li>No live Arc Testnet tx hashes yet — the full ERC-8183 sequence has not been wallet-signed and recorded.</li>
+              <li>No demo video. A short screen recording showing the job console flow and identity read is required.</li>
+              <li>Circle Wallets, Gateway, Nanopayments, CCTP, USYC, and StableFX are not integrated — these must not be claimed as live.</li>
+            </ul>
+          </div>
+          <div>
+            <div className="text-green-300 font-semibold mb-1">Defensible live claims</div>
+            <ul className="list-disc list-inside text-green-200/70 space-y-1">
+              <li>USDC on Arc — settlement asset and gas rail used throughout the lifecycle.</li>
+              <li>ERC-8004 agent identity — <code>ownerOf</code> and <code>tokenURI</code> reads from Arc Testnet IdentityRegistry.</li>
+              <li>ERC-8183 lifecycle — calldata preparation for all six lifecycle actions, wallet tx submission, and receipt parsing.</li>
+              <li>Deterministic settlement receipt — JSON and Markdown with receipt hash and deliverable hash binding.</li>
+            </ul>
+          </div>
+        </div>
+        <div className="text-xs text-amber-200/50">
+          Minimum path to <span className="text-green-300 font-semibold">READY</span>: complete one end-to-end wallet-signed run on Arc Testnet and record a short demo video.
+        </div>
       </section>
 
       <section className="grid md:grid-cols-3 gap-4">
@@ -175,6 +244,40 @@ export default function ChallengePage() {
                 <StatusPill status={product.status} />
               </div>
               <p className="text-xs text-gray-500 mt-2">{product.detail}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-white">Live contract addresses</h2>
+        <p className="text-xs text-gray-500">These Arc Testnet contracts are used by the MVP. Click to verify on Arcscan.</p>
+        <div className="grid md:grid-cols-2 gap-3">
+          {[
+            {
+              name: "ERC-8004 IdentityRegistry",
+              address: IDENTITY_REGISTRY,
+              standard: "Agent identity proof",
+            },
+            {
+              name: "ERC-8183 AgenticCommerce",
+              address: AGENTIC_COMMERCE_CONTRACT,
+              standard: "Job lifecycle and escrow",
+            },
+          ].map(({ name, address, standard }) => (
+            <div key={name} className="rounded-lg border border-gray-800 bg-gray-900 p-4 space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="font-semibold text-white text-sm">{name}</div>
+                <span className="text-[11px] text-gray-500">{standard}</span>
+              </div>
+              <a
+                href={`${ARCSCAN_URL}/address/${address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block font-mono text-[11px] text-blue-400 hover:underline break-all"
+              >
+                {address} ↗
+              </a>
             </div>
           ))}
         </div>

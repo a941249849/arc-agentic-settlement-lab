@@ -1,5 +1,38 @@
 # Challenge Submission Pack
 
+## Review Verdict
+
+**READY WITH CHANGES**
+
+### Top blockers before final submission
+
+1. **No live Arc Testnet tx hashes.** The full ERC-8183 sequence (`createJob → setBudget → approve → fund → submit → complete`) has not been wallet-signed and recorded. This is the single most important outstanding gate.
+2. **No demo video.** A screen recording is required. Minimum: show the job console flow, the identity read, and the receipt export.
+3. **Circle Wallets, Gateway, Nanopayments, CCTP, USYC, and StableFX are not integrated.** These must not be selected as live products in the submission form.
+
+### Defensible live claims
+
+- USDC on Arc — settlement asset and gas rail.
+- ERC-8004 agent identity — `ownerOf` and `tokenURI` reads from Arc Testnet IdentityRegistry (`0x8004A818BFB912233c491871b3d84c89A494BD9e`).
+- ERC-8183 lifecycle — calldata preparation, wallet tx submission, and receipt parsing via AgenticCommerce contract (`0x0747EEf0706327138c69792bF28Cd525089e4583`).
+- Deterministic settlement receipt — JSON and Markdown with receipt hash and deliverable hash binding.
+
+### Minimum path to READY
+
+Complete one end-to-end wallet-signed run on Arc Testnet and record a short demo video showing the full lifecycle.
+
+### Recommended next engineering gate
+
+Arc Testnet tx evidence first, then demo video, then Circle Wallets integration. Gateway/Nanopayments and CCTP are valuable additions but should not block submission.
+
+## Live Resources
+
+- Demo: https://arc-agentic-settlement-lab.vercel.app
+- Challenge pack page: https://arc-agentic-settlement-lab.vercel.app/challenge
+- Job console: https://arc-agentic-settlement-lab.vercel.app/jobs
+- Arcscan: https://testnet.arcscan.app
+- GitHub: https://github.com/a941249849/arc-agentic-settlement-lab
+
 ## Project
 
 **Arc Agentic Commerce Settlement**

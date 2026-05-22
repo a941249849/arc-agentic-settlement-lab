@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { ArcSettlementJob, ArcSettlementReceipt } from "@/lib/types";
+import type { ArcAgentIdentity, ArcSettlementJob, ArcSettlementReceipt } from "@/lib/types";
 import { useJobs, createJob, updateJob, fetchReceipt } from "@/hooks/useJobs";
 import LifecycleBadge from "./LifecycleBadge";
 import ReceiptExport from "./ReceiptExport";
+import IdentityConsole from "./IdentityConsole";
 
 // ──────────────────────────────────────────────
 // Create Job Form
@@ -12,9 +13,10 @@ import ReceiptExport from "./ReceiptExport";
 
 interface CreateFormProps {
   onCreated: (job: ArcSettlementJob) => void;
+  verifiedIdentity: ArcAgentIdentity | null;
 }
 
-function CreateJobForm({ onCreated }: CreateFormProps) {
+function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
   const [form, setForm] = useState({
     clientAddress: "0x1111111111111111111111111111111111111111",
     providerAddress: "0x2222222222222222222222222222222222222222",
@@ -30,7 +32,11 @@ function CreateJobForm({ onCreated }: CreateFormProps) {
     setSubmitting(true);
     setError(null);
     try {
-      const job = await createJob({ ...form, currency: "USDC" });
+      const job = await createJob({
+        ...form,
+        currency: "USDC",
+        agentIdentity: verifiedIdentity ?? undefined,
+      });
       setForm((f) => ({ ...f, description: "" }));
       onCreated(job);
     } catch (err) {
@@ -80,6 +86,11 @@ function CreateJobForm({ onCreated }: CreateFormProps) {
         />
       </div>
       {error && <p className="text-red-400 text-xs">{error}</p>}
+      {verifiedIdentity && (
+        <div className="rounded-lg border border-green-800 bg-green-950/20 px-3 py-2 text-xs text-green-300">
+          New job will include verified ERC-8004 agent #{verifiedIdentity.agentId}.
+        </div>
+      )}
       <button
         type="submit"
         disabled={submitting}
@@ -98,6 +109,7 @@ function CreateJobForm({ onCreated }: CreateFormProps) {
 interface JobCardProps {
   job: ArcSettlementJob;
   onUpdate: (updated: ArcSettlementJob) => void;
+  verifiedIdentity: ArcAgentIdentity | null;
 }
 
 const NEXT_ACTIONS: Record<
@@ -129,7 +141,7 @@ const NEXT_ACTIONS: Record<
   failed: [],
 };
 
-function JobCard({ job, onUpdate }: JobCardProps) {
+function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [deliverableHash, setDeliverableHash] = useState(job.deliverableHash ?? "");
   const [actionError, setActionError] = useState<string | null>(null);
@@ -169,6 +181,17 @@ function JobCard({ job, onUpdate }: JobCardProps) {
       setActionError(err instanceof Error ? err.message : "Receipt fetch failed");
     } finally {
       setLoadingReceipt(false);
+    }
+  }
+
+  async function attachIdentity() {
+    if (!verifiedIdentity) return;
+    setActionError(null);
+    try {
+      const updated = await updateJob(job.id, { agentIdentity: verifiedIdentity });
+      onUpdate(updated);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Identity attach failed");
     }
   }
 
@@ -221,6 +244,53 @@ function JobCard({ job, onUpdate }: JobCardProps) {
                 {job.budgetAmount ? `${job.budgetAmount} ${job.currency}` : "Not set"}
               </span>
             </div>
+          </div>
+
+          <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-xs space-y-2">
+            <div className="font-semibold text-gray-300">Agent identity</div>
+            {job.agentIdentity ? (
+              <div className="grid md:grid-cols-3 gap-2">
+                <div>
+                  <span className="text-gray-500">Agent ID: </span>
+                  <span className="text-green-300">#{job.agentIdentity.agentId}</span>
+                </div>
+                <div className="min-w-0">
+                  <span className="text-gray-500">Owner: </span>
+                  <code
+                    className="block text-blue-300 truncate"
+                    title={job.agentIdentity.ownerAddress}
+                  >
+                    {job.agentIdentity.ownerAddress}
+                  </code>
+                </div>
+                <div className="min-w-0">
+                  <span className="text-gray-500">Metadata: </span>
+                  <code
+                    className="block text-blue-300 truncate"
+                    title={job.agentIdentity.metadataURI}
+                  >
+                    {job.agentIdentity.metadataURI}
+                  </code>
+                </div>
+              </div>
+            ) : verifiedIdentity ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-gray-500">
+                  Verified agent #{verifiedIdentity.agentId} is available for this session.
+                </span>
+                <button
+                  onClick={attachIdentity}
+                  className="px-3 py-1 rounded bg-green-800 text-green-100 hover:bg-green-700"
+                >
+                  Attach Verified Agent
+                </button>
+              </div>
+            ) : (
+              <span className="text-gray-600">
+                No ERC-8004 agent attached. Verify an agent above before treating this job as
+                identity-backed.
+              </span>
+            )}
           </div>
 
           {/* Deliverable input (only when funded) */}
@@ -298,6 +368,7 @@ function JobCard({ job, onUpdate }: JobCardProps) {
 export default function JobConsole() {
   const { jobs, loading, error, refresh } = useJobs();
   const [showCreate, setShowCreate] = useState(false);
+  const [verifiedIdentity, setVerifiedIdentity] = useState<ArcAgentIdentity | null>(null);
 
   function handleCreated() {
     refresh();
@@ -320,7 +391,7 @@ export default function JobConsole() {
         </div>
         <div className="flex items-center gap-3">
           <span className="px-2 py-1 rounded text-xs bg-blue-900/40 border border-blue-700 text-blue-300">
-            🔵 Simulated – no live transactions
+            🔵 Settlement simulated · Identity reads enabled
           </span>
           <button
             onClick={() => setShowCreate((s) => !s)}
@@ -331,11 +402,13 @@ export default function JobConsole() {
         </div>
       </div>
 
+      <IdentityConsole compact onVerified={setVerifiedIdentity} />
+
       {/* Create form */}
       {showCreate && (
         <div className="rounded-xl border border-blue-800 bg-blue-950/20 p-6">
           <h2 className="text-base font-semibold text-white mb-4">Create New Settlement Job</h2>
-          <CreateJobForm onCreated={handleCreated} />
+          <CreateJobForm onCreated={handleCreated} verifiedIdentity={verifiedIdentity} />
         </div>
       )}
 
@@ -359,15 +432,21 @@ export default function JobConsole() {
       ) : (
         <div className="space-y-3">
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} onUpdate={handleUpdate} />
+            <JobCard
+              key={job.id}
+              job={job}
+              onUpdate={handleUpdate}
+              verifiedIdentity={verifiedIdentity}
+            />
           ))}
         </div>
       )}
 
       {/* Blueprint notice */}
       <div className="rounded-lg border border-gray-800 bg-gray-900/40 p-4 text-xs text-gray-600 space-y-1">
-        <div className="font-semibold text-gray-500">Blueprint Features (Phase 3+)</div>
+        <div className="font-semibold text-gray-500">Current Boundary / Blueprint Features</div>
         <ul className="list-disc list-inside space-y-0.5">
+          <li>✅ ERC-8004 identity verifier reads ownerOf/tokenURI from Arc Testnet</li>
           <li>
             🔷 Real ERC-8183 AgenticCommerce contract execution on Arc Testnet (
             <code>0x0747EEf0706327138c69792bF28Cd525089e4583</code>)

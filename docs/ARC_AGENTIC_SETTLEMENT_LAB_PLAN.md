@@ -643,7 +643,14 @@ The Phase 1 scaffold has been updated to match the strategy-review corrections:
 - Agent Stack / x402 / nanopayments are separated from ERC-8183 job settlement;
 - Phase 1 remains explicitly labeled as scaffold, not final public proof.
 
-Next, plan Phase 2 as live ERC-8004 agent registration, then Phase 3 as live ERC-8183 execution with Arcscan links.
+Phase 2 now adds ERC-8004 read verification:
+
+- prepare IdentityRegistry `register(string)` calldata;
+- verify existing `agentId` with `ownerOf` and `tokenURI` reads on Arc Testnet;
+- attach verified identity to settlement jobs;
+- export the verified identity inside deterministic receipts.
+
+Next, complete wallet-submitted ERC-8004 registration for the provider account, then move to Phase 3 live ERC-8183 execution with Arcscan links.
 
 ## References
 

@@ -12,6 +12,17 @@ export type JobStatus =
 
 export type SettlementMode = "simulated" | "onchain-verified";
 
+export interface ArcAgentIdentity {
+  standard: "ERC-8004";
+  registryAddress: string;
+  agentId: string;
+  ownerAddress: string;
+  metadataURI: string;
+  registerTxHash?: string;
+  isVerified: boolean;
+  verifiedAt: string;
+}
+
 export interface ArcSettlementJob {
   id: string;
   status: JobStatus;
@@ -21,6 +32,7 @@ export interface ArcSettlementJob {
   amount: string;
   currency: "USDC";
   description: string;
+  agentIdentity?: ArcAgentIdentity;
   budgetAmount?: string;
   deliverableHash?: string;
   /** ERC-8183 lifecycle tx hashes – only populated after live onchain execution */
@@ -61,11 +73,7 @@ export interface ArcSettlementReceipt {
     submit?: string;
     settle?: string;
   };
-  agentIdentity?: {
-    standard: "ERC-8004";
-    registryAddress: string;
-    agentId?: string;
-  };
+  agentIdentity?: ArcAgentIdentity;
   appKitFunding?: {
     capability: "bridge" | "send" | "swap" | "unified-balance";
     reference?: string;

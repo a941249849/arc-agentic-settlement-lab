@@ -55,7 +55,13 @@ export function useJobs() {
 export async function createJob(
   data: Pick<
     ArcSettlementJob,
-    "clientAddress" | "providerAddress" | "evaluatorAddress" | "amount" | "currency" | "description"
+    | "clientAddress"
+    | "providerAddress"
+    | "evaluatorAddress"
+    | "amount"
+    | "currency"
+    | "description"
+    | "agentIdentity"
   >
 ): Promise<ArcSettlementJob> {
   const res = await fetch("/api/arc-settlement/jobs", {

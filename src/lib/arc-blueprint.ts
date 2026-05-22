@@ -3,7 +3,7 @@ import type { ArcSettlementBlueprint } from "./types";
 export const arcSettlementBlueprint: ArcSettlementBlueprint = {
   product: "Arc Agentic Settlement Lab",
   version: "0.1.0",
-  phase: "Phase 1/2 - Offchain Lifecycle",
+  phase: "Phase 2 - ERC-8004 Identity Proof + Offchain Lifecycle",
   network: "Arc Testnet",
 
   contracts: {
@@ -26,7 +26,7 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     {
       name: "In-memory job store",
       status: "implemented",
-      description: "Create and manage settlement jobs in server memory (Phase 1/2).",
+      description: "Create and manage settlement jobs in server memory.",
     },
     {
       name: "Offchain lifecycle state machine",
@@ -48,9 +48,9 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     },
     {
       name: "ERC-8004 agent identity",
-      status: "blueprint",
+      status: "implemented",
       description:
-        "IdentityRegistry, ReputationRegistry, ValidationRegistry calls. Required before live ERC-8183 execution.",
+        "IdentityRegistry read verification for agent owner and metadata URI. Live registration calldata preparation is implemented; wallet submission remains external.",
     },
     {
       name: "Circle Agent Stack",
@@ -79,7 +79,7 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     {
       name: "StableFX multi-currency settlement",
       status: "future",
-      description: "QCAD/EURC -> USDC FX settlement via FxEscrow. Research only at Phase 1/2.",
+      description: "QCAD/EURC -> USDC FX settlement via FxEscrow. Research-only extension.",
     },
   ],
 
@@ -98,7 +98,7 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     txHashes:
       "object - { create?, setBudget?, approve?, fund?, submit?, settle? } - Arc Testnet tx hashes",
     agentIdentity:
-      "object - { standard: ERC-8004, registryAddress, agentId? } - Phase 2+",
+      "object - { standard, registryAddress, agentId, ownerAddress, metadataURI, registerTxHash?, isVerified, verifiedAt }",
     appKitFunding: "object - { capability, reference? } - Phase 5+",
     receiptHash: "string - SHA-256 of canonical receipt fields",
     settlementMode: "string - simulated|onchain-verified",

@@ -48,10 +48,14 @@ ${txSection}
 
 - Standard: **${receipt.agentIdentity?.standard ?? "—"}**
 - Registry: \`${receipt.agentIdentity?.registryAddress ?? "—"}\`
+- Agent ID: \`${receipt.agentIdentity?.agentId ?? "—"}\`
+- Owner: \`${receipt.agentIdentity?.ownerAddress ?? "—"}\`
+- Metadata URI: \`${receipt.agentIdentity?.metadataURI ?? "—"}\`
+- Verified: **${receipt.agentIdentity?.isVerified ? "yes" : "no"}**
 
 ---
 
-*This receipt was produced by Arc Agentic Settlement Lab (Phase 1/2 – offchain simulation).
-Live onchain settlement requires real transaction hashes from Arc Testnet.*
+*This receipt was produced by Arc Agentic Settlement Lab (Phase 2 – ERC-8004 identity proof plus offchain settlement simulation).
+Live ERC-8183 settlement requires real transaction hashes from Arc Testnet.*
 `;
 }

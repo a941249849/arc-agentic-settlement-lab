@@ -13,11 +13,11 @@ Primary docs:
 
 ## Required First Scope
 
-The current app implements a Phase 1 scaffold. Do not continue feature work until the strategy-review corrections are reflected in the plan.
+The current app implements a Phase 2 scaffold: ERC-8004 identity read verification plus offchain ERC-8183 lifecycle modeling. Do not present it as live settlement execution.
 
 Next implementation scope should be planned in this order:
 
-1. ERC-8004 agent registration and reputation proof.
+1. Wallet-submitted ERC-8004 agent registration.
 2. ERC-8183 live Arc Testnet job lifecycle.
 3. App Kit funding path.
 4. Wallet policy / embedded wallet path.
@@ -57,6 +57,15 @@ The current Phase 1 scaffold contains:
 7. Public docs and acceptance criteria.
 
 The scaffold already includes `budgeted` / provider `setBudget` in the UI, API patch surface, receipt schema, and deterministic receipt export. The next engineering gate is ERC-8004 agent identity before live ERC-8183 settlement execution.
+
+Phase 2 also includes:
+
+- `/api/arc-identity`;
+- `/api/arc-identity/prepare` for `register(string)` calldata;
+- `/api/arc-identity/verify` for real Arc Testnet `ownerOf` / `tokenURI` reads;
+- Job/receipt binding for verified ERC-8004 identity.
+
+The remaining gate before live ERC-8183 execution is wallet-submitted ERC-8004 registration plus an actual `agentId` tied to the provider identity.
 
 Do not implement live wallet or contract execution in the first pass unless the lifecycle UX is already complete and reviewed.
 

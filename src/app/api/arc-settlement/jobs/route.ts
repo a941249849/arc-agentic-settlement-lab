@@ -17,8 +17,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { clientAddress, providerAddress, evaluatorAddress, amount, currency, description } =
-    body;
+  const {
+    clientAddress,
+    providerAddress,
+    evaluatorAddress,
+    amount,
+    currency,
+    description,
+    agentIdentity,
+  } = body;
 
   if (!clientAddress || !providerAddress || !evaluatorAddress || !amount || !description) {
     return NextResponse.json(
@@ -37,6 +44,7 @@ export async function POST(req: NextRequest) {
     amount,
     currency: currency ?? "USDC",
     description,
+    agentIdentity,
   });
 
   return NextResponse.json({ job }, { status: 201 });

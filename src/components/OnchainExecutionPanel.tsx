@@ -64,7 +64,20 @@ function nextPatch(
   if (action === "submit") {
     return { ...base, status: "submitted", submitTxHash: txHash, deliverableHash };
   }
-  return { status: "settled", settleTxHash: txHash, settlementMode: "onchain-verified" };
+  // Only mark onchain-verified when all prior lifecycle tx hashes are present,
+  // confirming the full ERC-8183 sequence was executed on Arc Testnet.
+  const allPriorTxPresent = !!(
+    job.createTxHash &&
+    job.setBudgetTxHash &&
+    job.approveTxHash &&
+    job.fundTxHash &&
+    job.submitTxHash
+  );
+  return {
+    status: "settled",
+    settleTxHash: txHash,
+    settlementMode: allPriorTxPresent ? "onchain-verified" : "onchain-partial",
+  };
 }
 
 function recommendedActions(job: ArcSettlementJob): ArcCommerceAction[] {

@@ -68,9 +68,9 @@ export default async function OverviewPage() {
       {/* Hero */}
       <section className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/40 border border-blue-700 text-blue-300 text-sm">
-          <span>🔵 Simulated</span>
+          <span>⬡ Phase 3</span>
           <span className="text-blue-600">·</span>
-          <span>Phase 3 - Wallet Execution + Settlement Receipts</span>
+          <span>ERC-8004 + ERC-8183 · Arc Testnet</span>
         </div>
         <h1 className="text-4xl font-bold text-white">Arc Agentic Settlement Lab</h1>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto">

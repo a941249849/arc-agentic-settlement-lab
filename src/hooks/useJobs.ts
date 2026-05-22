@@ -103,6 +103,16 @@ export async function updateJob(
   return job;
 }
 
+export async function deleteJob(id: string): Promise<void> {
+  const res = await fetch(`/api/arc-settlement/jobs/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `HTTP ${res.status}`);
+  }
+}
+
 export async function fetchReceipt(id: string) {
   const res = await fetch(`/api/arc-settlement/jobs/${id}/receipt`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);

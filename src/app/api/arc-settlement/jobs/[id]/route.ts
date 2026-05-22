@@ -1,5 +1,6 @@
-// GET   /api/arc-settlement/jobs/[id]  – get one job
-// PATCH /api/arc-settlement/jobs/[id]  – update job status / lifecycle evidence
+// GET    /api/arc-settlement/jobs/[id]  – get one job
+// PATCH  /api/arc-settlement/jobs/[id]  – update job status / lifecycle evidence
+// DELETE /api/arc-settlement/jobs/[id]  – delete one job
 
 import { NextRequest, NextResponse } from "next/server";
 import { jobStore, isValidTransition, VALID_TRANSITIONS } from "@/lib/job-store";
@@ -56,4 +57,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const updated = jobStore.update(id, body);
   return NextResponse.json({ job: updated });
+}
+
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const deleted = jobStore.delete(id);
+  if (!deleted) {
+    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+  }
+  return NextResponse.json({ ok: true });
 }

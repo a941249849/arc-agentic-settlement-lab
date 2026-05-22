@@ -3,20 +3,20 @@ import { arcSettlementBlueprint } from "@/lib/arc-blueprint";
 
 const HOW_TO_USE = [
   {
-    title: "1. Verify an agent",
-    body: "Read an existing ERC-8004 identity from Arc Testnet so the service provider is not just a random address.",
+    title: "1. Create a job",
+    body: "Describe the service an agent wants to buy and set the buyer, provider, evaluator, and USDC amount.",
   },
   {
-    title: "2. Create a service job",
-    body: "Describe what the buyer agent wants to purchase: a report, dataset, API result, model response, or other service.",
+    title: "2. Run the demo flow",
+    body: "Publish the request, set the provider budget, fund escrow, submit a deliverable hash, and approve settlement.",
   },
   {
-    title: "3. Move funds through escrow",
-    body: "Use the ERC-8183 lifecycle: set budget, approve USDC, fund escrow, submit work, and complete settlement.",
+    title: "3. Add chain evidence",
+    body: "Optionally connect a wallet and attach Arc Testnet ERC-8183 transaction hashes to the same job.",
   },
   {
     title: "4. Export the receipt",
-    body: "Generate a receipt that binds the buyer, provider, amount, deliverable hash, agent identity, and tx evidence.",
+    body: "Generate a receipt that binds the buyer, provider, amount, deliverable hash, identity, and tx evidence.",
   },
 ];
 
@@ -57,7 +57,7 @@ export default function OverviewPage() {
             <p className="text-lg text-gray-400 max-w-2xl">
               This app is a testnet workflow for agent-paid services. A buyer agent requests work,
               a provider sets a budget, USDC moves through escrow, the deliverable is recorded, and
-              the final receipt shows the business context behind the payment.
+              the final receipt shows what happened before, during, and after payment.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

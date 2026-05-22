@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ArcAgentIdentity, ArcSettlementJob, ArcSettlementReceipt } from "@/lib/types";
-import { useJobs, createJob, updateJob, fetchReceipt } from "@/hooks/useJobs";
+import { useJobs, createJob, updateJob, fetchReceipt, deleteJob } from "@/hooks/useJobs";
 import LifecycleBadge from "./LifecycleBadge";
 import ReceiptExport from "./ReceiptExport";
 import IdentityConsole from "./IdentityConsole";
@@ -75,7 +75,7 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
       </div>
       <div className="space-y-1">
         <label htmlFor="description" className="block text-xs text-gray-400">
-          Job Description
+          Service request
         </label>
         <textarea
           id="description"
@@ -98,7 +98,7 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
         disabled={submitting}
         className="px-5 py-2 rounded bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
       >
-        {submitting ? "Creating…" : "Create Job (draft)"}
+        {submitting ? "Creating..." : "Create service job"}
       </button>
     </form>
   );
@@ -111,44 +111,85 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
 interface JobCardProps {
   job: ArcSettlementJob;
   onUpdate: (updated: ArcSettlementJob) => void;
+  onDeleted: () => void;
   verifiedIdentity: ArcAgentIdentity | null;
+  defaultExpanded?: boolean;
 }
 
 const NEXT_ACTIONS: Record<
   string,
   { label: string; nextStatus: ArcSettlementJob["status"]; deliverableRequired?: boolean }[]
 > = {
-  draft: [{ label: "Publish (→ open)", nextStatus: "open" }],
+  draft: [{ label: "Publish request", nextStatus: "open" }],
   open: [
-    { label: "Provider Set Budget (→ budgeted)", nextStatus: "budgeted" },
-    { label: "Fail", nextStatus: "failed" },
+    { label: "Set provider budget", nextStatus: "budgeted" },
+    { label: "Mark failed", nextStatus: "failed" },
   ],
   budgeted: [
-    { label: "Approve & Fund Escrow (→ funded)", nextStatus: "funded" },
-    { label: "Fail", nextStatus: "failed" },
+    { label: "Fund escrow", nextStatus: "funded" },
+    { label: "Mark failed", nextStatus: "failed" },
   ],
   funded: [
     {
-      label: "Submit Deliverable (→ submitted)",
+      label: "Submit deliverable",
       nextStatus: "submitted",
       deliverableRequired: true,
     },
-    { label: "Fail", nextStatus: "failed" },
+    { label: "Mark failed", nextStatus: "failed" },
   ],
   submitted: [
-    { label: "Approve & Settle (→ settled)", nextStatus: "settled" },
-    { label: "Reject (→ failed)", nextStatus: "failed" },
+    { label: "Approve and settle", nextStatus: "settled" },
+    { label: "Reject", nextStatus: "failed" },
   ],
   settled: [],
   failed: [],
 };
 
-function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
-  const [expanded, setExpanded] = useState(false);
+const STATUS_GUIDE: Record<ArcSettlementJob["status"], { title: string; detail: string }> = {
+  draft: {
+    title: "Draft request",
+    detail: "Review the service request, addresses, and amount. Publish it when it is ready.",
+  },
+  open: {
+    title: "Waiting for provider budget",
+    detail: "The provider should confirm the service price before funds are locked.",
+  },
+  budgeted: {
+    title: "Ready to fund escrow",
+    detail: "The buyer can approve and fund USDC escrow for the agreed amount.",
+  },
+  funded: {
+    title: "Waiting for deliverable",
+    detail: "Add a SHA-256 hash, IPFS CID, or other stable proof of the completed work.",
+  },
+  submitted: {
+    title: "Ready for review",
+    detail: "The evaluator checks the deliverable proof and approves settlement or rejects it.",
+  },
+  settled: {
+    title: "Settled",
+    detail: "The receipt can now be exported as the business record for this payment.",
+  },
+  failed: {
+    title: "Stopped",
+    detail: "The job was rejected or stopped before settlement.",
+  },
+};
+
+const WORKFLOW_STEPS = [
+  ["1", "Create", "Describe the service and counterparties."],
+  ["2", "Run local flow", "Move through request, budget, escrow, delivery, and approval."],
+  ["3", "Optional onchain", "Use wallet signing when you want Arc Testnet tx evidence."],
+  ["4", "Export receipt", "Copy or download the final payment record."],
+];
+
+function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }: JobCardProps) {
+  const [expanded, setExpanded] = useState(Boolean(defaultExpanded));
   const [deliverableHash, setDeliverableHash] = useState(job.deliverableHash ?? "");
   const [actionError, setActionError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<ArcSettlementReceipt | null>(null);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
+  const [showOnchain, setShowOnchain] = useState(false);
 
   async function transition(
     nextStatus: ArcSettlementJob["status"],
@@ -197,7 +238,18 @@ function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
     }
   }
 
+  async function handleDelete() {
+    setActionError(null);
+    try {
+      await deleteJob(job.id);
+      onDeleted();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Delete failed");
+    }
+  }
+
   const actions = NEXT_ACTIONS[job.status] ?? [];
+  const guide = STATUS_GUIDE[job.status];
 
   return (
     <div className="rounded-xl border border-gray-700 bg-gray-900 overflow-hidden">
@@ -217,6 +269,18 @@ function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
 
       {expanded && (
         <div className="border-t border-gray-700 px-4 py-4 space-y-4">
+          <div className="rounded-lg border border-blue-900 bg-blue-950/20 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-blue-200">{guide.title}</div>
+                <p className="text-xs text-gray-400 mt-1">{guide.detail}</p>
+              </div>
+              <div className="text-xs text-gray-500">
+                Local demo first. Use onchain signing only when you need tx evidence.
+              </div>
+            </div>
+          </div>
+
           {/* Parties */}
           <div className="grid md:grid-cols-3 gap-3 text-xs">
             {[
@@ -298,7 +362,16 @@ function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
           {/* Deliverable input (only when funded) */}
           {job.status === "funded" && (
             <div className="space-y-1">
-              <label className="text-xs text-gray-400">Deliverable Hash (SHA-256 or IPFS CID)</label>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="text-xs text-gray-400">Deliverable Hash (SHA-256 or IPFS CID)</label>
+                <button
+                  type="button"
+                  onClick={() => setDeliverableHash("sha256:demo-market-intelligence-report")}
+                  className="text-xs text-blue-300 hover:underline"
+                >
+                  Use sample hash
+                </button>
+              </div>
               <input
                 value={deliverableHash}
                 onChange={(e) => setDeliverableHash(e.target.value)}
@@ -316,41 +389,81 @@ function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
             </div>
           )}
 
-          <OnchainExecutionPanel
-            job={job}
-            deliverableHash={deliverableHash || job.deliverableHash || ""}
-            onUpdate={onUpdate}
-          />
-
-          {/* Action buttons */}
-          {actions.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {actions.map((action) => (
-                <button
-                  key={action.nextStatus}
-                  onClick={() => transition(action.nextStatus, action.deliverableRequired)}
-                  className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
-                    action.nextStatus === "failed"
-                      ? "border border-red-700 text-red-400 hover:bg-red-900/30"
-                      : action.nextStatus === "settled"
-                      ? "bg-green-800 text-green-100 hover:bg-green-700"
-                      : "bg-blue-700 text-white hover:bg-blue-600"
-                  }`}
-                >
-                  {action.label}
-                </button>
-              ))}
+          <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4 space-y-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-white">Step-by-step demo flow</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  This path lets anyone understand the payment workflow without needing a wallet.
+                </p>
+              </div>
+              <span className="text-xs text-gray-500">Mode: simulated receipt</span>
             </div>
-          )}
+
+            {actions.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {actions.map((action) => (
+                  <button
+                    key={action.nextStatus}
+                    onClick={() => transition(action.nextStatus, action.deliverableRequired)}
+                    className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+                      action.nextStatus === "failed"
+                        ? "border border-red-700 text-red-400 hover:bg-red-900/30"
+                        : action.nextStatus === "settled"
+                        ? "bg-green-800 text-green-100 hover:bg-green-700"
+                        : "bg-blue-700 text-white hover:bg-blue-600"
+                    }`}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-green-300">
+                No more local workflow actions. Generate the receipt below.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-white">Optional Arc Testnet execution</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Use this only when you want wallet-signed ERC-8183 transactions attached to the job.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowOnchain((v) => !v)}
+                className="px-3 py-1.5 rounded border border-gray-700 text-xs text-gray-300 hover:bg-gray-800"
+              >
+                {showOnchain ? "Hide onchain steps" : "Show onchain steps"}
+              </button>
+            </div>
+
+            {showOnchain && (
+              <OnchainExecutionPanel
+                job={job}
+                deliverableHash={deliverableHash || job.deliverableHash || ""}
+                onUpdate={onUpdate}
+              />
+            )}
+          </div>
 
           {actionError && <p className="text-red-400 text-xs">{actionError}</p>}
 
           {/* Receipt */}
-          <div>
+          <div className="rounded-lg border border-purple-900 bg-purple-950/20 p-4 space-y-3">
+            <div>
+              <div className="text-sm font-semibold text-white">Receipt</div>
+              <p className="text-xs text-gray-500 mt-1">
+                Export this after the local flow or after wallet-signed tx hashes are attached.
+              </p>
+            </div>
             <button
               onClick={loadReceipt}
               disabled={loadingReceipt}
-              className="px-4 py-1.5 rounded border border-gray-600 text-xs text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="px-4 py-1.5 rounded bg-purple-800 text-purple-50 text-xs font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50"
             >
               {loadingReceipt ? "Loading..." : "Generate Receipt"}
             </button>
@@ -359,9 +472,17 @@ function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
           {receipt && <ReceiptExport receipt={receipt} />}
 
           {/* Timestamps */}
-          <div className="flex gap-4 text-xs text-gray-600">
-            <span>Created: {new Date(job.createdAt).toLocaleString()}</span>
-            <span>Updated: {new Date(job.updatedAt).toLocaleString()}</span>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-600">
+            <div className="flex flex-wrap gap-4">
+              <span>Created: {new Date(job.createdAt).toLocaleString()}</span>
+              <span>Updated: {new Date(job.updatedAt).toLocaleString()}</span>
+            </div>
+            <button
+              onClick={handleDelete}
+              className="px-3 py-1 rounded border border-red-900 text-red-400 hover:bg-red-950/40"
+            >
+              Delete job
+            </button>
           </div>
         </div>
       )}
@@ -377,8 +498,10 @@ export default function JobConsole() {
   const { jobs, loading, error, refresh } = useJobs();
   const [showCreate, setShowCreate] = useState(false);
   const [verifiedIdentity, setVerifiedIdentity] = useState<ArcAgentIdentity | null>(null);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
-  function handleCreated() {
+  function handleCreated(job: ArcSettlementJob) {
+    setActiveJobId(job.id);
     refresh();
     setShowCreate(false);
   }
@@ -394,13 +517,13 @@ export default function JobConsole() {
         <div>
           <h1 className="text-2xl font-bold text-white">Service Payment Console</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Create a buyer-agent service purchase, set a provider budget, fund USDC escrow, submit
-            deliverable evidence, and export a settlement receipt.
+            Start with the no-wallet demo flow. Open the Arc Testnet signing panel only when you
+            want transaction hashes attached to the receipt.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="px-2 py-1 rounded text-xs bg-blue-900/40 border border-blue-700 text-blue-300">
-            Wallet execution · Identity reads enabled
+            Demo flow + optional wallet signing
           </span>
           <button
             onClick={() => setShowCreate((s) => !s)}
@@ -411,39 +534,44 @@ export default function JobConsole() {
         </div>
       </div>
 
-      <IdentityConsole compact onVerified={setVerifiedIdentity} />
-
-      <section className="rounded-xl border border-cyan-800 bg-cyan-950/20 p-5 text-sm text-cyan-100">
-        <div className="font-semibold text-white mb-2">Example service payment</div>
-        <p className="text-xs text-gray-400 mb-4">
-          Use this page to simulate or execute a service purchase: request work, set the provider
-          budget, fund escrow, submit a deliverable hash, approve settlement, then export a receipt.
-        </p>
+      <section className="rounded-xl border border-cyan-800 bg-cyan-950/20 p-5 space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-base font-semibold text-white">Start here</div>
+            <p className="text-xs text-gray-400 mt-1">
+              Complete the product flow in four steps. The wallet path is optional and only needed
+              for live Arc Testnet evidence.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-4 py-1.5 rounded bg-cyan-800 text-cyan-50 text-xs font-semibold hover:bg-cyan-700"
+          >
+            Create first job
+          </button>
+        </div>
         <div className="grid md:grid-cols-4 gap-3 text-xs">
-          <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
-            <div className="text-cyan-300 font-semibold">Request</div>
-            <p className="text-gray-400 mt-1">The buyer agent asks for a report, dataset, API result, or service.</p>
-          </div>
-          <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
-            <div className="text-cyan-300 font-semibold">Budget</div>
-            <p className="text-gray-400 mt-1">The provider sets the price before escrow funding.</p>
-          </div>
-          <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
-            <div className="text-cyan-300 font-semibold">Escrow</div>
-            <p className="text-gray-400 mt-1">USDC can be locked in the Arc Testnet job lifecycle.</p>
-          </div>
-          <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
-            <div className="text-cyan-300 font-semibold">Receipt</div>
-            <p className="text-gray-400 mt-1">The output proves identity, deliverable, amount, and settlement status.</p>
-          </div>
+          {WORKFLOW_STEPS.map(([number, label, detail]) => (
+            <div key={number} className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
+              <div className="flex items-center gap-2">
+                <span className="h-6 w-6 rounded-full border border-cyan-800 text-cyan-200 flex items-center justify-center font-semibold">
+                  {number}
+                </span>
+                <span className="text-cyan-300 font-semibold">{label}</span>
+              </div>
+              <p className="text-gray-400 mt-2">{detail}</p>
+            </div>
+          ))}
         </div>
       </section>
+
+      <IdentityConsole compact onVerified={setVerifiedIdentity} />
 
       {/* Create form */}
       {showCreate && (
         <div className="rounded-xl border border-blue-800 bg-blue-950/20 p-6">
           <h2 className="text-base font-semibold text-white mb-4">
-            Create New Agentic Commerce Job
+            Create service job
           </h2>
           <CreateJobForm onCreated={handleCreated} verifiedIdentity={verifiedIdentity} />
         </div>
@@ -473,7 +601,9 @@ export default function JobConsole() {
               key={job.id}
               job={job}
               onUpdate={handleUpdate}
+              onDeleted={refresh}
               verifiedIdentity={verifiedIdentity}
+              defaultExpanded={job.id === activeJobId}
             />
           ))}
         </div>

@@ -652,6 +652,16 @@ Phase 2 now adds ERC-8004 read verification:
 
 Next, complete wallet-submitted ERC-8004 registration for the provider account, then move to Phase 3 live ERC-8183 execution with Arcscan links.
 
+Phase 3 now adds wallet-submitted ERC-8183 execution controls:
+
+- prepare calldata for `createJob`, `setBudget`, USDC `approve`, `fund`, `submit`, and `complete`;
+- submit via injected EIP-1193 wallet when available;
+- parse transaction receipts and `JobCreated`;
+- bind tx hashes and ERC-8183 job id to the settlement receipt;
+- keep partial execution distinct from final `onchain-verified` completion.
+
+Next, complete a funded-wallet public run and capture Arcscan links for each lifecycle transaction.
+
 ## References
 
 - Arc Agentic Economy: https://docs.arc.io/build/agentic-economy.md

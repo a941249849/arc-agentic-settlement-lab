@@ -18,6 +18,7 @@ function hashReceipt(canonical: Omit<ArcSettlementReceipt, "receiptHash">): stri
   // Build a stable serialisation with an explicit, fixed key order.
   const ordered = [
     ["jobId", canonical.jobId],
+    ["onchainJobId", canonical.onchainJobId],
     ["lifecycleStatus", canonical.lifecycleStatus],
     ["clientAddress", canonical.clientAddress],
     ["providerAddress", canonical.providerAddress],
@@ -41,6 +42,7 @@ export function generateReceipt(job: ArcSettlementJob): ArcSettlementReceipt {
     receiptVersion: "arc-settlement-v1",
     network: "Arc Testnet",
     jobId: job.id,
+    onchainJobId: job.onchainJobId,
     lifecycleStatus: job.status,
     clientAddress: job.clientAddress,
     providerAddress: job.providerAddress,

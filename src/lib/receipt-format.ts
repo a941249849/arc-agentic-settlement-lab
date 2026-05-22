@@ -8,6 +8,8 @@ export function receiptToMarkdown(receipt: ArcSettlementReceipt): string {
   const statusBadge =
     receipt.settlementMode === "onchain-verified"
       ? "✅ Onchain verified"
+      : receipt.settlementMode === "onchain-partial"
+      ? "🟢 Partial onchain"
       : "🔵 Simulated";
 
   const txEntries = Object.entries(receipt.txHashes).filter(([, v]) => v);
@@ -22,6 +24,7 @@ export function receiptToMarkdown(receipt: ArcSettlementReceipt): string {
 | Receipt version | \`${receipt.receiptVersion}\` |
 | Network | ${receipt.network} |
 | Job ID | \`${receipt.jobId}\` |
+| ERC-8183 job ID | \`${receipt.onchainJobId ?? "—"}\` |
 | Lifecycle status | **${receipt.lifecycleStatus}** |
 | Settlement mode | ${statusBadge} |
 
@@ -55,7 +58,7 @@ ${txSection}
 
 ---
 
-*This receipt was produced by Arc Agentic Settlement Lab (Phase 2 – ERC-8004 identity proof plus offchain settlement simulation).
+*This receipt was produced by Arc Agentic Settlement Lab (Phase 3 – ERC-8004 identity proof plus ERC-8183 wallet execution controls).
 Live ERC-8183 settlement requires real transaction hashes from Arc Testnet.*
 `;
 }

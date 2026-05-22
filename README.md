@@ -6,23 +6,27 @@ Agent-native financial workflow on Arc: verifiable agent identity, job creation,
 agent identity -> job creation -> provider sets budget -> USDC escrow -> deliverable proof -> evaluator approval -> settlement receipt
 ```
 
-## Implemented (Phase 2)
+## Implemented (Phase 3)
 
 - **Product shell** — Next.js app with Arc-branded UI
 - **`/api/arc-settlement`** — Blueprint endpoint: Arc contract addresses, capability matrix, lifecycle states, receipt schema
 - **`/api/arc-identity`** — ERC-8004 IdentityRegistry context and contract addresses
 - **`/api/arc-identity/prepare`** — Prepare `register(string metadataURI)` calldata for wallet submission
 - **`/api/arc-identity/verify`** — Read `ownerOf(agentId)` and `tokenURI(agentId)` from Arc Testnet
+- **`/api/arc-commerce`** — ERC-8183 AgenticCommerce execution context and contract addresses
+- **`/api/arc-commerce/prepare`** — Prepare wallet transaction calldata for `createJob`, `setBudget`, `approve`, `fund`, `submit`, and `complete`
+- **`/api/arc-commerce/jobs/:id`** — Read `getJob(jobId)` from Arc Testnet
+- **`/api/arc-commerce/tx/:hash`** — Inspect Arc Testnet receipts and parse `JobCreated`
 - **`/api/arc-settlement/jobs`** — In-memory job store: create and list jobs
 - **`/api/arc-settlement/jobs/:id`** — Get and update job status
 - **`/api/arc-settlement/jobs/:id/receipt`** — Generate deterministic settlement receipt
 - **Offchain lifecycle state machine** — current scaffold: `draft → open → budgeted → funded → submitted → settled / failed`
 - **Agent identity proof binding** — verified ERC-8004 identity can be attached to jobs and exported in receipts
 - **Deterministic receipt export** — SHA-256 hashed JSON receipt + Markdown export
-- **UI labels** — Blueprint / Simulated / Onchain-verified states visibly separated
+- **UI labels** — Simulated / partial onchain / onchain-verified states visibly separated
 - **Research context** — Arc Discord/X and official-doc context retained for follow-up implementation
 
-The scaffold now includes the strategy-review correction: provider `setBudget` is modeled as the explicit `budgeted` lifecycle state before escrow funding. Phase 2 adds real Arc Testnet read verification for ERC-8004 identity, while wallet registration and ERC-8183 settlement execution remain external/blueprint-only.
+The scaffold now includes the strategy-review correction: provider `setBudget` is modeled as the explicit `budgeted` lifecycle state before escrow funding. Phase 2 adds real Arc Testnet read verification for ERC-8004 identity. Phase 3 adds wallet-submitted ERC-8183 execution controls and tx receipt parsing; the app only marks a job `onchain-verified` after the complete transaction is recorded.
 
 ## Strategy Review Verdict
 
@@ -44,7 +48,7 @@ See [Copilot Arc Strategy Review](docs/COPILOT_ARC_STRATEGY_REVIEW.md).
 | Phase | Feature | Status |
 |-------|---------|--------|
 | Phase 2 | ERC-8004 identity proof and receipt binding | ✅ Implemented |
-| Phase 3 | Live Arc Testnet ERC-8183 lifecycle: createJob, setBudget, approve, fund, submit, complete | 🔷 Blueprint |
+| Phase 3 | Wallet-submitted Arc Testnet ERC-8183 lifecycle: createJob, setBudget, approve, fund, submit, complete | ✅ Implemented |
 | Phase 4 | App Kit funding and monetization path | 🔷 Blueprint |
 | Phase 5 | Embedded wallets and policy signing | 🔷 Blueprint |
 | Phase 6 | StableFX multi-currency settlement (QCAD/EURC → USDC) | 🔘 Future |
@@ -74,6 +78,10 @@ Open [http://localhost:3000](http://localhost:3000).
 | `GET` | `/api/arc-identity` | ERC-8004 identity verifier context |
 | `POST` | `/api/arc-identity/prepare` | Prepare IdentityRegistry `register(string)` calldata |
 | `POST` | `/api/arc-identity/verify` | Verify `ownerOf` and `tokenURI` for an existing agent ID |
+| `GET` | `/api/arc-commerce` | ERC-8183 AgenticCommerce execution context |
+| `POST` | `/api/arc-commerce/prepare` | Prepare wallet transaction calldata for ERC-8183 actions |
+| `GET` | `/api/arc-commerce/jobs/:id` | Read ERC-8183 `getJob(jobId)` from Arc Testnet |
+| `GET` | `/api/arc-commerce/tx/:hash` | Inspect a transaction receipt and parse `JobCreated` |
 | `GET` | `/api/arc-settlement/jobs` | List all jobs |
 | `POST` | `/api/arc-settlement/jobs` | Create a new job |
 | `GET` | `/api/arc-settlement/jobs/:id` | Get a job |
@@ -87,6 +95,7 @@ type ArcSettlementReceipt = {
   receiptVersion: "arc-settlement-v1";
   network: "Arc Testnet";
   jobId: string;
+  onchainJobId?: string;
   lifecycleStatus: "draft" | "open" | "budgeted" | "funded" | "submitted" | "settled" | "failed";
   clientAddress: string;
   providerAddress: string;
@@ -114,7 +123,7 @@ type ArcSettlementReceipt = {
     verifiedAt: string;
   };
   receiptHash: string;          // SHA-256 of canonical fields
-  settlementMode: "simulated" | "onchain-verified";
+  settlementMode: "simulated" | "onchain-partial" | "onchain-verified";
   createdAt: string;
 };
 ```
@@ -124,4 +133,4 @@ type ArcSettlementReceipt = {
 - Do not commit API keys, entity secrets, private keys, mnemonics, local logs, or browser session data.
 - Do not claim onchain completion without transaction hashes.
 - Keep Circle Wallets, App Kit, StableFX, and ERC-8183 claims aligned with official Arc docs.
-- Settlement remains simulated until Phase 3. ERC-8004 verifier reads Arc Testnet but does not submit wallet transactions.
+- Settlement can remain simulated or be advanced through wallet-submitted ERC-8183 transactions. Do not claim final onchain settlement unless every relevant tx hash is present.

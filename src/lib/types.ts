@@ -10,7 +10,7 @@ export type JobStatus =
   | "settled"
   | "failed";
 
-export type SettlementMode = "simulated" | "onchain-verified";
+export type SettlementMode = "simulated" | "onchain-partial" | "onchain-verified";
 
 export interface ArcAgentIdentity {
   standard: "ERC-8004";
@@ -33,6 +33,7 @@ export interface ArcSettlementJob {
   currency: "USDC";
   description: string;
   agentIdentity?: ArcAgentIdentity;
+  onchainJobId?: string;
   budgetAmount?: string;
   deliverableHash?: string;
   /** ERC-8183 lifecycle tx hashes – only populated after live onchain execution */
@@ -54,6 +55,7 @@ export interface ArcSettlementReceipt {
   receiptVersion: "arc-settlement-v1";
   network: "Arc Testnet";
   jobId: string;
+  onchainJobId?: string;
   lifecycleStatus: JobStatus;
   clientAddress: string;
   providerAddress: string;

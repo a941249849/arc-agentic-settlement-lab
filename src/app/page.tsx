@@ -70,7 +70,7 @@ export default async function OverviewPage() {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/40 border border-blue-700 text-blue-300 text-sm">
           <span>🔵 Simulated</span>
           <span className="text-blue-600">·</span>
-          <span>Phase 2 - Identity Proof + Offchain Lifecycle</span>
+          <span>Phase 3 - Wallet Execution + Settlement Receipts</span>
         </div>
         <h1 className="text-4xl font-bold text-white">Arc Agentic Settlement Lab</h1>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto">
@@ -173,7 +173,7 @@ export default async function OverviewPage() {
               </div>
             </div>
             <div className="text-xs text-green-600">
-              ✅ Offchain scaffold implemented · Phase 3 = live ERC-8183 calls
+              ✅ Wallet execution path implemented · tx hashes required
             </div>
           </div>
 
@@ -303,7 +303,7 @@ export default async function OverviewPage() {
             {[
               { phase: "Phase 1", label: "Product shell + offchain lifecycle", done: true },
               { phase: "Phase 2", label: "ERC-8004 identity proof and receipt binding", done: true },
-              { phase: "Phase 3", label: "Live ERC-8183 createJob/setBudget/fund/settle", done: false },
+              { phase: "Phase 3", label: "Wallet ERC-8183 execution and receipt binding", done: true },
               { phase: "Phase 4", label: "App Kit funding and monetization path", done: false },
               { phase: "Phase 5", label: "Embedded wallets and policy signing", done: false },
               { phase: "Phase 6", label: "StableFX / QCAD multi-currency", done: false },
@@ -322,13 +322,13 @@ export default async function OverviewPage() {
 
       {/* Disclaimer */}
       <section className="rounded-lg border border-yellow-900/50 bg-yellow-950/20 p-4 text-xs text-yellow-200/70 space-y-1">
-        <div className="font-semibold text-yellow-300">⚠️ Phase 2 Boundaries</div>
+        <div className="font-semibold text-yellow-300">⚠️ Phase 3 Boundaries</div>
         <ul className="list-disc list-inside space-y-0.5 text-yellow-200/60">
-          <li>All jobs are simulated offchain. No real Arc Testnet transactions are executed.</li>
+          <li>Jobs can be advanced offchain or through wallet-submitted Arc Testnet transactions.</li>
           <li>ERC-8004 identity verification uses real Arc Testnet reads only.</li>
           <li>The offchain lifecycle includes provider setBudget before escrow funding.</li>
           <li>Settlement receipts are deterministic but not anchored to any blockchain.</li>
-          <li>ERC-8004 wallet registration, ERC-8183 contract calls, App Kit, and Circle Wallets are blueprint only.</li>
+          <li>ERC-8004 wallet registration, App Kit, and Circle Wallets remain blueprint only.</li>
           <li>No secrets, API keys, private keys, or mnemonics are stored or transmitted.</li>
           <li>Not financial advice. Not a production system.</li>
         </ul>

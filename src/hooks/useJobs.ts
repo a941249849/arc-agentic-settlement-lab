@@ -4,10 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import type { ArcSettlementJob } from "@/lib/types";
 
 async function fetchJobs(): Promise<ArcSettlementJob[]> {
-  const res = await fetch("/api/arc-settlement/jobs");
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  return data.jobs as ArcSettlementJob[];
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch("/api/arc-settlement/jobs", {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.jobs as ArcSettlementJob[];
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 export function useJobs() {

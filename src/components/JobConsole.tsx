@@ -6,6 +6,7 @@ import { useJobs, createJob, updateJob, fetchReceipt } from "@/hooks/useJobs";
 import LifecycleBadge from "./LifecycleBadge";
 import ReceiptExport from "./ReceiptExport";
 import IdentityConsole from "./IdentityConsole";
+import OnchainExecutionPanel from "./OnchainExecutionPanel";
 
 // ──────────────────────────────────────────────
 // Create Job Form
@@ -314,6 +315,12 @@ function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
             </div>
           )}
 
+          <OnchainExecutionPanel
+            job={job}
+            deliverableHash={deliverableHash || job.deliverableHash || ""}
+            onUpdate={onUpdate}
+          />
+
           {/* Action buttons */}
           {actions.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -391,7 +398,7 @@ export default function JobConsole() {
         </div>
         <div className="flex items-center gap-3">
           <span className="px-2 py-1 rounded text-xs bg-blue-900/40 border border-blue-700 text-blue-300">
-            🔵 Settlement simulated · Identity reads enabled
+            🟢 Wallet execution · Identity reads enabled
           </span>
           <button
             onClick={() => setShowCreate((s) => !s)}
@@ -448,10 +455,10 @@ export default function JobConsole() {
         <ul className="list-disc list-inside space-y-0.5">
           <li>✅ ERC-8004 identity verifier reads ownerOf/tokenURI from Arc Testnet</li>
           <li>
-            🔷 Real ERC-8183 AgenticCommerce contract execution on Arc Testnet (
+            ✅ Wallet-submitted ERC-8183 AgenticCommerce execution on Arc Testnet (
             <code>0x0747EEf0706327138c69792bF28Cd525089e4583</code>)
           </li>
-          <li>🔷 Official lifecycle requires provider setBudget before escrow funding</li>
+          <li>✅ Official lifecycle includes provider setBudget before escrow funding</li>
           <li>🔷 Circle Wallets integration for server-driven escrow funding</li>
           <li>🔷 Agent Stack / Gateway nanopayments are adjacent x402 paid-access rails</li>
           <li>🔷 Dynamic or Turnkey-style embedded wallet and policy signing path</li>

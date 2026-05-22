@@ -3,7 +3,7 @@ import type { ArcSettlementBlueprint } from "./types";
 export const arcSettlementBlueprint: ArcSettlementBlueprint = {
   product: "Arc Agentic Settlement Lab",
   version: "0.1.0",
-  phase: "Phase 2 - ERC-8004 Identity Proof + Offchain Lifecycle",
+  phase: "Phase 3 - ERC-8004 Identity Proof + ERC-8183 Wallet Execution",
   network: "Arc Testnet",
 
   contracts: {
@@ -42,9 +42,9 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     },
     {
       name: "ERC-8183 onchain execution",
-      status: "blueprint",
+      status: "implemented",
       description:
-        "Live AgenticCommerce calls on Arc Testnet: createJob, setBudget, approve, fund, submitDeliverable, completeJob.",
+        "Wallet transaction builder and verifier for AgenticCommerce: createJob, setBudget, approve, fund, submit, complete.",
     },
     {
       name: "ERC-8004 agent identity",
@@ -95,13 +95,14 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     currency: "string - USDC",
     budget: "object - { amount, txHash? } - provider setBudget amount and tx reference",
     deliverableHash: "string - SHA-256 or IPFS CID of deliverable artifact",
+    onchainJobId: "string - ERC-8183 AgenticCommerce job id, present after live createJob",
     txHashes:
       "object - { create?, setBudget?, approve?, fund?, submit?, settle? } - Arc Testnet tx hashes",
     agentIdentity:
       "object - { standard, registryAddress, agentId, ownerAddress, metadataURI, registerTxHash?, isVerified, verifiedAt }",
     appKitFunding: "object - { capability, reference? } - Phase 5+",
     receiptHash: "string - SHA-256 of canonical receipt fields",
-    settlementMode: "string - simulated|onchain-verified",
+    settlementMode: "string - simulated|onchain-partial|onchain-verified",
     createdAt: "string - ISO-8601 timestamp",
   },
 };

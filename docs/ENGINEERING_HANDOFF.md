@@ -13,12 +13,12 @@ Primary docs:
 
 ## Required First Scope
 
-The current app implements a Phase 2 scaffold: ERC-8004 identity read verification plus offchain ERC-8183 lifecycle modeling. Do not present it as live settlement execution.
+The current app implements a Phase 3 wallet-execution scaffold: ERC-8004 identity read verification, offchain ERC-8183 lifecycle modeling, and wallet-submitted ERC-8183 transaction controls. Do not present a job as final onchain settlement unless the complete transaction hash is recorded.
 
 Next implementation scope should be planned in this order:
 
 1. Wallet-submitted ERC-8004 agent registration.
-2. ERC-8183 live Arc Testnet job lifecycle.
+2. Hardening ERC-8183 live Arc Testnet job lifecycle with real user tx evidence.
 3. App Kit funding path.
 4. Wallet policy / embedded wallet path.
 5. StableFX / QCAD extension.
@@ -66,6 +66,16 @@ Phase 2 also includes:
 - Job/receipt binding for verified ERC-8004 identity.
 
 The remaining gate before live ERC-8183 execution is wallet-submitted ERC-8004 registration plus an actual `agentId` tied to the provider identity.
+
+Phase 3 also includes:
+
+- `/api/arc-commerce`;
+- `/api/arc-commerce/prepare` for ERC-8183 calldata;
+- `/api/arc-commerce/jobs/:id` for `getJob(jobId)`;
+- `/api/arc-commerce/tx/:hash` for tx receipt parsing and `JobCreated` extraction;
+- Job Console wallet controls for `createJob`, `setBudget`, USDC `approve`, `fund`, `submit`, and `complete`.
+
+The remaining hardening gate is real end-to-end user testing with a funded wallet and published Arcscan links.
 
 Do not implement live wallet or contract execution in the first pass unless the lifecycle UX is already complete and reviewed.
 

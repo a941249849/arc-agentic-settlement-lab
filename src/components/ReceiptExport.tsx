@@ -45,11 +45,15 @@ export default function ReceiptExport({ receipt }: Props) {
             className={`px-2 py-0.5 rounded text-xs border ${
               receipt.settlementMode === "onchain-verified"
                 ? "bg-green-900/60 text-green-300 border-green-700"
+                : receipt.settlementMode === "onchain-partial"
+                ? "bg-emerald-900/60 text-emerald-300 border-emerald-700"
                 : "bg-blue-900/60 text-blue-300 border-blue-700"
             }`}
           >
             {receipt.settlementMode === "onchain-verified"
               ? "✅ Onchain verified"
+              : receipt.settlementMode === "onchain-partial"
+              ? "🟢 Partial onchain"
               : "🔵 Simulated"}
           </span>
         </div>

@@ -19,7 +19,7 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
         <footer className="py-4 text-center text-xs text-gray-600 border-t border-gray-800">
-          Arc Agentic Settlement Lab · Phase 2 · Identity Proof + Offchain Settlement · Not financial advice
+          Arc Agentic Settlement Lab · Phase 3 · Wallet Execution + Settlement Receipts · Not financial advice
         </footer>
       </body>
     </html>

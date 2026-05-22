@@ -22,7 +22,7 @@ export default function Navbar() {
             Arc Agentic Settlement Lab
           </span>
           <span className="ml-2 px-2 py-0.5 rounded text-xs bg-blue-900/60 text-blue-300 border border-blue-700">
-            Phase 2
+            Phase 3
           </span>
         </div>
 
@@ -44,7 +44,7 @@ export default function Navbar() {
 
         <div className="ml-auto flex items-center gap-2">
           <span className="px-2 py-1 rounded text-xs bg-gray-800 text-gray-400 border border-gray-700">
-            🔵 Settlement simulated
+            🟢 Wallet execution
           </span>
           <a
             href="https://testnet.arcscan.app"

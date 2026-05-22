@@ -38,7 +38,12 @@ export default function LifecycleBadge({ status, mode, size = "md" }: Props) {
       <span className="capitalize">{status}</span>
       {mode && (
         <span className="ml-1 opacity-70 font-normal">
-          · {mode === "onchain-verified" ? "✅ Onchain" : "🔵 Sim"}
+          ·{" "}
+          {mode === "onchain-verified"
+            ? "✅ Onchain"
+            : mode === "onchain-partial"
+            ? "🟢 Partial"
+            : "🔵 Sim"}
         </span>
       )}
     </span>

@@ -13,12 +13,12 @@ agent identity -> job creation -> provider sets budget -> USDC escrow -> deliver
 - **`/api/arc-settlement/jobs`** — In-memory job store: create and list jobs
 - **`/api/arc-settlement/jobs/:id`** — Get and update job status
 - **`/api/arc-settlement/jobs/:id/receipt`** — Generate deterministic settlement receipt
-- **Offchain lifecycle state machine** — current scaffold: `draft → open → funded → submitted → settled / failed`
+- **Offchain lifecycle state machine** — current scaffold: `draft → open → budgeted → funded → submitted → settled / failed`
 - **Deterministic receipt export** — SHA-256 hashed JSON receipt + Markdown export
 - **UI labels** — Blueprint / Simulated / Onchain-verified states visibly separated
 - **Research context** — Arc Discord/X and official-doc context retained for follow-up implementation
 
-The scaffold predates the strategy-review correction. Before live ERC-8183 work, the lifecycle must add `budgeted` / `setBudget`.
+The scaffold now includes the strategy-review correction: provider `setBudget` is modeled as the explicit `budgeted` lifecycle state before escrow funding.
 
 ## Strategy Review Verdict
 
@@ -70,7 +70,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `GET` | `/api/arc-settlement/jobs` | List all jobs |
 | `POST` | `/api/arc-settlement/jobs` | Create a new job |
 | `GET` | `/api/arc-settlement/jobs/:id` | Get a job |
-| `PATCH` | `/api/arc-settlement/jobs/:id` | Update job status or deliverable hash |
+| `PATCH` | `/api/arc-settlement/jobs/:id` | Update job status, provider budget, tx evidence, or deliverable hash |
 | `GET` | `/api/arc-settlement/jobs/:id/receipt` | Generate deterministic receipt |
 
 ### Receipt Schema
@@ -87,8 +87,15 @@ type ArcSettlementReceipt = {
   amount: string;
   currency: "USDC";
   deliverableHash: string;
-  txHashes: { create?: string; fund?: string; submit?: string; settle?: string };
-  budget?: { amount: string; txHash?: string };
+  budget: { amount: string; txHash?: string };
+  txHashes: {
+    create?: string;
+    setBudget?: string;
+    approve?: string;
+    fund?: string;
+    submit?: string;
+    settle?: string;
+  };
   agentIdentity?: { standard: "ERC-8004"; registryAddress: string; agentId?: string };
   receiptHash: string;          // SHA-256 of canonical fields
   settlementMode: "simulated" | "onchain-verified";

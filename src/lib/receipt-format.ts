@@ -38,6 +38,7 @@ export function receiptToMarkdown(receipt: ArcSettlementReceipt): string {
 | Field | Value |
 |---|---|
 | Amount | ${receipt.amount} ${receipt.currency} |
+| Provider budget | ${receipt.budget.amount} ${receipt.currency} |
 | Deliverable hash | \`${receipt.deliverableHash || "—"}\` |
 | Receipt hash | \`${receipt.receiptHash}\` |
 | Created at | ${receipt.createdAt} |

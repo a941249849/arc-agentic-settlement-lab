@@ -4,6 +4,7 @@
 export type JobStatus =
   | "draft"
   | "open"
+  | "budgeted"
   | "funded"
   | "submitted"
   | "settled"
@@ -20,9 +21,12 @@ export interface ArcSettlementJob {
   amount: string;
   currency: "USDC";
   description: string;
+  budgetAmount?: string;
   deliverableHash?: string;
   /** ERC-8183 lifecycle tx hashes – only populated after live onchain execution */
   createTxHash?: string;
+  setBudgetTxHash?: string;
+  approveTxHash?: string;
   fundTxHash?: string;
   submitTxHash?: string;
   settleTxHash?: string;
@@ -44,9 +48,15 @@ export interface ArcSettlementReceipt {
   evaluatorAddress: string;
   amount: string;
   currency: "USDC";
+  budget: {
+    amount: string;
+    txHash?: string;
+  };
   deliverableHash: string;
   txHashes: {
     create?: string;
+    setBudget?: string;
+    approve?: string;
     fund?: string;
     submit?: string;
     settle?: string;

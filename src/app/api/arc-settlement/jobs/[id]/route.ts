@@ -1,5 +1,5 @@
 // GET   /api/arc-settlement/jobs/[id]  – get one job
-// PATCH /api/arc-settlement/jobs/[id]  – update job status / deliverable hash
+// PATCH /api/arc-settlement/jobs/[id]  – update job status / lifecycle evidence
 
 import { NextRequest, NextResponse } from "next/server";
 import { jobStore, isValidTransition, VALID_TRANSITIONS } from "@/lib/job-store";
@@ -25,8 +25,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   let body: {
     status?: JobStatus;
+    budgetAmount?: string;
     deliverableHash?: string;
     createTxHash?: string;
+    setBudgetTxHash?: string;
+    approveTxHash?: string;
     fundTxHash?: string;
     submitTxHash?: string;
     settleTxHash?: string;

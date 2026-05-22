@@ -15,13 +15,19 @@ const LIFECYCLE_STEPS = [
     status: "open",
     icon: "📋",
     label: "Open",
-    desc: "Job posted. Provider accepted terms. Awaiting funding.",
+    desc: "Job posted. Provider accepted terms. Awaiting provider budget.",
+  },
+  {
+    status: "budgeted",
+    icon: "🧾",
+    label: "Budgeted",
+    desc: "Provider called setBudget. Client can approve USDC and fund escrow.",
   },
   {
     status: "funded",
     icon: "💰",
     label: "Funded",
-    desc: "USDC escrow deposited. Phase 3+: real AgenticCommerce fundJob() tx.",
+    desc: "USDC escrow deposited. Phase 3+: real AgenticCommerce fund() tx.",
   },
   {
     status: "submitted",
@@ -68,8 +74,9 @@ export default async function OverviewPage() {
         </div>
         <h1 className="text-4xl font-bold text-white">Arc Agentic Settlement Lab</h1>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-          Agent-native financial workflow on Arc: verifiable job creation, USDC escrow,
-          deliverable proof, evaluator approval, and deterministic settlement receipt.
+          Agent-native financial workflow on Arc: verifiable agent identity, job creation,
+          provider budget setting, USDC escrow, deliverable proof, evaluator approval, and
+          deterministic settlement receipt.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap text-sm">
           <Link
@@ -95,7 +102,7 @@ export default async function OverviewPage() {
           Mirrors the Arc AgenticCommerce standard. Phase 1/2 is fully offchain (simulated).
           Phase 3 adds live Arc Testnet execution.
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 gap-3">
           {LIFECYCLE_STEPS.map((step) => (
             <div
               key={step.status}
@@ -150,7 +157,7 @@ export default async function OverviewPage() {
                 <code className="text-blue-300">{blueprint.contracts.validationRegistry}</code>
               </div>
             </div>
-            <div className="text-xs text-blue-500">🔷 Blueprint – Phase 4</div>
+            <div className="text-xs text-blue-500">🔷 Blueprint - Phase 2</div>
           </div>
 
           <div className="rounded-lg border border-green-800 bg-green-950/30 p-4 space-y-2">
@@ -166,7 +173,7 @@ export default async function OverviewPage() {
               </div>
             </div>
             <div className="text-xs text-green-600">
-              ✅ Offchain simulation implemented · Phase 3 = live
+              ✅ Offchain scaffold implemented · Phase 3 = live ERC-8183 calls
             </div>
           </div>
 
@@ -183,7 +190,7 @@ export default async function OverviewPage() {
               </div>
               <div>Capabilities: bridge · send · swap · unified-balance</div>
             </div>
-            <div className="text-xs text-purple-500">🔷 Blueprint – Phase 5</div>
+            <div className="text-xs text-purple-500">🔷 Blueprint - Phase 4</div>
           </div>
         </div>
       </section>
@@ -197,6 +204,8 @@ export default async function OverviewPage() {
               "Agent identity (ERC-8004)",
               "→",
               "Job creation",
+              "→",
+              "Provider setBudget",
               "→",
               "USDC escrow",
               "→",
@@ -224,6 +233,28 @@ export default async function OverviewPage() {
           deliverables, and a deterministic settlement receipt. It is not a generic USDC transfer
           demo.
         </p>
+      </section>
+
+      {/* Reference app differentiation */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-white">Positioning</h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="rounded-lg border border-gray-700 bg-gray-900 p-4 space-y-2">
+            <div className="text-sm font-semibold text-white">Different From Plain Escrow</div>
+            <p className="text-xs text-gray-400">
+              Circle&apos;s official arc-escrow reference is the baseline for escrow mechanics. This
+              lab focuses on the agentic settlement layer above it: registered agent identity,
+              provider budget setting, deliverable proof, evaluator approval, and portable receipts.
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-700 bg-gray-900 p-4 space-y-2">
+            <div className="text-sm font-semibold text-white">Separate From x402 Payments</div>
+            <p className="text-xs text-gray-400">
+              Agent Stack, x402, and nanopayments are treated as paid-access or funding rails. They
+              can complement this product later, but they are not the ERC-8183 job-escrow lifecycle.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Network info */}
@@ -270,10 +301,11 @@ export default async function OverviewPage() {
           <div className="text-sm font-semibold text-white">Phase Roadmap</div>
           <div className="text-xs space-y-1">
             {[
-              { phase: "Phase 1/2", label: "Product shell + offchain lifecycle", done: true },
-              { phase: "Phase 3", label: "Arc Testnet ERC-8183 execution", done: false },
-              { phase: "Phase 4", label: "ERC-8004 agent identity", done: false },
-              { phase: "Phase 5", label: "Agent Stack, wallet policy, and App Kit funding", done: false },
+              { phase: "Phase 1", label: "Product shell + offchain lifecycle", done: true },
+              { phase: "Phase 2", label: "ERC-8004 agent identity registration", done: false },
+              { phase: "Phase 3", label: "Live ERC-8183 createJob/setBudget/fund/settle", done: false },
+              { phase: "Phase 4", label: "App Kit funding and monetization path", done: false },
+              { phase: "Phase 5", label: "Embedded wallets and policy signing", done: false },
               { phase: "Phase 6", label: "StableFX / QCAD multi-currency", done: false },
             ].map((r) => (
               <div key={r.phase} className="flex items-center gap-2">
@@ -293,8 +325,9 @@ export default async function OverviewPage() {
         <div className="font-semibold text-yellow-300">⚠️ Phase 1/2 Boundaries</div>
         <ul className="list-disc list-inside space-y-0.5 text-yellow-200/60">
           <li>All jobs are simulated offchain. No real Arc Testnet transactions are executed.</li>
+          <li>The offchain lifecycle includes provider setBudget before escrow funding.</li>
           <li>Settlement receipts are deterministic but not anchored to any blockchain.</li>
-          <li>App Kit, Circle Wallets, and ERC-8004 features are blueprint only.</li>
+          <li>ERC-8004 identity, ERC-8183 contract calls, App Kit, and Circle Wallets are blueprint only.</li>
           <li>No secrets, API keys, private keys, or mnemonics are stored or transmitted.</li>
           <li>Not financial advice. Not a production system.</li>
         </ul>

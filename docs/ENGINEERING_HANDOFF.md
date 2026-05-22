@@ -48,13 +48,15 @@ The current Phase 1 scaffold contains:
 5. Offchain lifecycle state machine:
    - `draft`;
    - `open`;
-   - `budgeted` must be added before any live ERC-8183 implementation;
+   - `budgeted`;
    - `funded`;
    - `submitted`;
    - `settled`;
    - `failed`.
 6. Deterministic receipt export.
 7. Public docs and acceptance criteria.
+
+The scaffold already includes `budgeted` / provider `setBudget` in the UI, API patch surface, receipt schema, and deterministic receipt export. The next engineering gate is ERC-8004 agent identity before live ERC-8183 settlement execution.
 
 Do not implement live wallet or contract execution in the first pass unless the lifecycle UX is already complete and reviewed.
 

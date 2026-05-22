@@ -85,7 +85,8 @@ export const jobStore = {
 /** Valid lifecycle state-machine transitions */
 export const VALID_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
   draft: ["open", "failed"],
-  open: ["funded", "failed"],
+  open: ["budgeted", "failed"],
+  budgeted: ["funded", "failed"],
   funded: ["submitted", "failed"],
   submitted: ["settled", "failed"],
   settled: [],

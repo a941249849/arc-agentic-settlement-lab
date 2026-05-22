@@ -635,15 +635,15 @@ Reviewers should check:
 
 ## Recommended Next Engineering Task
 
-Update the existing Phase 1 scaffold so it matches the strategy-review corrections before adding live chain execution:
+The Phase 1 scaffold has been updated to match the strategy-review corrections:
 
-- add `budgeted` / `setBudget` to the offchain lifecycle;
-- update receipt schema and UI copy for `setBudget`;
-- add `arc-escrow` differentiation to the public app copy;
-- separate Agent Stack / x402 / nanopayments from ERC-8183 job settlement in the UI;
-- keep Phase 1 explicitly labeled as scaffold, not final public proof.
+- `budgeted` / `setBudget` is part of the offchain lifecycle;
+- receipt schema and UI copy include provider budget setting;
+- public app copy differentiates this lab from Circle's official `arc-escrow` reference app;
+- Agent Stack / x402 / nanopayments are separated from ERC-8183 job settlement;
+- Phase 1 remains explicitly labeled as scaffold, not final public proof.
 
-After that, plan Phase 2 as live ERC-8004 agent registration, then Phase 3 as live ERC-8183 execution with Arcscan links.
+Next, plan Phase 2 as live ERC-8004 agent registration, then Phase 3 as live ERC-8183 execution with Arcscan links.
 
 ## References
 

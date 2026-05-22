@@ -27,6 +27,7 @@ function hashReceipt(canonical: Omit<ArcSettlementReceipt, "receiptHash">): stri
     ["evaluatorAddress", canonical.evaluatorAddress],
     ["amount", canonical.amount],
     ["currency", canonical.currency],
+    ["budget", canonical.budget],
     ["deliverableHash", canonical.deliverableHash],
     ["txHashes", canonical.txHashes],
     ["settlementMode", canonical.settlementMode],
@@ -48,9 +49,15 @@ export function generateReceipt(job: ArcSettlementJob): ArcSettlementReceipt {
     evaluatorAddress: job.evaluatorAddress,
     amount: job.amount,
     currency: job.currency,
+    budget: {
+      amount: job.budgetAmount ?? job.amount,
+      txHash: job.setBudgetTxHash,
+    },
     deliverableHash: job.deliverableHash ?? "",
     txHashes: {
       create: job.createTxHash,
+      setBudget: job.setBudgetTxHash,
+      approve: job.approveTxHash,
       fund: job.fundTxHash,
       submit: job.submitTxHash,
       settle: job.settleTxHash,

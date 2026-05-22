@@ -9,6 +9,7 @@ interface Props {
 const STATUS_STYLES: Record<JobStatus, string> = {
   draft: "bg-gray-700 text-gray-300 border-gray-600",
   open: "bg-sky-900/70 text-sky-300 border-sky-700",
+  budgeted: "bg-violet-900/70 text-violet-300 border-violet-700",
   funded: "bg-indigo-900/70 text-indigo-300 border-indigo-700",
   submitted: "bg-yellow-900/70 text-yellow-300 border-yellow-700",
   settled: "bg-green-900/70 text-green-300 border-green-700",
@@ -18,6 +19,7 @@ const STATUS_STYLES: Record<JobStatus, string> = {
 const STATUS_ICONS: Record<JobStatus, string> = {
   draft: "✏️",
   open: "📋",
+  budgeted: "🧾",
   funded: "💰",
   submitted: "📦",
   settled: "✅",

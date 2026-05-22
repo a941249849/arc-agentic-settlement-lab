@@ -106,7 +106,11 @@ const NEXT_ACTIONS: Record<
 > = {
   draft: [{ label: "Publish (→ open)", nextStatus: "open" }],
   open: [
-    { label: "Fund Escrow (→ funded)", nextStatus: "funded" },
+    { label: "Provider Set Budget (→ budgeted)", nextStatus: "budgeted" },
+    { label: "Fail", nextStatus: "failed" },
+  ],
+  budgeted: [
+    { label: "Approve & Fund Escrow (→ funded)", nextStatus: "funded" },
     { label: "Fail", nextStatus: "failed" },
   ],
   funded: [
@@ -143,6 +147,9 @@ function JobCard({ job, onUpdate }: JobCardProps) {
     }
     try {
       const patch: Partial<ArcSettlementJob> = { status: nextStatus };
+      if (nextStatus === "budgeted") {
+        patch.budgetAmount = job.amount;
+      }
       if (needsDeliverable && deliverableHash.trim()) {
         patch.deliverableHash = deliverableHash.trim();
       }
@@ -192,11 +199,28 @@ function JobCard({ job, onUpdate }: JobCardProps) {
               { label: "Provider", value: job.providerAddress },
               { label: "Evaluator", value: job.evaluatorAddress },
             ].map(({ label, value }) => (
-              <div key={label}>
+              <div key={label} className="min-w-0">
                 <span className="text-gray-500">{label}: </span>
-                <code className="text-blue-300 break-all">{value}</code>
+                <code className="block mt-1 text-blue-300 truncate" title={value}>
+                  {value}
+                </code>
               </div>
             ))}
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-3 text-xs">
+            <div>
+              <span className="text-gray-500">Requested amount: </span>
+              <span className="text-white">
+                {job.amount} {job.currency}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-500">Provider budget: </span>
+              <span className={job.budgetAmount ? "text-violet-300" : "text-gray-600"}>
+                {job.budgetAmount ? `${job.budgetAmount} ${job.currency}` : "Not set"}
+              </span>
+            </div>
           </div>
 
           {/* Deliverable input (only when funded) */}
@@ -318,9 +342,11 @@ export default function JobConsole() {
       {/* Lifecycle legend */}
       <div className="flex flex-wrap gap-2 text-xs text-gray-500">
         <span>Lifecycle:</span>
-        {(["draft", "open", "funded", "submitted", "settled", "failed"] as const).map((s) => (
-          <LifecycleBadge key={s} status={s} size="sm" />
-        ))}
+        {(["draft", "open", "budgeted", "funded", "submitted", "settled", "failed"] as const).map(
+          (s) => (
+            <LifecycleBadge key={s} status={s} size="sm" />
+          )
+        )}
       </div>
 
       {/* Job list */}
@@ -346,8 +372,9 @@ export default function JobConsole() {
             🔷 Real ERC-8183 AgenticCommerce contract execution on Arc Testnet (
             <code>0x0747EEf0706327138c69792bF28Cd525089e4583</code>)
           </li>
+          <li>🔷 Official lifecycle requires provider setBudget before escrow funding</li>
           <li>🔷 Circle Wallets integration for server-driven escrow funding</li>
-          <li>🔷 Agent Stack / Gateway nanopayments as a future funding layer</li>
+          <li>🔷 Agent Stack / Gateway nanopayments are adjacent x402 paid-access rails</li>
           <li>🔷 Dynamic or Turnkey-style embedded wallet and policy signing path</li>
           <li>🔷 App Kit bridge / send / swap for chain-abstracted funding</li>
           <li>🔷 ERC-8004 agent identity registration</li>

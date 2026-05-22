@@ -20,7 +20,7 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11",
   },
 
-  lifecycleStates: ["draft", "open", "funded", "submitted", "settled", "failed"],
+  lifecycleStates: ["draft", "open", "budgeted", "funded", "submitted", "settled", "failed"],
 
   capabilities: [
     {
@@ -32,7 +32,7 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
       name: "Offchain lifecycle state machine",
       status: "implemented",
       description:
-        "Full draft -> open -> funded -> submitted -> settled/failed lifecycle without wallet execution.",
+        "Full draft -> open -> budgeted -> funded -> submitted -> settled/failed lifecycle without wallet execution.",
     },
     {
       name: "Deterministic receipt export",
@@ -44,19 +44,19 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
       name: "ERC-8183 onchain execution",
       status: "blueprint",
       description:
-        "Live AgenticCommerce contract calls on Arc Testnet. Planned for Phase 3 with Circle Wallets or viem.",
+        "Live AgenticCommerce calls on Arc Testnet: createJob, setBudget, approve, fund, submitDeliverable, completeJob.",
     },
     {
       name: "ERC-8004 agent identity",
       status: "blueprint",
       description:
-        "IdentityRegistry, ReputationRegistry, ValidationRegistry calls. Planned for Phase 4.",
+        "IdentityRegistry, ReputationRegistry, ValidationRegistry calls. Required before live ERC-8183 execution.",
     },
     {
       name: "Circle Agent Stack",
       status: "blueprint",
       description:
-        "Agent Wallets, Agent Marketplace, Circle CLI, and agent-oriented USDC workflows. Planned after the offchain lifecycle is stable.",
+        "Agent wallets and x402/nanopayment access path. Adjacent paid-access rail, not the ERC-8183 job-settlement primitive.",
     },
     {
       name: "Gateway nanopayments",
@@ -87,16 +87,18 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     receiptVersion: "string - arc-settlement-v1",
     network: "string - Arc Testnet",
     jobId: "string - UUID",
-    lifecycleStatus: "string - draft|open|funded|submitted|settled|failed",
+    lifecycleStatus: "string - draft|open|budgeted|funded|submitted|settled|failed",
     clientAddress: "string - 0x...",
     providerAddress: "string - 0x...",
     evaluatorAddress: "string - 0x...",
     amount: "string - decimal USDC amount",
     currency: "string - USDC",
+    budget: "object - { amount, txHash? } - provider setBudget amount and tx reference",
     deliverableHash: "string - SHA-256 or IPFS CID of deliverable artifact",
-    txHashes: "object - { create?, fund?, submit?, settle? } - Arc Testnet tx hashes",
+    txHashes:
+      "object - { create?, setBudget?, approve?, fund?, submit?, settle? } - Arc Testnet tx hashes",
     agentIdentity:
-      "object - { standard: ERC-8004, registryAddress, agentId? } - Phase 4+",
+      "object - { standard: ERC-8004, registryAddress, agentId? } - Phase 2+",
     appKitFunding: "object - { capability, reference? } - Phase 5+",
     receiptHash: "string - SHA-256 of canonical receipt fields",
     settlementMode: "string - simulated|onchain-verified",

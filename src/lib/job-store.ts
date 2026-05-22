@@ -1,4 +1,4 @@
-// In-memory job store for Arc Agentic Settlement Lab (Phase 1/2)
+// In-memory job store for Arc Agentic Commerce Settlement.
 // In a production deployment this would be replaced with a persistent database.
 
 import { randomUUID } from "crypto";
@@ -19,7 +19,8 @@ function seed() {
     evaluatorAddress: "0x3333333333333333333333333333333333333333",
     amount: "25.00",
     currency: "USDC",
-    description: "Research report: Arc agentic economy ecosystem overview",
+    description:
+      "Buyer agent purchases a market-intelligence report, locks a USDC budget, and releases payment after deliverable verification.",
     createdAt: now,
     updatedAt: now,
     settlementMode: "simulated",

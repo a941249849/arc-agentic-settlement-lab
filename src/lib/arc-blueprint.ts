@@ -1,9 +1,9 @@
 import type { ArcSettlementBlueprint } from "./types";
 
 export const arcSettlementBlueprint: ArcSettlementBlueprint = {
-  product: "Arc Agentic Settlement Lab",
+  product: "Arc Agentic Commerce Settlement",
   version: "0.1.0",
-  phase: "Phase 3 - ERC-8004 Identity Proof + ERC-8183 Wallet Execution",
+  phase: "Challenge MVP - Agentic Economy on Arc",
   network: "Arc Testnet",
 
   contracts: {
@@ -24,21 +24,22 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
 
   capabilities: [
     {
-      name: "In-memory job store",
+      name: "Agent commerce job store",
       status: "implemented",
-      description: "Create and manage settlement jobs in server memory.",
+      description:
+        "Create and manage buyer-agent service jobs for the public MVP. Production storage remains a follow-up.",
     },
     {
       name: "Offchain lifecycle state machine",
       status: "implemented",
       description:
-        "Full draft -> open -> budgeted -> funded -> submitted -> settled/failed lifecycle without wallet execution.",
+        "Full draft -> open -> budgeted -> funded -> submitted -> settled/failed lifecycle for agent-purchased services.",
     },
     {
       name: "Deterministic receipt export",
       status: "implemented",
       description:
-        "JSON and Markdown receipts with SHA-256 hash binding job id, parties, amount, deliverable hash, and settlement mode.",
+        "JSON and Markdown receipts with SHA-256 hash binding job id, parties, amount, deliverable hash, settlement mode, and agent identity.",
     },
     {
       name: "ERC-8183 onchain execution",
@@ -56,13 +57,13 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
       name: "Circle Agent Stack",
       status: "blueprint",
       description:
-        "Agent wallets and x402/nanopayment access path. Adjacent paid-access rail, not the ERC-8183 job-settlement primitive.",
+        "Agent Wallets, agent-side authorization, and paid-access primitives documented as the next live integration layer.",
     },
     {
       name: "Gateway nanopayments",
       status: "blueprint",
       description:
-        "Gas-efficient paid API, data-product, and agent-to-service payment layer. Requires real buyer/seller setup before live use.",
+        "Gas-efficient paid API, data-product, and agent-to-service payment layer for pay-per-report or pay-per-inference services.",
     },
     {
       name: "Embedded wallet and policy signing",

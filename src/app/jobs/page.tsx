@@ -1,9 +1,9 @@
 import JobConsole from "@/components/JobConsole";
 
 export const metadata = {
-  title: "Job Console – Arc Agentic Settlement Lab",
+  title: "Agentic Commerce Console - Arc Agentic Commerce Settlement",
   description:
-    "Verify ERC-8004 agent identity and manage Arc agentic settlement jobs through the ERC-8183 lifecycle scaffold.",
+    "Create buyer-agent service jobs, verify ERC-8004 identity, prepare ERC-8183 wallet execution, and export settlement receipts.",
 };
 
 export default function JobsPage() {

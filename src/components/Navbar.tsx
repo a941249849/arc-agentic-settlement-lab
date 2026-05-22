@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { href: "/", label: "Overview" },
   { href: "/identity", label: "Agent Identity" },
   { href: "/jobs", label: "Job Console" },
+  { href: "/challenge", label: "Challenge Pack" },
 ];
 
 export default function Navbar() {
@@ -14,19 +15,19 @@ export default function Navbar() {
 
   return (
     <header className="border-b border-gray-800 bg-gray-950/90 backdrop-blur sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-8">
-        <div className="flex items-center gap-2">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-4 lg:gap-8">
+        <div className="flex items-center gap-2 min-w-0">
           {/* Arc-inspired logo mark */}
           <span className="text-blue-400 font-bold text-lg">⬡</span>
-          <span className="font-semibold text-white tracking-tight">
-            Arc Agentic Settlement Lab
+          <span className="font-semibold text-white tracking-tight truncate">
+            Arc Agentic Commerce Settlement
           </span>
           <span className="ml-2 px-2 py-0.5 rounded text-xs bg-blue-900/60 text-blue-300 border border-blue-700">
-            Phase 3
+            Challenge MVP
           </span>
         </div>
 
-        <nav className="flex gap-1">
+        <nav className="flex flex-wrap gap-1">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
@@ -44,7 +45,7 @@ export default function Navbar() {
 
         <div className="ml-auto flex items-center gap-2">
           <span className="px-2 py-1 rounded text-xs bg-gray-800 text-gray-400 border border-gray-700">
-            🟢 Wallet execution
+            USDC on Arc
           </span>
           <a
             href="https://testnet.arcscan.app"

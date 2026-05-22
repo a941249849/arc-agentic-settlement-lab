@@ -94,7 +94,7 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
         </div>
         {!compact && (
           <span className="px-2 py-1 rounded text-xs bg-blue-900/60 text-blue-300 border border-blue-700 whitespace-nowrap">
-            Phase 2
+            Identity proof
           </span>
         )}
       </div>

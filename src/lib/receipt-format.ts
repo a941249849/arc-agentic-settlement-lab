@@ -58,7 +58,7 @@ ${txSection}
 
 ---
 
-*This receipt was produced by Arc Agentic Settlement Lab (Phase 3 – ERC-8004 identity proof plus ERC-8183 wallet execution controls).
+*This receipt was produced by Arc Agentic Commerce Settlement (ERC-8004 identity proof plus ERC-8183 wallet execution controls).
 Live ERC-8183 settlement requires real transaction hashes from Arc Testnet.*
 `;
 }

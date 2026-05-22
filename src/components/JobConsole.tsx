@@ -23,7 +23,8 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
     providerAddress: "0x2222222222222222222222222222222222222222",
     evaluatorAddress: "0x3333333333333333333333333333333333333333",
     amount: "25.00",
-    description: "",
+    description:
+      "Buyer agent purchases a market-intelligence report and pays the provider after evaluator approval.",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +55,7 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
           [
             { id: "clientAddress", label: "Client Address" },
             { id: "providerAddress", label: "Provider / Agent Address" },
-            { id: "evaluatorAddress", label: "Evaluator Address" },
+            { id: "evaluatorAddress", label: "Evaluator / Auditor Address" },
             { id: "amount", label: "Amount (USDC)" },
           ] as const
         ).map(({ id, label }) => (
@@ -81,7 +82,7 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           rows={2}
-          placeholder="Describe the deliverable the agent should produce…"
+          placeholder="Describe the service, API call, report, or deliverable the buyer agent is purchasing..."
           className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
           required
         />
@@ -391,14 +392,15 @@ export default function JobConsole() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Job Console</h1>
+          <h1 className="text-2xl font-bold text-white">Agentic Commerce Console</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Create and advance Arc agentic settlement jobs through the full ERC-8183 lifecycle.
+            Create a buyer-agent service purchase, set a provider budget, fund USDC escrow, submit
+            deliverable evidence, and export a settlement receipt.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="px-2 py-1 rounded text-xs bg-blue-900/40 border border-blue-700 text-blue-300">
-            🟢 Wallet execution · Identity reads enabled
+            Wallet execution · Identity reads enabled
           </span>
           <button
             onClick={() => setShowCreate((s) => !s)}
@@ -411,10 +413,34 @@ export default function JobConsole() {
 
       <IdentityConsole compact onVerified={setVerifiedIdentity} />
 
+      <section className="rounded-xl border border-cyan-800 bg-cyan-950/20 p-5 text-sm text-cyan-100">
+        <div className="font-semibold text-white mb-2">Challenge scenario</div>
+        <div className="grid md:grid-cols-4 gap-3 text-xs">
+          <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
+            <div className="text-cyan-300 font-semibold">Buyer agent</div>
+            <p className="text-gray-400 mt-1">Requests a report, dataset, API result, or service.</p>
+          </div>
+          <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
+            <div className="text-cyan-300 font-semibold">Budget control</div>
+            <p className="text-gray-400 mt-1">Provider calls setBudget before escrow funding.</p>
+          </div>
+          <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
+            <div className="text-cyan-300 font-semibold">USDC escrow</div>
+            <p className="text-gray-400 mt-1">Arc Testnet tx hashes can be bound to the job.</p>
+          </div>
+          <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
+            <div className="text-cyan-300 font-semibold">Receipt</div>
+            <p className="text-gray-400 mt-1">Auditable proof for agent identity and settlement.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Create form */}
       {showCreate && (
         <div className="rounded-xl border border-blue-800 bg-blue-950/20 p-6">
-          <h2 className="text-base font-semibold text-white mb-4">Create New Settlement Job</h2>
+          <h2 className="text-base font-semibold text-white mb-4">
+            Create New Agentic Commerce Job
+          </h2>
           <CreateJobForm onCreated={handleCreated} verifiedIdentity={verifiedIdentity} />
         </div>
       )}
@@ -451,7 +477,7 @@ export default function JobConsole() {
 
       {/* Blueprint notice */}
       <div className="rounded-lg border border-gray-800 bg-gray-900/40 p-4 text-xs text-gray-600 space-y-1">
-        <div className="font-semibold text-gray-500">Current Boundary / Blueprint Features</div>
+        <div className="font-semibold text-gray-500">Current Boundary / Challenge Features</div>
         <ul className="list-disc list-inside space-y-0.5">
           <li>✅ ERC-8004 identity verifier reads ownerOf/tokenURI from Arc Testnet</li>
           <li>
@@ -460,7 +486,7 @@ export default function JobConsole() {
           </li>
           <li>✅ Official lifecycle includes provider setBudget before escrow funding</li>
           <li>🔷 Circle Wallets integration for server-driven escrow funding</li>
-          <li>🔷 Agent Stack / Gateway nanopayments are adjacent x402 paid-access rails</li>
+          <li>🔷 Gateway nanopayments for pay-per-report or pay-per-inference services</li>
           <li>🔷 Dynamic or Turnkey-style embedded wallet and policy signing path</li>
           <li>🔷 App Kit bridge / send / swap for chain-abstracted funding</li>
           <li>🔷 ERC-8004 agent identity registration</li>

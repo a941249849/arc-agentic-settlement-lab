@@ -4,8 +4,8 @@ import { AGENTIC_COMMERCE_CONTRACT, ARC_USDC } from "@/lib/arc-commerce";
 
 export function GET() {
   return NextResponse.json({
-    product: "Arc Agentic Settlement Lab",
-    phase: "Phase 3 - ERC-8183 Wallet Execution",
+    product: "Arc Agentic Commerce Settlement",
+    phase: "Challenge MVP - ERC-8183 Wallet Execution",
     network: arcTestnet.name,
     chainId: arcTestnet.id,
     rpcUrl: ARC_TESTNET_RPC,

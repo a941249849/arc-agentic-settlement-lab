@@ -1,4 +1,4 @@
-// Arc Agentic Settlement Lab – type definitions
+// Arc Agentic Commerce Settlement – type definitions
 // These types mirror the ERC-8183 job lifecycle concepts from the Arc docs.
 
 export type JobStatus =

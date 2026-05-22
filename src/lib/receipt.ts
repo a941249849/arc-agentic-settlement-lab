@@ -1,4 +1,4 @@
-// Deterministic receipt generation for Arc Agentic Settlement Lab
+// Deterministic receipt generation for Arc Agentic Commerce Settlement.
 // Uses Node.js built-in crypto – server-side only, do not import in client components.
 
 import { createHash } from "crypto";

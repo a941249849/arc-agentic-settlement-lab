@@ -8,8 +8,8 @@ import { ARC_TESTNET_EXPLORER, ARC_TESTNET_RPC, arcTestnet } from "@/lib/arc-cha
 
 export function GET() {
   return NextResponse.json({
-    product: "Arc Agentic Settlement Lab",
-    phase: "Phase 2 - ERC-8004 Identity Proof",
+    product: "Arc Agentic Commerce Settlement",
+    phase: "Challenge MVP - ERC-8004 Identity Proof",
     network: arcTestnet.name,
     chainId: arcTestnet.id,
     rpcUrl: ARC_TESTNET_RPC,
@@ -27,4 +27,3 @@ export function GET() {
     ],
   });
 }
-

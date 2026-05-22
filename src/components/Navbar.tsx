@@ -7,7 +7,6 @@ const NAV_LINKS = [
   { href: "/", label: "Overview" },
   { href: "/identity", label: "Agent Identity" },
   { href: "/jobs", label: "Job Console" },
-  { href: "/challenge", label: "Challenge Pack" },
 ];
 
 export default function Navbar() {
@@ -23,7 +22,7 @@ export default function Navbar() {
             Arc Agentic Commerce Settlement
           </span>
           <span className="ml-2 px-2 py-0.5 rounded text-xs bg-blue-900/60 text-blue-300 border border-blue-700">
-            Challenge MVP
+            Testnet MVP
           </span>
         </div>
 

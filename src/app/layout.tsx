@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 export const metadata: Metadata = {
   title: "Arc Agentic Commerce Settlement",
   description:
-    "Stablecoin commerce stack MVP on Arc: agent identity, budgeted USDC escrow, deliverable proof, settlement receipts, and Circle product feedback.",
+    "Agent service payment workflow on Arc: identity, budgeted USDC escrow, deliverable proof, and settlement receipts.",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
         <footer className="py-4 text-center text-xs text-gray-600 border-t border-gray-800">
-          Arc Agentic Commerce Settlement · Challenge MVP · Arc Testnet · Not financial advice
+          Arc Agentic Commerce Settlement · Arc Testnet · Not financial advice
         </footer>
       </body>
     </html>

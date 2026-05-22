@@ -23,7 +23,7 @@ interface Props {
 }
 
 const ACTION_LABELS: Record<ArcCommerceAction, string> = {
-  createJob: "Create ERC-8183 Job",
+  createJob: "Create Onchain Job",
   setBudget: "Set Budget",
   approve: "Approve USDC",
   fund: "Fund Escrow",
@@ -221,10 +221,10 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
     <div className="rounded-lg border border-green-900 bg-green-950/10 p-4 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-sm font-semibold text-green-300">Live ERC-8183 Execution</div>
+          <div className="text-sm font-semibold text-green-300">Onchain payment steps</div>
           <p className="text-xs text-gray-500 mt-1">
-            Uses the connected wallet to submit Arc Testnet transactions. Tx hashes are required
-            before the job can become onchain-verified.
+            Connect a wallet on Arc Testnet and submit each payment step. The receipt becomes fully
+            verified only after every required transaction hash is recorded.
           </p>
         </div>
         <button
@@ -244,7 +244,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
               disabled={running !== null}
               className="px-3 py-1.5 rounded bg-green-800 text-green-100 text-xs font-semibold hover:bg-green-700 disabled:opacity-50"
             >
-              {running === action ? "Waiting for receipt..." : ACTION_LABELS[action]}
+              {running === action ? "Waiting..." : ACTION_LABELS[action]}
             </button>
           ))
         ) : (
@@ -263,7 +263,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
 
       <div className="grid md:grid-cols-3 gap-2 text-xs">
         <div>
-          <span className="text-gray-500">Mode: </span>
+          <span className="text-gray-500">Receipt state: </span>
           <span className="text-white">{job.settlementMode}</span>
         </div>
         <div>

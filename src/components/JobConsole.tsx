@@ -352,7 +352,7 @@ function JobCard({ job, onUpdate, verifiedIdentity }: JobCardProps) {
               disabled={loadingReceipt}
               className="px-4 py-1.5 rounded border border-gray-600 text-xs text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
-              {loadingReceipt ? "Loading…" : "📄 Generate Receipt"}
+              {loadingReceipt ? "Loading..." : "Generate Receipt"}
             </button>
           </div>
 
@@ -392,7 +392,7 @@ export default function JobConsole() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Agentic Commerce Console</h1>
+          <h1 className="text-2xl font-bold text-white">Service Payment Console</h1>
           <p className="text-sm text-gray-400 mt-1">
             Create a buyer-agent service purchase, set a provider budget, fund USDC escrow, submit
             deliverable evidence, and export a settlement receipt.
@@ -414,23 +414,27 @@ export default function JobConsole() {
       <IdentityConsole compact onVerified={setVerifiedIdentity} />
 
       <section className="rounded-xl border border-cyan-800 bg-cyan-950/20 p-5 text-sm text-cyan-100">
-        <div className="font-semibold text-white mb-2">Challenge scenario</div>
+        <div className="font-semibold text-white mb-2">Example service payment</div>
+        <p className="text-xs text-gray-400 mb-4">
+          Use this page to simulate or execute a service purchase: request work, set the provider
+          budget, fund escrow, submit a deliverable hash, approve settlement, then export a receipt.
+        </p>
         <div className="grid md:grid-cols-4 gap-3 text-xs">
           <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
-            <div className="text-cyan-300 font-semibold">Buyer agent</div>
-            <p className="text-gray-400 mt-1">Requests a report, dataset, API result, or service.</p>
+            <div className="text-cyan-300 font-semibold">Request</div>
+            <p className="text-gray-400 mt-1">The buyer agent asks for a report, dataset, API result, or service.</p>
           </div>
           <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
-            <div className="text-cyan-300 font-semibold">Budget control</div>
-            <p className="text-gray-400 mt-1">Provider calls setBudget before escrow funding.</p>
+            <div className="text-cyan-300 font-semibold">Budget</div>
+            <p className="text-gray-400 mt-1">The provider sets the price before escrow funding.</p>
           </div>
           <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
-            <div className="text-cyan-300 font-semibold">USDC escrow</div>
-            <p className="text-gray-400 mt-1">Arc Testnet tx hashes can be bound to the job.</p>
+            <div className="text-cyan-300 font-semibold">Escrow</div>
+            <p className="text-gray-400 mt-1">USDC can be locked in the Arc Testnet job lifecycle.</p>
           </div>
           <div className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
             <div className="text-cyan-300 font-semibold">Receipt</div>
-            <p className="text-gray-400 mt-1">Auditable proof for agent identity and settlement.</p>
+            <p className="text-gray-400 mt-1">The output proves identity, deliverable, amount, and settlement status.</p>
           </div>
         </div>
       </section>
@@ -477,19 +481,19 @@ export default function JobConsole() {
 
       {/* Blueprint notice */}
       <div className="rounded-lg border border-gray-800 bg-gray-900/40 p-4 text-xs text-gray-600 space-y-1">
-        <div className="font-semibold text-gray-500">Current Boundary / Challenge Features</div>
+        <div className="font-semibold text-gray-400">What works today and what is planned</div>
         <ul className="list-disc list-inside space-y-0.5">
-          <li>✅ ERC-8004 identity verifier reads ownerOf/tokenURI from Arc Testnet</li>
+          <li>ERC-8004 identity verifier reads ownerOf/tokenURI from Arc Testnet</li>
           <li>
-            ✅ Wallet-submitted ERC-8183 AgenticCommerce execution on Arc Testnet (
+            Wallet-submitted ERC-8183 AgenticCommerce execution on Arc Testnet (
             <code>0x0747EEf0706327138c69792bF28Cd525089e4583</code>)
           </li>
-          <li>✅ Official lifecycle includes provider setBudget before escrow funding</li>
-          <li>🔷 Circle Wallets integration for server-driven escrow funding</li>
-          <li>🔷 Gateway nanopayments for pay-per-report or pay-per-inference services</li>
-          <li>🔷 Dynamic or Turnkey-style embedded wallet and policy signing path</li>
-          <li>🔷 App Kit bridge / send / swap for chain-abstracted funding</li>
-          <li>🔷 ERC-8004 agent identity registration</li>
+          <li>Provider budget is recorded before escrow funding</li>
+          <li>Planned: Circle Wallets for server-driven escrow funding</li>
+          <li>Planned: Gateway nanopayments for pay-per-report or pay-per-inference services</li>
+          <li>Planned: embedded wallet and policy signing path</li>
+          <li>Planned: App Kit bridge / send / swap for chain-abstracted funding</li>
+          <li>Planned: ERC-8004 agent identity registration</li>
         </ul>
       </div>
     </div>

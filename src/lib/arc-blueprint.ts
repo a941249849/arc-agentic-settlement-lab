@@ -3,7 +3,7 @@ import type { ArcSettlementBlueprint } from "./types";
 export const arcSettlementBlueprint: ArcSettlementBlueprint = {
   product: "Arc Agentic Commerce Settlement",
   version: "0.1.0",
-  phase: "Challenge MVP - Agentic Economy on Arc",
+  phase: "Testnet MVP - Agent service settlement on Arc",
   network: "Arc Testnet",
 
   contracts: {
@@ -51,7 +51,7 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
       name: "ERC-8004 agent identity",
       status: "implemented",
       description:
-        "IdentityRegistry read verification for agent owner and metadata URI. Live registration calldata preparation is implemented; wallet submission remains external.",
+        "IdentityRegistry read verification for agent owner and metadata URI. Live registration calldata preparation is implemented; connected wallet confirmation remains external.",
     },
     {
       name: "Circle Agent Stack",

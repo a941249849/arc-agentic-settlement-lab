@@ -1,60 +1,34 @@
 # Arc Agentic Commerce Settlement
 
-Stablecoin commerce stack MVP on Arc for the **Agentic Economy** track of **The Stablecoins Commerce Stack Challenge**.
+Arc Agentic Commerce Settlement is a testnet product prototype for agent-paid services on Arc.
 
-The project models a buyer agent purchasing a report, dataset, API result, or service with USDC on Arc. It verifies agent identity, creates a budgeted settlement job, prepares wallet-submitted Arc Testnet transactions, records deliverable evidence, and exports a deterministic settlement receipt.
+The app models a buyer agent purchasing a report, dataset, API result, or service with USDC. It verifies agent identity, creates a budgeted service job, prepares wallet-submitted Arc Testnet transactions, records deliverable evidence, and exports a deterministic settlement receipt.
 
 ```text
 buyer agent -> ERC-8004 identity -> ERC-8183 job -> provider budget -> USDC escrow -> deliverable proof -> evaluator approval -> settlement receipt
 ```
 
-## For Challenge Judges
-
-**Verdict: READY WITH CHANGES**
-
-| Resource | URL |
-| --- | --- |
-| Live demo | https://arc-agentic-settlement-lab.vercel.app |
-| Challenge pack | https://arc-agentic-settlement-lab.vercel.app/challenge |
-| Job console | https://arc-agentic-settlement-lab.vercel.app/jobs |
-| Agent identity | https://arc-agentic-settlement-lab.vercel.app/identity |
-| API blueprint | https://arc-agentic-settlement-lab.vercel.app/api/arc-settlement |
-| Arcscan | https://testnet.arcscan.app |
-
-**Track:** Best Agentic Economy Experience on Arc
-
-**What is live and verifiable:**
-- USDC on Arc — settlement asset and gas rail throughout the lifecycle.
-- ERC-8004 agent identity reads — `ownerOf` and `tokenURI` from Arc Testnet IdentityRegistry (`0x8004A818BFB912233c491871b3d84c89A494BD9e`).
-- ERC-8183 AgenticCommerce lifecycle — calldata preparation for all six actions (`createJob`, `setBudget`, `approve`, `fund`, `submit`, `complete`) and wallet tx submission via the deployed contract (`0x0747EEf0706327138c69792bF28Cd525089e4583`).
-- Deterministic receipt export — JSON and Markdown with SHA-256 receipt hash and deliverable hash binding.
-
-**What is not claimed as live:**
-- Circle Wallets, Gateway / Nanopayments, CCTP / Bridge Kit, USYC, StableFX.
-
-**Remaining gates before final submission:**
-1. Complete one end-to-end wallet-signed Arc Testnet run and record tx hashes.
-2. Record a short demo video (job console, identity read, receipt export).
-
 ## Live Links
 
 - Demo: https://arc-agentic-settlement-lab.vercel.app
-- Challenge pack: https://arc-agentic-settlement-lab.vercel.app/challenge
+- Job console: https://arc-agentic-settlement-lab.vercel.app/jobs
+- Agent identity: https://arc-agentic-settlement-lab.vercel.app/identity
 - Arcscan: https://testnet.arcscan.app
 - Arc docs: https://docs.arc.network
 
-## Challenge Fit
+## What Problem It Solves
 
-| Requirement | Project status |
+Normal stablecoin transfers prove that tokens moved. They usually do not prove why the payment happened, which agent acted, what was purchased, which budget was approved, whether the provider submitted work, or how the receipt can be audited later.
+
+This prototype wraps a payment in a service workflow:
+
+| Stage | User meaning |
 | --- | --- |
-| Track | Best Agentic Economy Experience on Arc |
-| Functional frontend | Implemented: overview, identity verifier, job console, challenge pack |
-| Backend APIs | Implemented: blueprint, job lifecycle, receipt generation, identity reads, ERC-8183 tx preparation |
-| Architecture diagram | Included in `/challenge` and `docs/CHALLENGE_SUBMISSION_PACK.md` |
-| GitHub setup docs | Included |
-| Demo URL | Vercel production deployment |
-| Circle Product Feedback | Included in `/challenge` and `docs/CIRCLE_PRODUCT_FEEDBACK.md` |
-| Video demo | Pending final live wallet run and recording |
+| Agent identity | The service buyer or provider can be tied to an ERC-8004 identity instead of only an address. |
+| Budget | The provider states the expected USDC amount before funding. |
+| Escrow | Funds are prepared for the ERC-8183 job lifecycle rather than sent as a blind transfer. |
+| Deliverable | The provider records proof of completed work. |
+| Receipt | The final output binds identity, amount, deliverable hash, tx slots, and lifecycle status. |
 
 ## What Is Implemented
 
@@ -63,7 +37,7 @@ buyer agent -> ERC-8004 identity -> ERC-8183 job -> provider budget -> USDC escr
 - **ERC-8183 AgenticCommerce lifecycle**: prepare wallet-submitted calls for `createJob`, `setBudget`, `approve`, `fund`, `submit`, and `complete`.
 - **Budgeted service workflow**: buyer-agent service request, provider budget, escrow funding, deliverable proof, evaluator approval.
 - **Receipt export**: JSON and Markdown receipts with receipt hash, deliverable hash, tx hash slots, agent identity, lifecycle status, and settlement mode.
-- **Challenge-facing documentation**: submission pack, architecture, Circle Product Feedback, implementation boundaries.
+- **Implementation documentation**: architecture notes, Arc official context, Circle product feedback, implementation boundaries.
 
 ## Current Boundaries
 
@@ -104,10 +78,10 @@ flowchart LR
 
 ## Product Pages
 
-- `/` - challenge-oriented overview and stablecoin commerce stack positioning.
+- `/` - product overview for agent-paid services on Arc.
 - `/jobs` - agentic commerce console for creating and advancing settlement jobs.
 - `/identity` - ERC-8004 identity preparation and verifier.
-- `/challenge` - submission pack, architecture, product matrix, checklist, and Circle Product Feedback.
+- `/challenge` - hidden submission pack for external review contexts; not part of the user flow.
 
 ## API Surface
 
@@ -155,7 +129,7 @@ for (const path of ["/", "/jobs", "/identity", "/challenge", "/api/arc-commerce"
 NODE
 ```
 
-## Challenge Submission Notes
+## External Review Notes
 
 Recommended track:
 

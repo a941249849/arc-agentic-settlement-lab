@@ -7,10 +7,10 @@ import type { ArcSettlementReceipt } from "./types";
 export function receiptToMarkdown(receipt: ArcSettlementReceipt): string {
   const statusBadge =
     receipt.settlementMode === "onchain-verified"
-      ? "✅ Onchain verified"
+      ? "Onchain verified"
       : receipt.settlementMode === "onchain-partial"
-      ? "🟢 Partial onchain"
-      : "🔵 Simulated";
+      ? "Partial onchain"
+      : "Simulated";
 
   const txEntries = Object.entries(receipt.txHashes).filter(([, v]) => v);
   const txSection = txEntries.length

@@ -1,77 +1,44 @@
 import Link from "next/link";
 import { arcSettlementBlueprint } from "@/lib/arc-blueprint";
 
-const LIFECYCLE_STEPS = [
+const HOW_TO_USE = [
   {
-    status: "draft",
-    label: "Request",
-    desc: "Buyer agent defines the service, data, report, API call, or task to purchase.",
+    title: "1. Verify an agent",
+    body: "Read an existing ERC-8004 identity from Arc Testnet so the service provider is not just a random address.",
   },
   {
-    status: "open",
-    label: "Accept",
-    desc: "Provider accepts terms and prepares a budgeted settlement path.",
+    title: "2. Create a service job",
+    body: "Describe what the buyer agent wants to purchase: a report, dataset, API result, model response, or other service.",
   },
   {
-    status: "budgeted",
-    label: "Budget",
-    desc: "Provider calls setBudget before the buyer funds escrow.",
+    title: "3. Move funds through escrow",
+    body: "Use the ERC-8183 lifecycle: set budget, approve USDC, fund escrow, submit work, and complete settlement.",
   },
   {
-    status: "funded",
-    label: "Escrow",
-    desc: "USDC is approved and escrow funding tx evidence can be attached.",
-  },
-  {
-    status: "submitted",
-    label: "Deliver",
-    desc: "Provider submits a deliverable hash for evaluator review.",
-  },
-  {
-    status: "settled",
-    label: "Settle",
-    desc: "Evaluator approval releases payment and produces an auditable receipt.",
+    title: "4. Export the receipt",
+    body: "Generate a receipt that binds the buyer, provider, amount, deliverable hash, agent identity, and tx evidence.",
   },
 ];
 
-const STACK = [
-  {
-    name: "USDC on Arc",
-    status: "implemented",
-    detail: "Primary settlement and gas-denominated rail for the MVP.",
-  },
-  {
-    name: "ERC-8004 identity",
-    status: "implemented",
-    detail: "Reads IdentityRegistry owner and metadata from Arc Testnet.",
-  },
-  {
-    name: "ERC-8183 job escrow",
-    status: "implemented",
-    detail: "Wallet-submitted createJob, setBudget, approve, fund, submit, complete.",
-  },
-  {
-    name: "Circle Wallets",
-    status: "next",
-    detail: "Target path for agent-controlled treasury and non-crypto-native UX.",
-  },
-  {
-    name: "Gateway / Nanopayments",
-    status: "next",
-    detail: "Target path for pay-per-report, paid API, and pay-per-inference access.",
-  },
-  {
-    name: "CCTP / Bridge Kit",
-    status: "optional",
-    detail: "Relevant when the buyer funds from another chain or treasury account.",
-  },
+const FLOW = [
+  ["Buyer agent", "Creates a purchase request"],
+  ["Provider", "Accepts work and sets budget"],
+  ["USDC escrow", "Locks settlement funds"],
+  ["Deliverable", "Stores proof of completed work"],
+  ["Evaluator", "Approves release"],
+  ["Receipt", "Exports audit evidence"],
 ];
 
-const STATUS_CLASS: Record<string, string> = {
-  implemented: "border-green-700 bg-green-950/30 text-green-200",
-  next: "border-blue-700 bg-blue-950/30 text-blue-200",
-  optional: "border-gray-700 bg-gray-900 text-gray-300",
-};
+const DIFFERENCES = [
+  ["Plain transfer", "Sends tokens from A to B with little business context."],
+  ["This app", "Tracks who the agent is, what was bought, budget approval, escrow state, deliverable proof, and receipt evidence."],
+];
+
+const STATUS = [
+  ["Ready to try", "Create service jobs, verify agent identity, prepare Arc Testnet wallet transactions, and export receipts."],
+  ["Onchain evidence", "A job becomes fully verified only after all lifecycle transaction hashes are recorded."],
+  ["Planned rails", "Circle Wallets, Gateway / Nanopayments, CCTP, USYC, and StableFX are integration targets."],
+];
 
 export default function OverviewPage() {
   const blueprint = arcSettlementBlueprint;
@@ -81,18 +48,16 @@ export default function OverviewPage() {
       <section className="grid lg:grid-cols-[1fr_0.9fr] gap-8 items-center">
         <div className="space-y-5">
           <div className="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-blue-900/40 border border-blue-700 text-blue-300 text-sm">
-            <span>The Stablecoins Commerce Stack Challenge</span>
-            <span className="text-blue-600">/</span>
-            <span>Best Agentic Economy Experience on Arc</span>
+            Arc Testnet · USDC · Agent service settlement
           </div>
           <div className="space-y-3">
             <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-              Agentic commerce settlement on Arc
+              Agent payments with context, escrow, and proof.
             </h1>
             <p className="text-lg text-gray-400 max-w-2xl">
-              A stablecoin commerce MVP where a buyer agent purchases a service, verifies agent
-              identity, controls budget, funds USDC escrow, records deliverable evidence, and
-              exports an auditable settlement receipt.
+              This app is a testnet workflow for agent-paid services. A buyer agent requests work,
+              a provider sets a budget, USDC moves through escrow, the deliverable is recorded, and
+              the final receipt shows the business context behind the payment.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -100,35 +65,21 @@ export default function OverviewPage() {
               href="/jobs"
               className="px-5 py-2 rounded-lg bg-blue-700 text-white hover:bg-blue-600 transition-colors font-semibold"
             >
-              Open Commerce Console
+              Try the workflow
             </Link>
             <Link
-              href="/challenge"
+              href="/identity"
               className="px-5 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800 transition-colors"
             >
-              View Challenge Pack
+              Verify agent identity
             </Link>
-            <a
-              href="/api/arc-settlement"
-              target="_blank"
-              className="px-5 py-2 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 transition-colors"
-            >
-              API Blueprint
-            </a>
           </div>
         </div>
 
         <div className="rounded-xl border border-gray-800 bg-gray-950 p-5">
-          <div className="text-sm font-semibold text-white mb-4">Commerce stack flow</div>
+          <div className="text-sm font-semibold text-white mb-4">What happens in one payment</div>
           <div className="space-y-3">
-            {[
-              ["Buyer agent", "Defines task and budget"],
-              ["Arc identity", "ERC-8004 verification"],
-              ["USDC escrow", "ERC-8183 lifecycle"],
-              ["Provider", "Submits deliverable proof"],
-              ["Evaluator", "Approves settlement"],
-              ["Receipt", "Portable audit trail"],
-            ].map(([title, desc], index) => (
+            {FLOW.map(([title, desc], index) => (
               <div key={title} className="flex items-center gap-3">
                 <div className="h-8 w-8 shrink-0 rounded-full border border-blue-700 bg-blue-950 text-blue-200 flex items-center justify-center text-xs font-semibold">
                   {index + 1}
@@ -145,98 +96,100 @@ export default function OverviewPage() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-xl font-semibold text-white">Why this matches the challenge</h2>
+          <h2 className="text-xl font-semibold text-white">What this is for</h2>
           <p className="text-sm text-gray-400 mt-1">
-            The project targets the Agentic Economy track while staying close to the stablecoin
-            commerce requirement: a functional frontend, backend APIs, Arc Testnet execution
-            controls, and clear Circle product feedback.
+            The goal is to make agent payments understandable and auditable. Instead of only asking
+            whether money moved, the app records who acted, what was purchased, what budget was
+            approved, what was delivered, and what evidence proves settlement.
           </p>
         </div>
-        <div className="grid md:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           {[
-            ["Track", "Best Agentic Economy Experience on Arc"],
-            ["Use case", "AI agent buys reports, APIs, data, or services"],
-            ["Settlement", "USDC escrow with tx evidence and receipts"],
-            ["Review angle", "Budget control, auditability, and developer feedback"],
+            ["For users", "Understand what an agent paid for before trusting the payment result."],
+            ["For providers", "Submit work with a deliverable hash and receive settlement after approval."],
+            ["For builders", "Test Arc identity, escrow lifecycle, and receipt patterns before adding production wallet rails."],
           ].map(([label, value]) => (
             <div key={label} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
-              <div className="text-xs uppercase text-gray-500">{label}</div>
-              <div className="text-sm font-semibold text-white mt-1">{value}</div>
+              <div className="text-sm font-semibold text-white">{label}</div>
+              <p className="text-xs text-gray-500 mt-2">{value}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Stablecoin Commerce Stack</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {STACK.map((item) => (
-            <div key={item.name} className={`rounded-lg border p-4 ${STATUS_CLASS[item.status]}`}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="font-semibold text-sm">{item.name}</div>
-                <div className="text-[11px] uppercase tracking-wide opacity-70">{item.status}</div>
-              </div>
-              <p className="text-xs opacity-80 mt-2">{item.detail}</p>
+        <h2 className="text-xl font-semibold text-white">How to use it</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {HOW_TO_USE.map((step) => (
+            <div key={step.title} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+              <div className="text-sm font-semibold text-white">{step.title}</div>
+              <p className="text-xs text-gray-500 mt-2">{step.body}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Agentic Settlement Lifecycle</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {LIFECYCLE_STEPS.map((step, index) => (
-            <div key={step.status} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
-              <div className="flex items-center gap-3">
-                <span className="h-7 w-7 rounded bg-blue-950 border border-blue-800 text-blue-200 flex items-center justify-center text-xs font-semibold">
-                  {index + 1}
-                </span>
-                <div className="text-sm font-semibold text-white">{step.label}</div>
-              </div>
-              <p className="text-xs text-gray-500 mt-3">{step.desc}</p>
+        <h2 className="text-xl font-semibold text-white">How this differs from a normal transfer</h2>
+        <div className="rounded-lg border border-gray-800 bg-gray-900 divide-y divide-gray-800">
+          {DIFFERENCES.map(([label, value]) => (
+            <div key={label} className="grid md:grid-cols-[0.4fr_1.6fr] gap-3 p-4 text-sm">
+              <div className="font-semibold text-gray-300">{label}</div>
+              <div className="text-gray-500">{value}</div>
             </div>
           ))}
         </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Implemented Arc Primitives</h2>
+        <h2 className="text-xl font-semibold text-white">What is implemented now</h2>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="rounded-lg border border-blue-800 bg-blue-950/30 p-4 space-y-2">
-            <div className="text-blue-300 font-semibold text-sm">ERC-8004 Agent Identity</div>
+            <div className="text-blue-300 font-semibold text-sm">Agent identity</div>
             <p className="text-xs text-gray-400">
-              Verifies existing agent identity by reading Arc Testnet IdentityRegistry state.
+              Reads ERC-8004 IdentityRegistry state from Arc Testnet.
             </p>
             <code className="block text-[11px] text-blue-300 break-all">
               {blueprint.contracts.identityRegistry}
             </code>
           </div>
           <div className="rounded-lg border border-green-800 bg-green-950/30 p-4 space-y-2">
-            <div className="text-green-300 font-semibold text-sm">ERC-8183 AgenticCommerce</div>
+            <div className="text-green-300 font-semibold text-sm">Service settlement</div>
             <p className="text-xs text-gray-400">
-              Prepares wallet-submitted lifecycle calls and parses tx evidence after submission.
+              Prepares ERC-8183 job lifecycle calls for connected wallet confirmation.
             </p>
             <code className="block text-[11px] text-green-300 break-all">
               {blueprint.contracts.agenticCommerce}
             </code>
           </div>
           <div className="rounded-lg border border-purple-800 bg-purple-950/30 p-4 space-y-2">
-            <div className="text-purple-300 font-semibold text-sm">Circle Stack Path</div>
+            <div className="text-purple-300 font-semibold text-sm">Receipt evidence</div>
             <p className="text-xs text-gray-400">
-              Circle Wallets, Gateway, Nanopayments, CCTP, and StableFX are documented as the next
-              integration layer. The MVP does not overclaim gated product access.
+              Exports JSON and Markdown receipts with receipt hash, deliverable hash, identity,
+              lifecycle status, and transaction slots.
             </p>
           </div>
         </div>
       </section>
 
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-white">Current status</h2>
+        <div className="grid md:grid-cols-3 gap-3">
+          {STATUS.map(([label, value]) => (
+            <div key={label} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+              <div className="text-sm font-semibold text-white">{label}</div>
+              <p className="text-xs text-gray-500 mt-2">{value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="rounded-lg border border-yellow-900/50 bg-yellow-950/20 p-4 text-xs text-yellow-200/70 space-y-1">
-        <div className="font-semibold text-yellow-300">Current boundary</div>
+        <div className="font-semibold text-yellow-300">Testnet boundary</div>
         <ul className="list-disc list-inside space-y-0.5 text-yellow-200/60">
-          <li>Arc Testnet ERC-8004 identity reads and ERC-8183 wallet execution controls are implemented.</li>
-          <li>Jobs can remain simulated or become onchain-partial / onchain-verified only with tx hashes.</li>
-          <li>Circle Wallets, Gateway, Nanopayments, CCTP, USYC, and StableFX are not falsely marked live.</li>
-          <li>The strongest next gate is a real end-to-end Arc Testnet run and demo recording.</li>
+          <li>This is not a production payment system.</li>
+          <li>Only mark a job as onchain verified after every required Arc Testnet tx hash is present.</li>
+          <li>Circle Wallets, Gateway, Nanopayments, CCTP, USYC, and StableFX are future integrations unless explicitly added and verified.</li>
         </ul>
       </section>
     </div>

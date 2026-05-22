@@ -51,10 +51,10 @@ export default function ReceiptExport({ receipt }: Props) {
             }`}
           >
             {receipt.settlementMode === "onchain-verified"
-              ? "✅ Onchain verified"
+              ? "Onchain verified"
               : receipt.settlementMode === "onchain-partial"
-              ? "🟢 Partial onchain"
-              : "🔵 Simulated"}
+              ? "Partial onchain"
+              : "Simulated"}
           </span>
         </div>
 

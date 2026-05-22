@@ -16,14 +16,14 @@ const STATUS_STYLES: Record<JobStatus, string> = {
   failed: "bg-red-900/70 text-red-400 border-red-700",
 };
 
-const STATUS_ICONS: Record<JobStatus, string> = {
-  draft: "✏️",
-  open: "📋",
-  budgeted: "🧾",
-  funded: "💰",
-  submitted: "📦",
-  settled: "✅",
-  failed: "❌",
+const STATUS_MARKS: Record<JobStatus, string> = {
+  draft: "DR",
+  open: "OP",
+  budgeted: "BD",
+  funded: "FD",
+  submitted: "SB",
+  settled: "ST",
+  failed: "FL",
 };
 
 export default function LifecycleBadge({ status, mode, size = "md" }: Props) {
@@ -34,16 +34,16 @@ export default function LifecycleBadge({ status, mode, size = "md" }: Props) {
 
   return (
     <span className={`${base} ${STATUS_STYLES[status]}`}>
-      <span>{STATUS_ICONS[status]}</span>
+      <span className="font-mono text-[10px] opacity-80">{STATUS_MARKS[status]}</span>
       <span className="capitalize">{status}</span>
       {mode && (
         <span className="ml-1 opacity-70 font-normal">
           ·{" "}
           {mode === "onchain-verified"
-            ? "✅ Onchain"
+            ? "Onchain"
             : mode === "onchain-partial"
-            ? "🟢 Partial"
-            : "🔵 Sim"}
+            ? "Partial"
+            : "Sim"}
         </span>
       )}
     </span>

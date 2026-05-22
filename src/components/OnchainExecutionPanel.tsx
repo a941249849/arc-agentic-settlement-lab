@@ -66,13 +66,12 @@ function nextPatch(
   }
   // Only mark onchain-verified when all prior lifecycle tx hashes are present,
   // confirming the full ERC-8183 sequence was executed on Arc Testnet.
-  const allPriorTxPresent = !!(
+  const allPriorTxPresent =
     job.createTxHash &&
     job.setBudgetTxHash &&
     job.approveTxHash &&
     job.fundTxHash &&
-    job.submitTxHash
-  );
+    job.submitTxHash;
   return {
     status: "settled",
     settleTxHash: txHash,

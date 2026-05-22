@@ -7,8 +7,27 @@ Arc Agentic Settlement Lab is the proposed Arc-side follow-up to AgentPay Intell
 The goal is not to build another stablecoin transfer demo. The goal is to demonstrate an agent-native financial workflow on Arc:
 
 ```text
-agent identity -> job creation -> USDC escrow -> deliverable proof -> evaluator approval -> settlement receipt
+agent identity -> job creation -> provider sets budget -> USDC escrow -> deliverable proof -> evaluator approval -> settlement receipt
 ```
+
+## Strategy Review Status
+
+Copilot completed an official-doc strategy review in `docs/COPILOT_ARC_STRATEGY_REVIEW.md`.
+
+Verdict:
+
+```text
+GO WITH CHANGES
+```
+
+Accepted corrections:
+
+- ERC-8183 is a valid core wedge, but the lifecycle must include provider `setBudget`.
+- ERC-8004 agent identity should move before live ERC-8183 execution, not after it.
+- The current Phase 1/2 prototype is an internal scaffold, not the public proof point.
+- Circle's official `arc-escrow` reference app must be acknowledged and differentiated from.
+- Circle Agent Stack / x402 / Gateway nanopayments are paid-access or funding primitives, not synonyms for ERC-8183 job settlement.
+- ArcaneVM / opt-in privacy is roadmap-only and must not be treated as live implementation scope.
 
 This directly maps to Arc's current public builder direction:
 
@@ -38,7 +57,8 @@ Recent Arc messaging points toward production-style financial applications rathe
    - Agent Marketplace for service discovery;
    - Circle CLI for repeatable financial actions;
    - Gateway nanopayments for paid APIs, data products, and agent-to-service payments;
-   - x402 / MPP / AP2 as adjacent payment-negotiation protocols.
+   - x402 / MPP / AP2 as adjacent payment-negotiation protocols;
+   - distinct from ERC-8183 job escrow and settlement.
 
 3. **App Kits**
    - bridge USDC across supported chains;
@@ -75,7 +95,7 @@ Recent Arc messaging points toward production-style financial applications rathe
 The clearest wedge is:
 
 ```text
-Agent job marketplace + Arc USDC escrow + deliverable receipts + optional Agent Stack / App Kit funding path
+Agent identity + Arc ERC-8183 job escrow + provider budget setting + deliverable receipts + optional App Kit funding path
 ```
 
 This is more aligned with Arc than a generic transfer UI because it uses Arc's differentiators:
@@ -88,6 +108,22 @@ This is more aligned with Arc than a generic transfer UI because it uses Arc's d
 - ERC-8004 agent identity;
 - ERC-8183 job lifecycle;
 - App Kit monetization and liquidity primitives.
+
+## Differentiation From Arc Escrow
+
+Arc's official docs link Circle's `arc-escrow` reference app:
+
+```text
+https://github.com/circlefin/arc-escrow
+```
+
+This project should not replicate that reference app. Differentiation target:
+
+- UI-first settlement console rather than only script/template execution;
+- ERC-8004 identity, reputation, and validation surfaced as product state;
+- role-separated client/provider/evaluator workflow;
+- deterministic JSON and Markdown receipt export;
+- public builder narrative explaining why Arc's USDC gas, deterministic finality, and agentic standards matter.
 
 ## Relation To The Existing AgentPay Project
 
@@ -120,12 +156,14 @@ Comparison frame:
 
 ### MVP User Story
 
-A user creates a paid research or execution job for an AI agent. The job is funded in USDC on Arc Testnet. The agent submits a deliverable hash. The evaluator approves the work. The provider receives settlement. The app exports a receipt that binds:
+A user creates a paid research or execution job for a registered AI agent. The provider sets a budget. The client funds USDC escrow on Arc Testnet. The agent submits a deliverable hash. The evaluator approves the work. The provider receives settlement. The app exports a receipt that binds:
 
 - job id;
+- ERC-8004 agent id;
 - client wallet;
 - provider or agent wallet;
 - evaluator wallet;
+- provider budget;
 - escrow amount;
 - deliverable hash;
 - settlement transaction;
@@ -191,15 +229,17 @@ Core frontend state:
 ```ts
 type ArcSettlementJob = {
   id: string;
-  status: "draft" | "open" | "funded" | "submitted" | "settled" | "failed";
+  status: "draft" | "open" | "budgeted" | "funded" | "submitted" | "settled" | "failed";
   clientAddress: string;
   providerAddress: string;
   evaluatorAddress: string;
   amount: string;
+  budgetAmount?: string;
   currency: "USDC";
   description: string;
   deliverableHash?: string;
   createTxHash?: string;
+  setBudgetTxHash?: string;
   fundTxHash?: string;
   submitTxHash?: string;
   settleTxHash?: string;
@@ -326,6 +366,8 @@ MVP requirement:
 Arc docs provide an AgenticCommerce reference implementation for:
 
 - job creation;
+- provider budget setting;
+- USDC approval;
 - escrow funding;
 - deliverable submission;
 - evaluation;
@@ -340,6 +382,7 @@ Use this for:
 MVP requirement:
 
 - mirror the ERC-8183 lifecycle in the app UI;
+- include `setBudget(jobId, amount, optParams)` before escrow funding;
 - make every state transition explicit;
 - bind receipt output to the job state and deliverable hash.
 
@@ -411,7 +454,7 @@ MVP should mention this as Phase 2, not include it in the first shipped scope un
 
 ## Implementation Phases
 
-### Phase 1: Research-Backed Product Shell
+### Phase 1: Research-Backed Product Shell And Scaffold
 
 Deliverables:
 
@@ -427,62 +470,49 @@ Acceptance:
 - route returns structured plan JSON;
 - UI clearly distinguishes blueprint state from live tx state;
 - no unsupported claims.
+- public docs state that Phase 1 is a scaffold, not the final public proof.
 
-### Phase 2: Offchain Job Lifecycle
-
-Deliverables:
-
-- create job;
-- update job status;
-- submit deliverable hash;
-- generate settlement receipt;
-- export Markdown.
-
-Acceptance:
-
-- full lifecycle can be simulated without wallet credentials;
-- receipt contains deterministic hash;
-- UX demonstrates the product loop end to end.
-
-### Phase 3: Arc Testnet Contract Execution
+### Phase 2: ERC-8004 Agent Identity
 
 Deliverables:
 
-- connect Circle Wallets or viem;
-- create/fund ERC-8183 job on Arc Testnet;
-- submit deliverable;
-- settle job;
-- capture tx hashes.
-
-Acceptance:
-
-- explorer links resolve;
-- receipt includes real tx hashes;
-- no transaction remains stuck/pending without error explanation;
-- docs include exact environment variables and funding steps.
-
-### Phase 4: ERC-8004 Agent Identity
-
-Deliverables:
-
-- register provider agent;
-- display agent identity;
+- register provider agent on Arc Testnet;
+- display agent identity and metadata URI;
 - record or read reputation event;
 - link job settlement to agent identity.
 
 Acceptance:
 
 - agent registry tx hash captured;
+- Arcscan link resolves;
 - UI shows identity/reputation status;
-- job receipt includes agent identity reference.
+- receipt schema includes agent identity reference.
 
-### Phase 5: Agent Stack, Wallet Policy, And App Kit Funding
+### Phase 3: Arc Testnet ERC-8183 Job Lifecycle
 
 Deliverables:
 
-- Agent Wallet or embedded wallet integration path;
-- policy-scoped signing / approval design;
-- optional Gateway nanopayment-funded job path;
+- connect Circle Wallets or viem;
+- create ERC-8183 job on Arc Testnet;
+- provider calls `setBudget`;
+- client approves USDC;
+- client funds escrow;
+- provider submits deliverable;
+- evaluator completes job;
+- capture tx hashes.
+
+Acceptance:
+
+- explorer links resolve;
+- receipt includes real tx hashes for create, budget, approve, fund, submit, and complete;
+- receipt includes ERC-8004 agent id and ERC-8183 job id;
+- no transaction remains stuck/pending without error explanation;
+- docs include exact environment variables and funding steps.
+
+### Phase 4: App Kit Funding
+
+Deliverables:
+
 - bridge/send/swap/unified balance path;
 - optional app monetization fee;
 - stable funding path into the ERC-8183 job.
@@ -493,6 +523,21 @@ Acceptance:
 - wallet policy and signing boundaries are explicit;
 - user sees funding source, destination, amount, and tx reference;
 - receipt binds funding path to job settlement.
+
+### Phase 5: Embedded Wallets And Policy Signing
+
+Deliverables:
+
+- Dynamic or Turnkey embedded wallet path;
+- policy-scoped signing / approval design;
+- role-scoped client/provider/evaluator permissions;
+- optional backend-assisted actions.
+
+Acceptance:
+
+- wallet policy and signing boundaries are explicit;
+- no delegated signer has unlimited authority;
+- user-controlled wallet ownership remains clear.
 
 ### Phase 6: StableFX / QCAD Extension
 
@@ -524,6 +569,8 @@ type ArcSettlementReceipt = {
   deliverableHash: string;
   txHashes: {
     create?: string;
+    setBudget?: string;
+    approve?: string;
     fund?: string;
     submit?: string;
     settle?: string;
@@ -554,10 +601,12 @@ Outline:
 2. Arc's agentic economy direction.
 3. ERC-8004: agent identity and reputation.
 4. ERC-8183: job escrow and settlement.
-5. Circle Agent Stack: Agent Wallets, Agent Marketplace, and nanopayments.
-6. App Kit: funding, liquidity, and monetization.
-7. Wallet policy: embedded wallets, approvals, and delegated signing.
-8. Demo walkthrough: create job -> fund escrow -> submit deliverable -> settle -> export receipt.
+5. Required lifecycle correction: provider setBudget before funding.
+6. Differentiation from Circle's official arc-escrow reference app.
+7. App Kit: funding, liquidity, and monetization.
+8. Circle Agent Stack / x402 / nanopayments as adjacent paid-access rails, not job settlement.
+9. Wallet policy: embedded wallets, approvals, and delegated signing.
+10. Demo walkthrough: register agent -> create job -> set budget -> fund escrow -> submit deliverable -> settle -> export receipt.
 9. Comparison with Tempo MPP and x402.
 10. StableFX/QCAD as the multi-currency extension.
 11. What still needs production hardening.

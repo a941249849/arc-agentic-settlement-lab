@@ -9,10 +9,30 @@ Primary docs:
 - `docs/ARC_AGENTIC_SETTLEMENT_LAB_PLAN.md`
 - `docs/ARC_OFFICIAL_CONTEXT_FOR_ENGINEERING.md`
 - `docs/ARC_DISCORD_X_RESEARCH_NOTES.md`
+- `docs/COPILOT_ARC_STRATEGY_REVIEW.md`
 
 ## Required First Scope
 
-Implement Phase 1 and Phase 2 only:
+The current app implements a Phase 1 scaffold. Do not continue feature work until the strategy-review corrections are reflected in the plan.
+
+Next implementation scope should be planned in this order:
+
+1. ERC-8004 agent registration and reputation proof.
+2. ERC-8183 live Arc Testnet job lifecycle.
+3. App Kit funding path.
+4. Wallet policy / embedded wallet path.
+5. StableFX / QCAD extension.
+
+The ERC-8183 lifecycle must include:
+
+- `createJob`;
+- provider `setBudget`;
+- USDC `approve`;
+- `fund`;
+- `submitDeliverable`;
+- evaluator `completeJob`.
+
+The current Phase 1 scaffold contains:
 
 1. `Arc Settlement Lab` product surface.
 2. `/api/arc-settlement` blueprint endpoint.
@@ -28,6 +48,7 @@ Implement Phase 1 and Phase 2 only:
 5. Offchain lifecycle state machine:
    - `draft`;
    - `open`;
+   - `budgeted` must be added before any live ERC-8183 implementation;
    - `funded`;
    - `submitted`;
    - `settled`;
@@ -45,7 +66,9 @@ Do not implement live wallet or contract execution in the first pass unless the 
 - Do not build a plain transfer demo.
 - Keep the product framed around agent job settlement and receipt generation.
 - Do not reduce the product to a wallet-to-wallet USDC transfer demo.
-- Keep Agent Stack, nanopayments, App Kit, and StableFX as explicit roadmap/capability layers unless live credentials and verifiable tx/payment receipts are present.
+- Keep Agent Stack / x402 / nanopayments separate from ERC-8183 job settlement. They are paid-access/funding primitives, not job-escrow primitives.
+- Acknowledge Circle's official `arc-escrow` reference app and differentiate from it.
+- Do not present opt-in privacy / ArcaneVM as live; it is roadmap-only in current official docs.
 
 ## Acceptance Criteria
 
@@ -64,6 +87,8 @@ Do not implement live wallet or contract execution in the first pass unless the 
   - receipt hash;
   - simulated vs onchain flag.
 - Documentation explains which features are blueprint-only and which are implemented.
+- Onchain-verified mode requires Arcscan links for every relevant transaction.
+- Live ERC-8183 receipts must include both ERC-8004 agent ID and ERC-8183 job ID.
 
 ## Review Focus
 

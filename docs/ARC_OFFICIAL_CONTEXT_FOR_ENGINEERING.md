@@ -19,7 +19,7 @@ Official high-level properties:
 - USDC is the native gas token.
 - Arc is EVM-compatible.
 - Arc has sub-second deterministic finality.
-- Arc supports opt-in privacy.
+- Arc has opt-in privacy / ArcaneVM on the roadmap, but it is not currently available for implementation.
 - Arc integrates directly with Circle's developer platform.
 - Arc is currently available on testnet for this build path.
 
@@ -30,6 +30,7 @@ Engineering implications:
 - Use standard EVM tooling where possible: viem, ethers, Foundry, Hardhat.
 - Use Arc Testnet first.
 - Do not claim mainnet readiness unless official mainnet addresses and successful mainnet transactions are available.
+- Do not claim live privacy or ArcaneVM support; current official docs mark privacy features as roadmap-only.
 
 ## Arc Testnet Network
 
@@ -204,6 +205,8 @@ AgenticCommerce: 0x0747EEf0706327138c69792bF28Cd525089e4583
 Official lifecycle concepts:
 
 - create job;
+- provider sets budget;
+- client approves USDC;
 - fund escrow with USDC;
 - submit deliverable hash;
 - evaluator approves/completes settlement.
@@ -211,8 +214,26 @@ Official lifecycle concepts:
 MVP handling:
 
 - Phase 1/2 should mirror this lifecycle offchain first.
-- Live chain execution belongs in Phase 3.
+- Live chain execution belongs after ERC-8004 identity is represented.
 - Receipt must distinguish simulated lifecycle from onchain settlement.
+- The official tutorial includes `setBudget(jobId, amount, optParams)` between `createJob` and `fund`; do not omit it in live implementation.
+
+### Official Arc Escrow Reference App
+
+Arc's Agentic Economy docs link Circle's `arc-escrow` reference app:
+
+```text
+https://github.com/circlefin/arc-escrow
+```
+
+The project should not look like a copy of this reference implementation.
+Differentiate with:
+
+- UI-first settlement console;
+- ERC-8004 identity and reputation as first-class state;
+- role-separated client/provider/evaluator workflow;
+- deterministic JSON/Markdown receipts;
+- article/report-ready public narrative.
 
 ## Circle Wallets Path
 
@@ -310,6 +331,7 @@ Engineering handling:
 - Phase 1/2 should expose this as a capability map, not as a fake live payment.
 - A later nanopayment path must verify buyer funding, seller acceptance, and a real payment receipt.
 - Treat x402, MPP, AP2, and nanopayments as payment-negotiation/funding layers that can feed into Arc settlement receipts.
+- Do not describe Agent Stack / x402 nanopayments as the same primitive as ERC-8183. Agent Stack is primarily paid API/resource access; ERC-8183 is structured job escrow and settlement.
 
 Useful URLs:
 

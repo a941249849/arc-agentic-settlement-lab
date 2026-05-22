@@ -1,9 +1,9 @@
 # Arc Agentic Settlement Lab
 
-Agent-native financial workflow on Arc: verifiable job creation, USDC escrow, deliverable proof, evaluator approval, and deterministic settlement receipt.
+Agent-native financial workflow on Arc: verifiable agent identity, job creation, provider budget setting, USDC escrow, deliverable proof, evaluator approval, and deterministic settlement receipt.
 
 ```text
-agent identity -> job creation -> USDC escrow -> deliverable proof -> evaluator approval -> settlement receipt
+agent identity -> job creation -> provider sets budget -> USDC escrow -> deliverable proof -> evaluator approval -> settlement receipt
 ```
 
 ## Implemented (Phase 1/2)
@@ -13,19 +13,36 @@ agent identity -> job creation -> USDC escrow -> deliverable proof -> evaluator 
 - **`/api/arc-settlement/jobs`** — In-memory job store: create and list jobs
 - **`/api/arc-settlement/jobs/:id`** — Get and update job status
 - **`/api/arc-settlement/jobs/:id/receipt`** — Generate deterministic settlement receipt
-- **Offchain lifecycle state machine** — `draft → open → funded → submitted → settled / failed`
+- **Offchain lifecycle state machine** — current scaffold: `draft → open → funded → submitted → settled / failed`
 - **Deterministic receipt export** — SHA-256 hashed JSON receipt + Markdown export
 - **UI labels** — Blueprint / Simulated / Onchain-verified states visibly separated
 - **Research context** — Arc Discord/X and official-doc context retained for follow-up implementation
 
-## Future Work (Phase 3+)
+The scaffold predates the strategy-review correction. Before live ERC-8183 work, the lifecycle must add `budgeted` / `setBudget`.
+
+## Strategy Review Verdict
+
+Copilot's official-doc review returned `GO WITH CHANGES`.
+
+Required corrections before further product implementation:
+
+- include the ERC-8183 `setBudget` step;
+- move ERC-8004 agent identity before live ERC-8183 settlement;
+- acknowledge and differentiate from Circle's official `arc-escrow` reference app;
+- treat Phase 1/2 as a scaffold, not the public proof point;
+- separate Circle Agent Stack / x402 nanopayments from ERC-8183 job settlement;
+- do not present opt-in privacy / ArcaneVM as a live implementation target.
+
+See [Copilot Arc Strategy Review](docs/COPILOT_ARC_STRATEGY_REVIEW.md).
+
+## Future Work
 
 | Phase | Feature | Status |
 |-------|---------|--------|
-| Phase 3 | Arc Testnet ERC-8183 contract execution via AgenticCommerce | 🔷 Blueprint |
-| Phase 3 | Circle Developer-Controlled Wallets integration | 🔷 Blueprint |
-| Phase 4 | ERC-8004 agent identity registration and reputation | 🔷 Blueprint |
-| Phase 5 | Circle Agent Stack, Gateway nanopayments, wallet policy, and App Kit funding | 🔷 Blueprint |
+| Phase 2 | ERC-8004 agent identity registration and reputation | 🔷 Blueprint |
+| Phase 3 | Live Arc Testnet ERC-8183 lifecycle: createJob, setBudget, approve, fund, submit, complete | 🔷 Blueprint |
+| Phase 4 | App Kit funding and monetization path | 🔷 Blueprint |
+| Phase 5 | Embedded wallets and policy signing | 🔷 Blueprint |
 | Phase 6 | StableFX multi-currency settlement (QCAD/EURC → USDC) | 🔘 Future |
 
 ## Documents
@@ -33,6 +50,7 @@ agent identity -> job creation -> USDC escrow -> deliverable proof -> evaluator 
 - [Arc Agentic Settlement Lab plan](docs/ARC_AGENTIC_SETTLEMENT_LAB_PLAN.md)
 - [Arc official context for engineering](docs/ARC_OFFICIAL_CONTEXT_FOR_ENGINEERING.md)
 - [Arc Discord and X research notes](docs/ARC_DISCORD_X_RESEARCH_NOTES.md)
+- [Copilot Arc strategy review](docs/COPILOT_ARC_STRATEGY_REVIEW.md)
 - [Engineering handoff](docs/ENGINEERING_HANDOFF.md)
 
 ## Getting Started
@@ -62,7 +80,7 @@ type ArcSettlementReceipt = {
   receiptVersion: "arc-settlement-v1";
   network: "Arc Testnet";
   jobId: string;
-  lifecycleStatus: "draft" | "open" | "funded" | "submitted" | "settled" | "failed";
+  lifecycleStatus: "draft" | "open" | "budgeted" | "funded" | "submitted" | "settled" | "failed";
   clientAddress: string;
   providerAddress: string;
   evaluatorAddress: string;
@@ -70,6 +88,7 @@ type ArcSettlementReceipt = {
   currency: "USDC";
   deliverableHash: string;
   txHashes: { create?: string; fund?: string; submit?: string; settle?: string };
+  budget?: { amount: string; txHash?: string };
   agentIdentity?: { standard: "ERC-8004"; registryAddress: string; agentId?: string };
   receiptHash: string;          // SHA-256 of canonical fields
   settlementMode: "simulated" | "onchain-verified";

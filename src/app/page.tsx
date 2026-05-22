@@ -3,39 +3,39 @@ import { arcSettlementBlueprint } from "@/lib/arc-blueprint";
 
 const HOW_TO_USE = [
   {
-    title: "1. Create a job",
-    body: "Describe the service an agent wants to buy and set the buyer, provider, evaluator, and USDC amount.",
+    title: "1. Create a trade",
+    body: "Capture invoice ID, buyer country, supplier country, evaluator, and USDC amount.",
   },
   {
-    title: "2. Run the demo flow",
-    body: "Publish the request, set the provider budget, fund escrow, submit a deliverable hash, and approve settlement.",
+    title: "2. Control funds",
+    body: "Provider sets a budget before the buyer funds escrow, matching real SME trade controls.",
   },
   {
-    title: "3. Add chain evidence",
-    body: "Optionally connect a wallet and attach Arc Testnet ERC-8183 transaction hashes to the same job.",
+    title: "3. Prove delivery",
+    body: "Supplier submits a deliverable hash for the invoice document, service result, or trade proof.",
   },
   {
-    title: "4. Export the receipt",
-    body: "Generate a receipt that binds the buyer, provider, amount, deliverable hash, identity, and tx evidence.",
+    title: "4. Export evidence",
+    body: "Generate a receipt binding trade context, agent identity, escrow state, deliverable hash, and tx evidence.",
   },
 ];
 
 const FLOW = [
-  ["Buyer agent", "Creates a purchase request"],
-  ["Provider", "Accepts work and sets budget"],
+  ["Importer agent", "Creates a trade settlement request"],
+  ["Supplier agent", "Accepts terms and sets budget"],
   ["USDC escrow", "Locks settlement funds"],
-  ["Deliverable", "Stores proof of completed work"],
+  ["Trade proof", "Stores invoice or deliverable hash"],
   ["Evaluator", "Approves release"],
   ["Receipt", "Exports audit evidence"],
 ];
 
 const DIFFERENCES = [
-  ["Plain transfer", "Sends tokens from A to B with little business context."],
-  ["This app", "Tracks who the agent is, what was bought, budget approval, escrow state, deliverable proof, and receipt evidence."],
+  ["Plain transfer", "Sends tokens from A to B with little invoice, compliance, or delivery context."],
+  ["This app", "Tracks importer, supplier, country route, invoice ID, budget approval, escrow state, deliverable proof, and receipt evidence."],
 ];
 
 const STATUS = [
-  ["Ready to try", "Create service jobs, verify agent identity, prepare Arc Testnet wallet transactions, and export receipts."],
+  ["Ready to try", "Create trade settlements, verify agent identity, prepare Arc Testnet wallet transactions, and export receipts."],
   ["Onchain evidence", "A job becomes fully verified only after all lifecycle transaction hashes are recorded."],
   ["Planned rails", "Circle Wallets, Gateway / Nanopayments, CCTP, USYC, and StableFX are integration targets."],
 ];
@@ -48,16 +48,16 @@ export default function OverviewPage() {
       <section className="grid lg:grid-cols-[1fr_0.9fr] gap-8 items-center">
         <div className="space-y-5">
           <div className="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-blue-900/40 border border-blue-700 text-blue-300 text-sm">
-            Arc Testnet · USDC · Agent service settlement
+            Arc Testnet · USDC · SME trade settlement
           </div>
           <div className="space-y-3">
             <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-              Agent payments with context, escrow, and proof.
+              Cross-border trade settlement for AI agents and SMEs.
             </h1>
             <p className="text-lg text-gray-400 max-w-2xl">
-              This app is a testnet workflow for agent-paid services. A buyer agent requests work,
-              a provider sets a budget, USDC moves through escrow, the deliverable is recorded, and
-              the final receipt shows what happened before, during, and after payment.
+              Importer agents can create trade requests, suppliers can set budgets, USDC moves
+              through escrow, delivery evidence is recorded, and the receipt explains the business
+              context behind the stablecoin payment.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -77,7 +77,7 @@ export default function OverviewPage() {
         </div>
 
         <div className="rounded-xl border border-gray-800 bg-gray-950 p-5">
-          <div className="text-sm font-semibold text-white mb-4">What happens in one payment</div>
+          <div className="text-sm font-semibold text-white mb-4">What happens in one trade</div>
           <div className="space-y-3">
             {FLOW.map(([title, desc], index) => (
               <div key={title} className="flex items-center gap-3">
@@ -98,16 +98,16 @@ export default function OverviewPage() {
         <div>
           <h2 className="text-xl font-semibold text-white">What this is for</h2>
           <p className="text-sm text-gray-400 mt-1">
-            The goal is to make agent payments understandable and auditable. Instead of only asking
-            whether money moved, the app records who acted, what was purchased, what budget was
-            approved, what was delivered, and what evidence proves settlement.
+            The goal is to turn a stablecoin transfer into a business settlement record. Instead of
+            only asking whether money moved, the app records who acted, which trade was settled,
+            which budget was approved, what was delivered, and what evidence proves settlement.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-4">
           {[
-            ["For users", "Understand what an agent paid for before trusting the payment result."],
-            ["For providers", "Submit work with a deliverable hash and receive settlement after approval."],
-            ["For builders", "Test Arc identity, escrow lifecycle, and receipt patterns before adding production wallet rails."],
+            ["For SMEs", "Settle cross-border invoices with USDC while retaining invoice and delivery context."],
+            ["For suppliers", "Submit trade proof with a deliverable hash and receive settlement after approval."],
+            ["For builders", "Test Arc identity, escrow lifecycle, and receipt patterns before adding Circle wallet rails."],
           ].map(([label, value]) => (
             <div key={label} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
               <div className="text-sm font-semibold text-white">{label}</div>
@@ -154,7 +154,7 @@ export default function OverviewPage() {
             </code>
           </div>
           <div className="rounded-lg border border-green-800 bg-green-950/30 p-4 space-y-2">
-            <div className="text-green-300 font-semibold text-sm">Service settlement</div>
+            <div className="text-green-300 font-semibold text-sm">Trade settlement</div>
             <p className="text-xs text-gray-400">
               Prepares ERC-8183 job lifecycle calls for connected wallet confirmation.
             </p>

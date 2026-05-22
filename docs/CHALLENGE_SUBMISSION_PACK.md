@@ -15,7 +15,7 @@
 - USDC on Arc — settlement asset and gas rail.
 - ERC-8004 agent identity — `ownerOf` and `tokenURI` reads from Arc Testnet IdentityRegistry (`0x8004A818BFB912233c491871b3d84c89A494BD9e`).
 - ERC-8183 lifecycle — calldata preparation, wallet tx submission, and receipt parsing via AgenticCommerce contract (`0x0747EEf0706327138c69792bF28Cd525089e4583`).
-- Deterministic settlement receipt — JSON and Markdown with receipt hash and deliverable hash binding.
+- Deterministic trade settlement receipt — JSON and Markdown with invoice context, receipt hash, and deliverable hash binding.
 
 ### Minimum path to READY
 
@@ -29,31 +29,31 @@ Arc Testnet tx evidence first, then demo video, then Circle Wallets integration.
 
 - Demo: https://arc-agentic-settlement-lab.vercel.app
 - Challenge pack page: https://arc-agentic-settlement-lab.vercel.app/challenge
-- Job console: https://arc-agentic-settlement-lab.vercel.app/jobs
+- Trade console: https://arc-agentic-settlement-lab.vercel.app/jobs
 - Arcscan: https://testnet.arcscan.app
 - GitHub: https://github.com/a941249849/arc-agentic-settlement-lab
 
 ## Project
 
-**Arc Agentic Commerce Settlement**
+**Arc Trade Agent Settlement**
 
-Stablecoin commerce stack MVP on Arc for the **Best Agentic Economy Experience on Arc** track.
+Stablecoin commerce stack MVP on Arc for SME cross-border trade settlement and the **Best Agentic Economy Experience on Arc** track.
 
 Short description:
 
-> An agentic commerce settlement MVP where buyer agents purchase services with USDC on Arc, verify agent identity, enforce provider budgets, escrow settlement, bind deliverable proof, and export auditable receipts.
+> An SME trade settlement product where importer agents settle cross-border invoices with USDC on Arc, verify agent identity, enforce supplier budgets, escrow settlement, bind deliverable proof, and export auditable receipts.
 
 ## Challenge Alignment
 
-The challenge asks builders to explore how stablecoins can support cross-border payments, SME finance, tokenized assets, and the agentic economy. This project targets the agentic economy directly, with an SME-service workflow as the business wrapper.
+The challenge asks builders to explore how stablecoins can support cross-border payments, SME finance, tokenized assets, and the agentic economy. This project targets the overlap between cross-border payments, SME trade workflows, and agentic economy.
 
 The user story:
 
-1. A business wants to buy a report, dataset, API result, or model response.
-2. A buyer agent creates a service job and checks the provider identity.
-3. The provider sets a budget.
-4. The buyer funds USDC escrow on Arc.
-5. The provider submits a deliverable hash.
+1. A US importer wants to settle an invoice or trade document package with an overseas supplier.
+2. An importer agent creates a trade settlement job and checks supplier identity.
+3. The supplier agent sets a budget.
+4. The importer funds USDC escrow on Arc.
+5. The supplier submits a deliverable hash for the trade proof.
 6. An evaluator approves settlement.
 7. The app exports a receipt with identity, lifecycle, deliverable, and tx evidence.
 
@@ -63,7 +63,7 @@ The user story:
 
 Rationale:
 
-- The core actor is a buyer agent.
+- The core actor is an importer or supplier agent.
 - The flow is an autonomous economic action: request, budget, payment, delivery, approval.
 - The payment unit is USDC.
 - The workflow is richer than a plain token transfer because it adds identity, budget, deliverable proof, and receipt evidence.
@@ -77,7 +77,7 @@ Rationale:
 | ERC-8004 | Implemented | IdentityRegistry read verification and receipt binding |
 | ERC-8183 | Implemented | AgenticCommerce job lifecycle and wallet tx preparation |
 | Circle Wallets | Next integration | Agent-controlled treasury, policy signing, embedded wallet UX |
-| Gateway / Nanopayments | Next integration | Paid API, pay-per-report, pay-per-inference, high-frequency service access |
+| Gateway / Nanopayments | Next integration | Paid API, pay-per-document, supplier verification, and high-frequency agent access |
 | CCTP / Bridge Kit | Optional | Buyer funding from another chain |
 | USYC | Gated / conceptual | Idle treasury or working-capital extension |
 | StableFX | Gated / conceptual | Multi-currency settlement corridor extension |

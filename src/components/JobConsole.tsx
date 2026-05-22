@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import type { ArcAgentIdentity, ArcSettlementJob, ArcSettlementReceipt } from "@/lib/types";
+import type {
+  ArcAgentIdentity,
+  ArcSettlementJob,
+  ArcSettlementReceipt,
+  CommerceUseCase,
+  TradeProfile,
+} from "@/lib/types";
 import { useJobs, createJob, updateJob, fetchReceipt, deleteJob } from "@/hooks/useJobs";
 import LifecycleBadge from "./LifecycleBadge";
 import ReceiptExport from "./ReceiptExport";
@@ -22,9 +28,15 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
     clientAddress: "0x1111111111111111111111111111111111111111",
     providerAddress: "0x2222222222222222222222222222222222222222",
     evaluatorAddress: "0x3333333333333333333333333333333333333333",
-    amount: "25.00",
+    amount: "2500.00",
     description:
-      "Buyer agent purchases a market-intelligence report and pays the provider after evaluator approval.",
+      "US importer agent pays a Singapore supplier for a verified trade document package after evaluator approval.",
+    invoiceId: "ARC-INV-2026-002",
+    buyerCountry: "United States",
+    supplierCountry: "Singapore",
+    goodsOrService: "Trade document verification package",
+    useCase: "cross-border-trade" as CommerceUseCase,
+    complianceCheck: "pending" as TradeProfile["complianceCheck"],
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +47,22 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
     setError(null);
     try {
       const job = await createJob({
-        ...form,
+        clientAddress: form.clientAddress,
+        providerAddress: form.providerAddress,
+        evaluatorAddress: form.evaluatorAddress,
+        amount: form.amount,
+        description: form.description,
         currency: "USDC",
+        tradeProfile: {
+          useCase: form.useCase,
+          invoiceId: form.invoiceId,
+          buyerCountry: form.buyerCountry,
+          supplierCountry: form.supplierCountry,
+          goodsOrService: form.goodsOrService,
+          complianceCheck: form.complianceCheck,
+          fundingSource: "buyer-wallet",
+          settlementRail: "USDC-on-Arc",
+        },
         agentIdentity: verifiedIdentity ?? undefined,
       });
       setForm((f) => ({ ...f, description: "" }));
@@ -53,9 +79,9 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
       <div className="grid md:grid-cols-2 gap-4">
         {(
           [
-            { id: "clientAddress", label: "Client Address" },
-            { id: "providerAddress", label: "Provider / Agent Address" },
-            { id: "evaluatorAddress", label: "Evaluator / Auditor Address" },
+            { id: "clientAddress", label: "Buyer / Importer Address" },
+            { id: "providerAddress", label: "Supplier / Agent Address" },
+            { id: "evaluatorAddress", label: "Evaluator / Trade Desk Address" },
             { id: "amount", label: "Amount (USDC)" },
           ] as const
         ).map(({ id, label }) => (
@@ -75,17 +101,82 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
       </div>
       <div className="space-y-1">
         <label htmlFor="description" className="block text-xs text-gray-400">
-          Service request
+          Trade settlement request
         </label>
         <textarea
           id="description"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           rows={2}
-          placeholder="Describe the service, API call, report, or deliverable the buyer agent is purchasing..."
+          placeholder="Describe the cross-border trade, service, invoice, or deliverable being settled..."
           className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
           required
         />
+      </div>
+      <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4 space-y-3">
+        <div className="text-sm font-semibold text-white">Trade context</div>
+        <div className="grid md:grid-cols-2 gap-4">
+          {(
+            [
+              { id: "invoiceId", label: "Invoice / order ID" },
+              { id: "buyerCountry", label: "Buyer country" },
+              { id: "supplierCountry", label: "Supplier country" },
+              { id: "goodsOrService", label: "Goods or service" },
+            ] as const
+          ).map(({ id, label }) => (
+            <div key={id} className="space-y-1">
+              <label htmlFor={id} className="block text-xs text-gray-400">
+                {label}
+              </label>
+              <input
+                id={id}
+                value={form[id]}
+                onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
+                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
+                required
+              />
+            </div>
+          ))}
+          <div className="space-y-1">
+            <label htmlFor="useCase" className="block text-xs text-gray-400">
+              Use case
+            </label>
+            <select
+              id="useCase"
+              value={form.useCase}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, useCase: e.target.value as CommerceUseCase }))
+              }
+              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
+            >
+              <option value="cross-border-trade">Cross-border trade</option>
+              <option value="service-procurement">Service procurement</option>
+              <option value="invoice-finance">SME invoice finance</option>
+              <option value="tokenized-asset-settlement">Tokenized asset settlement</option>
+              <option value="agentic-economy">Agentic economy</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="complianceCheck" className="block text-xs text-gray-400">
+              Compliance check
+            </label>
+            <select
+              id="complianceCheck"
+              value={form.complianceCheck}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  complianceCheck: e.target.value as TradeProfile["complianceCheck"],
+                }))
+              }
+              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
+            >
+              <option value="pending">Pending</option>
+              <option value="passed">Passed</option>
+              <option value="needs-review">Needs review</option>
+            </select>
+          </div>
+        </div>
       </div>
       {error && <p className="text-red-400 text-xs">{error}</p>}
       {verifiedIdentity && (
@@ -98,7 +189,7 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
         disabled={submitting}
         className="px-5 py-2 rounded bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
       >
-        {submitting ? "Creating..." : "Create service job"}
+        {submitting ? "Creating..." : "Create trade settlement"}
       </button>
     </form>
   );
@@ -147,8 +238,8 @@ const NEXT_ACTIONS: Record<
 
 const STATUS_GUIDE: Record<ArcSettlementJob["status"], { title: string; detail: string }> = {
   draft: {
-    title: "Draft request",
-    detail: "Review the service request, addresses, and amount. Publish it when it is ready.",
+    title: "Draft trade request",
+    detail: "Review the importer, supplier, invoice, trade context, and USDC amount.",
   },
   open: {
     title: "Waiting for provider budget",
@@ -177,10 +268,17 @@ const STATUS_GUIDE: Record<ArcSettlementJob["status"], { title: string; detail: 
 };
 
 const WORKFLOW_STEPS = [
-  ["1", "Create", "Describe the service and counterparties."],
-  ["2", "Run local flow", "Move through request, budget, escrow, delivery, and approval."],
-  ["3", "Optional onchain", "Use wallet signing when you want Arc Testnet tx evidence."],
-  ["4", "Export receipt", "Copy or download the final payment record."],
+  ["1", "Create trade", "Capture invoice, countries, supplier, evaluator, and USDC amount."],
+  ["2", "Control funds", "Provider sets budget before buyer funds escrow."],
+  ["3", "Prove delivery", "Attach a deliverable hash for the trade document or service output."],
+  ["4", "Export evidence", "Generate a receipt with trade context, identity, and tx slots."],
+];
+
+const STACK_FIT = [
+  ["Cross-border payments", "USDC settlement between buyer and supplier countries."],
+  ["SME trade workflow", "Invoice, budget, escrow, deliverable proof, evaluator approval."],
+  ["Agentic economy", "Buyer and supplier agents can act with verifiable identity and receipts."],
+  ["Compliant DeFi path", "Receipt-first workflow can extend into USYC, StableFX, and financing."],
 ];
 
 function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }: JobCardProps) {
@@ -312,6 +410,41 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
             </div>
           </div>
 
+          {job.tradeProfile && (
+            <div className="rounded-lg border border-cyan-900 bg-cyan-950/10 p-3 text-xs space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="font-semibold text-cyan-200">Trade context</div>
+                <span className="px-2 py-0.5 rounded border border-cyan-800 text-cyan-300">
+                  {job.tradeProfile.useCase}
+                </span>
+              </div>
+              <div className="grid md:grid-cols-4 gap-3">
+                <div>
+                  <span className="text-gray-500">Invoice: </span>
+                  <code className="text-white">{job.tradeProfile.invoiceId}</code>
+                </div>
+                <div>
+                  <span className="text-gray-500">Route: </span>
+                  <span className="text-white">
+                    {job.tradeProfile.buyerCountry} → {job.tradeProfile.supplierCountry}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Compliance: </span>
+                  <span className="text-white">{job.tradeProfile.complianceCheck}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Rail: </span>
+                  <span className="text-white">{job.tradeProfile.settlementRail}</span>
+                </div>
+              </div>
+              <div>
+                <span className="text-gray-500">Goods / service: </span>
+                <span className="text-gray-300">{job.tradeProfile.goodsOrService}</span>
+              </div>
+            </div>
+          )}
+
           <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-xs space-y-2">
             <div className="font-semibold text-gray-300">Agent identity</div>
             {job.agentIdentity ? (
@@ -394,7 +527,7 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
               <div>
                 <div className="text-sm font-semibold text-white">Step-by-step demo flow</div>
                 <p className="text-xs text-gray-500 mt-1">
-                  This path lets anyone understand the payment workflow without needing a wallet.
+                  This path lets anyone understand the trade settlement workflow without needing a wallet.
                 </p>
               </div>
               <span className="text-xs text-gray-500">Mode: simulated receipt</span>
@@ -428,9 +561,9 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
           <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-white">Optional Arc Testnet execution</div>
+                <div className="text-sm font-semibold text-white">Arc Testnet evidence path</div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Use this only when you want wallet-signed ERC-8183 transactions attached to the job.
+                  Use wallet-signed ERC-8183 transactions when the submission needs real tx hashes.
                 </p>
               </div>
               <button
@@ -457,7 +590,7 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
             <div>
               <div className="text-sm font-semibold text-white">Receipt</div>
               <p className="text-xs text-gray-500 mt-1">
-                Export this after the local flow or after wallet-signed tx hashes are attached.
+                Export this after the trade flow or after wallet-signed tx hashes are attached.
               </p>
             </div>
             <button
@@ -515,15 +648,15 @@ export default function JobConsole() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Service Payment Console</h1>
+          <h1 className="text-2xl font-bold text-white">Trade Settlement Console</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Start with the no-wallet demo flow. Open the Arc Testnet signing panel only when you
-            want transaction hashes attached to the receipt.
+            Build a cross-border SME trade settlement: importer agent, supplier agent, evaluator,
+            USDC escrow, deliverable proof, and receipt evidence.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="px-2 py-1 rounded text-xs bg-blue-900/40 border border-blue-700 text-blue-300">
-            Demo flow + optional wallet signing
+            SME trade + agentic economy
           </span>
           <button
             onClick={() => setShowCreate((s) => !s)}
@@ -539,15 +672,15 @@ export default function JobConsole() {
           <div>
             <div className="text-base font-semibold text-white">Start here</div>
             <p className="text-xs text-gray-400 mt-1">
-              Complete the product flow in four steps. The wallet path is optional and only needed
-              for live Arc Testnet evidence.
+              Complete the trade settlement flow in four steps. The Arc Testnet path is where final
+              submission evidence should be collected.
             </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
             className="px-4 py-1.5 rounded bg-cyan-800 text-cyan-50 text-xs font-semibold hover:bg-cyan-700"
           >
-            Create first job
+            Create trade
           </button>
         </div>
         <div className="grid md:grid-cols-4 gap-3 text-xs">
@@ -565,14 +698,21 @@ export default function JobConsole() {
         </div>
       </section>
 
+      <section className="grid md:grid-cols-4 gap-3">
+        {STACK_FIT.map(([title, detail]) => (
+          <div key={title} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+            <div className="text-sm font-semibold text-white">{title}</div>
+            <p className="text-xs text-gray-500 mt-2">{detail}</p>
+          </div>
+        ))}
+      </section>
+
       <IdentityConsole compact onVerified={setVerifiedIdentity} />
 
       {/* Create form */}
       {showCreate && (
         <div className="rounded-xl border border-blue-800 bg-blue-950/20 p-6">
-          <h2 className="text-base font-semibold text-white mb-4">
-            Create service job
-          </h2>
+          <h2 className="text-base font-semibold text-white mb-4">Create trade settlement</h2>
           <CreateJobForm onCreated={handleCreated} verifiedIdentity={verifiedIdentity} />
         </div>
       )}
@@ -611,19 +751,19 @@ export default function JobConsole() {
 
       {/* Blueprint notice */}
       <div className="rounded-lg border border-gray-800 bg-gray-900/40 p-4 text-xs text-gray-600 space-y-1">
-        <div className="font-semibold text-gray-400">What works today and what is planned</div>
+        <div className="font-semibold text-gray-400">Circle and Arc stack status</div>
         <ul className="list-disc list-inside space-y-0.5">
-          <li>ERC-8004 identity verifier reads ownerOf/tokenURI from Arc Testnet</li>
+          <li>Live: USDC-denominated trade settlement workflow on Arc Testnet</li>
+          <li>Live: ERC-8004 identity verifier reads ownerOf/tokenURI from Arc Testnet</li>
           <li>
-            Wallet-submitted ERC-8183 AgenticCommerce execution on Arc Testnet (
+            Live: wallet-submitted ERC-8183 AgenticCommerce execution on Arc Testnet (
             <code>0x0747EEf0706327138c69792bF28Cd525089e4583</code>)
           </li>
-          <li>Provider budget is recorded before escrow funding</li>
-          <li>Planned: Circle Wallets for server-driven escrow funding</li>
-          <li>Planned: Gateway nanopayments for pay-per-report or pay-per-inference services</li>
-          <li>Planned: embedded wallet and policy signing path</li>
-          <li>Planned: App Kit bridge / send / swap for chain-abstracted funding</li>
-          <li>Planned: ERC-8004 agent identity registration</li>
+          <li>Live: provider budget is recorded before escrow funding</li>
+          <li>Submission gate: capture a full wallet-signed tx sequence before final submission</li>
+          <li>Next: Circle Wallets for policy-controlled agent treasury</li>
+          <li>Next: Gateway / Nanopayments for paid API, report, and document access</li>
+          <li>Next: CCTP funding, StableFX routing, and USYC treasury extensions</li>
         </ul>
       </div>
     </div>

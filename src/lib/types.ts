@@ -1,4 +1,4 @@
-// Arc Agentic Commerce Settlement – type definitions
+// Arc Trade Agent Settlement – type definitions
 // These types mirror the ERC-8183 job lifecycle concepts from the Arc docs.
 
 export type JobStatus =
@@ -11,6 +11,24 @@ export type JobStatus =
   | "failed";
 
 export type SettlementMode = "simulated" | "onchain-partial" | "onchain-verified";
+
+export type CommerceUseCase =
+  | "cross-border-trade"
+  | "service-procurement"
+  | "invoice-finance"
+  | "tokenized-asset-settlement"
+  | "agentic-economy";
+
+export interface TradeProfile {
+  useCase: CommerceUseCase;
+  invoiceId: string;
+  buyerCountry: string;
+  supplierCountry: string;
+  goodsOrService: string;
+  complianceCheck: "pending" | "passed" | "needs-review";
+  fundingSource: "buyer-wallet" | "circle-wallets-planned" | "cctp-planned" | "gateway-planned";
+  settlementRail: "USDC-on-Arc";
+}
 
 export interface ArcAgentIdentity {
   standard: "ERC-8004";
@@ -32,6 +50,7 @@ export interface ArcSettlementJob {
   amount: string;
   currency: "USDC";
   description: string;
+  tradeProfile?: TradeProfile;
   agentIdentity?: ArcAgentIdentity;
   onchainJobId?: string;
   budgetAmount?: string;
@@ -62,6 +81,7 @@ export interface ArcSettlementReceipt {
   evaluatorAddress: string;
   amount: string;
   currency: "USDC";
+  tradeProfile?: TradeProfile;
   budget: {
     amount: string;
     txHash?: string;

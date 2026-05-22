@@ -40,7 +40,7 @@ export default function ReceiptExport({ receipt }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-800/60">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-white">Settlement Receipt</span>
+          <span className="text-sm font-semibold text-white">Trade Settlement Receipt</span>
           <span
             className={`px-2 py-0.5 rounded text-xs border ${
               receipt.settlementMode === "onchain-verified"

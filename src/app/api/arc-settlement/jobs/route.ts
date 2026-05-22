@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
     amount,
     currency,
     description,
+    tradeProfile,
     agentIdentity,
   } = body;
 
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
     amount,
     currency: currency ?? "USDC",
     description,
+    tradeProfile,
     agentIdentity,
   });
 

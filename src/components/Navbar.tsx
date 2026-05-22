@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const NAV_LINKS = [
   { href: "/", label: "Overview" },
   { href: "/identity", label: "Agent Identity" },
-  { href: "/jobs", label: "Job Console" },
+  { href: "/jobs", label: "Trade Console" },
 ];
 
 export default function Navbar() {
@@ -19,7 +19,7 @@ export default function Navbar() {
           {/* Arc-inspired logo mark */}
           <span className="text-blue-400 font-bold text-lg">⬡</span>
           <span className="font-semibold text-white tracking-tight truncate">
-            Arc Agentic Commerce Settlement
+            Arc Trade Agent Settlement
           </span>
           <span className="ml-2 px-2 py-0.5 rounded text-xs bg-blue-900/60 text-blue-300 border border-blue-700">
             Testnet MVP

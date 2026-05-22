@@ -16,8 +16,11 @@ export function receiptToMarkdown(receipt: ArcSettlementReceipt): string {
   const txSection = txEntries.length
     ? `## Transaction References\n\n${txEntries.map(([k, v]) => `- **${k}**: \`${v}\``).join("\n")}\n`
     : "";
+  const tradeSection = receipt.tradeProfile
+    ? `## Trade Context\n\n| Field | Value |\n|---|---|\n| Use case | ${receipt.tradeProfile.useCase} |\n| Invoice ID | \`${receipt.tradeProfile.invoiceId}\` |\n| Buyer country | ${receipt.tradeProfile.buyerCountry} |\n| Supplier country | ${receipt.tradeProfile.supplierCountry} |\n| Goods or service | ${receipt.tradeProfile.goodsOrService} |\n| Compliance check | ${receipt.tradeProfile.complianceCheck} |\n| Funding source | ${receipt.tradeProfile.fundingSource} |\n| Settlement rail | ${receipt.tradeProfile.settlementRail} |\n`
+    : "";
 
-  return `# Arc Agentic Settlement Receipt
+  return `# Arc Trade Agent Settlement Receipt
 
 | Field | Value |
 |---|---|
@@ -28,6 +31,7 @@ export function receiptToMarkdown(receipt: ArcSettlementReceipt): string {
 | Lifecycle status | **${receipt.lifecycleStatus}** |
 | Settlement mode | ${statusBadge} |
 
+${tradeSection}
 ## Parties
 
 | Role | Address |
@@ -58,7 +62,7 @@ ${txSection}
 
 ---
 
-*This receipt was produced by Arc Agentic Commerce Settlement (ERC-8004 identity proof plus ERC-8183 wallet execution controls).
+*This receipt was produced by Arc Trade Agent Settlement (ERC-8004 identity proof plus ERC-8183 wallet execution controls).
 Live ERC-8183 settlement requires real transaction hashes from Arc Testnet.*
 `;
 }

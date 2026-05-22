@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Challenge Pack - Arc Agentic Commerce Settlement",
+  title: "Submission Pack - Arc Trade Agent Settlement",
   description:
-    "Submission-oriented overview for The Stablecoins Commerce Stack Challenge: track fit, architecture, Circle product feedback, and remaining evidence gates.",
+    "Submission-oriented overview for an SME cross-border trade settlement product on Arc.",
 };
 
 const LIVE_DEMO_URL = "https://arc-agentic-settlement-lab.vercel.app";
@@ -67,7 +67,7 @@ const FEEDBACK = [
   {
     title: "Why these products",
     points: [
-      "USDC on Arc is the direct settlement unit for agent-purchased services.",
+      "USDC on Arc is the direct settlement unit for invoice-backed cross-border trade.",
       "ERC-8004 gives the agent a verifiable identity before it can receive or execute paid work.",
       "ERC-8183 gives the business process a budgeted escrow lifecycle instead of a plain token transfer.",
       "Circle Wallets and Gateway are the right next layer for policy-controlled agent spending and high-frequency paid access.",
@@ -112,12 +112,12 @@ export default function ChallengePage() {
           The Stablecoins Commerce Stack Challenge
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-white">
-          Challenge submission pack
+          Submission evidence pack
         </h1>
         <p className="text-gray-400 max-w-3xl">
-          This page frames the MVP for the Agentic Economy track: a buyer agent purchases a
-          service with USDC on Arc, verifies agent identity, uses a budgeted job lifecycle, and
-          produces a receipt that can be reviewed by users, builders, or program judges.
+          This page frames the product across SME trade workflow, cross-border settlement, and
+          agentic economy: an importer agent settles a supplier invoice with USDC on Arc, verifies
+          agent identity, uses a budgeted ERC-8183 lifecycle, and produces an auditable receipt.
         </p>
         <div className="flex flex-wrap gap-3 pt-1">
           <a
@@ -134,7 +134,7 @@ export default function ChallengePage() {
             rel="noopener noreferrer"
             className="px-4 py-1.5 rounded border border-gray-600 text-gray-300 text-sm hover:bg-gray-800 transition-colors"
           >
-            Job Console ↗
+            Trade Console ↗
           </a>
           <a
             href={ARCSCAN_URL}
@@ -187,7 +187,7 @@ export default function ChallengePage() {
       <section className="grid md:grid-cols-3 gap-4">
         {[
           ["Track", "Best Agentic Economy Experience on Arc"],
-          ["Business flow", "Agent-purchased service with escrow and audit receipt"],
+          ["Business flow", "SME cross-border trade settlement with escrow and audit receipt"],
           ["Submission status", "MVP ready; final tx evidence and demo video pending"],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-gray-800 bg-gray-900 p-4">

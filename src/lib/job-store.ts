@@ -1,4 +1,4 @@
-// In-memory job store for Arc Agentic Commerce Settlement.
+// In-memory job store for Arc Trade Agent Settlement.
 // In a production deployment this would be replaced with a persistent database.
 
 import { randomUUID } from "crypto";
@@ -20,7 +20,17 @@ function seed() {
     amount: "25.00",
     currency: "USDC",
     description:
-      "Buyer agent purchases a market-intelligence report, locks a USDC budget, and releases payment after deliverable verification.",
+      "US importer agent purchases a supplier verification report for a Singapore exporter and releases USDC after deliverable review.",
+    tradeProfile: {
+      useCase: "cross-border-trade",
+      invoiceId: "ARC-INV-2026-001",
+      buyerCountry: "United States",
+      supplierCountry: "Singapore",
+      goodsOrService: "Supplier verification report",
+      complianceCheck: "pending",
+      fundingSource: "buyer-wallet",
+      settlementRail: "USDC-on-Arc",
+    },
     createdAt: now,
     updatedAt: now,
     settlementMode: "simulated",

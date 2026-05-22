@@ -1,4 +1,4 @@
-// Deterministic receipt generation for Arc Agentic Commerce Settlement.
+// Deterministic receipt generation for Arc Trade Agent Settlement.
 // Uses Node.js built-in crypto – server-side only, do not import in client components.
 
 import { createHash } from "crypto";
@@ -25,6 +25,7 @@ function hashReceipt(canonical: Omit<ArcSettlementReceipt, "receiptHash">): stri
     ["evaluatorAddress", canonical.evaluatorAddress],
     ["amount", canonical.amount],
     ["currency", canonical.currency],
+    ["tradeProfile", canonical.tradeProfile],
     ["budget", canonical.budget],
     ["deliverableHash", canonical.deliverableHash],
     ["txHashes", canonical.txHashes],
@@ -49,6 +50,7 @@ export function generateReceipt(job: ArcSettlementJob): ArcSettlementReceipt {
     evaluatorAddress: job.evaluatorAddress,
     amount: job.amount,
     currency: job.currency,
+    tradeProfile: job.tradeProfile,
     budget: {
       amount: job.budgetAmount ?? job.amount,
       txHash: job.setBudgetTxHash,

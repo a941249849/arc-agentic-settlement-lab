@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { jobStore, isValidTransition, VALID_TRANSITIONS } from "@/lib/job-store";
-import type { ArcAgentIdentity, JobStatus } from "@/lib/types";
+import type { ArcAgentIdentity, JobStatus, TradeProfile } from "@/lib/types";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -27,6 +27,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   let body: {
     status?: JobStatus;
     agentIdentity?: ArcAgentIdentity;
+    tradeProfile?: TradeProfile;
     budgetAmount?: string;
     deliverableHash?: string;
     createTxHash?: string;

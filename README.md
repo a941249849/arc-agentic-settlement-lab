@@ -1,42 +1,43 @@
-# Arc Agentic Commerce Settlement
+# Arc Trade Agent Settlement
 
-Arc Agentic Commerce Settlement is a testnet product prototype for agent-paid services on Arc.
+Arc Trade Agent Settlement is a testnet product for SME cross-border trade settlement on Arc.
 
-The app models a buyer agent purchasing a report, dataset, API result, or service with USDC. It verifies agent identity, creates a budgeted service job, prepares wallet-submitted Arc Testnet transactions, records deliverable evidence, and exports a deterministic settlement receipt.
+The app models an importer agent settling an invoice or trade document package with a supplier agent using USDC. It verifies agent identity, captures invoice and country-route context, creates a budgeted ERC-8183 job, prepares wallet-submitted Arc Testnet transactions, records deliverable evidence, and exports a deterministic trade settlement receipt.
 
 ```text
-buyer agent -> ERC-8004 identity -> ERC-8183 job -> provider budget -> USDC escrow -> deliverable proof -> evaluator approval -> settlement receipt
+importer agent -> ERC-8004 identity -> ERC-8183 trade job -> supplier budget -> USDC escrow -> trade proof -> evaluator approval -> settlement receipt
 ```
 
 ## Live Links
 
 - Demo: https://arc-agentic-settlement-lab.vercel.app
-- Job console: https://arc-agentic-settlement-lab.vercel.app/jobs
+- Trade console: https://arc-agentic-settlement-lab.vercel.app/jobs
 - Agent identity: https://arc-agentic-settlement-lab.vercel.app/identity
 - Arcscan: https://testnet.arcscan.app
 - Arc docs: https://docs.arc.network
 
 ## What Problem It Solves
 
-Normal stablecoin transfers prove that tokens moved. They usually do not prove why the payment happened, which agent acted, what was purchased, which budget was approved, whether the provider submitted work, or how the receipt can be audited later.
+Normal stablecoin transfers prove that tokens moved. They usually do not prove why the payment happened, which agent acted, which invoice or trade route was involved, what budget was approved, whether the supplier submitted deliverable proof, or how the receipt can be audited later.
 
-This prototype wraps a payment in a service workflow:
+This product wraps a payment in a trade workflow:
 
 | Stage | User meaning |
 | --- | --- |
-| Agent identity | The service buyer or provider can be tied to an ERC-8004 identity instead of only an address. |
-| Budget | The provider states the expected USDC amount before funding. |
+| Trade context | Invoice ID, buyer country, supplier country, goods/service, and compliance status are recorded. |
+| Agent identity | The importer or supplier can be tied to an ERC-8004 identity instead of only an address. |
+| Budget | The supplier states the expected USDC amount before funding. |
 | Escrow | Funds are prepared for the ERC-8183 job lifecycle rather than sent as a blind transfer. |
-| Deliverable | The provider records proof of completed work. |
-| Receipt | The final output binds identity, amount, deliverable hash, tx slots, and lifecycle status. |
+| Deliverable | The supplier records proof of completed trade documents or service output. |
+| Receipt | The final output binds trade context, identity, amount, deliverable hash, tx slots, and lifecycle status. |
 
 ## What Is Implemented
 
 - **USDC on Arc**: the settlement asset and gas-denominated rail used by the MVP.
 - **ERC-8004 identity proof**: prepare `register(string metadataURI)` calldata and verify existing identities by reading `ownerOf(agentId)` and `tokenURI(agentId)` from Arc Testnet.
 - **ERC-8183 AgenticCommerce lifecycle**: prepare wallet-submitted calls for `createJob`, `setBudget`, `approve`, `fund`, `submit`, and `complete`.
-- **Budgeted service workflow**: buyer-agent service request, provider budget, escrow funding, deliverable proof, evaluator approval.
-- **Receipt export**: JSON and Markdown receipts with receipt hash, deliverable hash, tx hash slots, agent identity, lifecycle status, and settlement mode.
+- **Budgeted trade workflow**: importer-agent request, supplier budget, escrow funding, deliverable proof, evaluator approval.
+- **Receipt export**: JSON and Markdown receipts with invoice/trade context, receipt hash, deliverable hash, tx hash slots, agent identity, lifecycle status, and settlement mode.
 - **Implementation documentation**: architecture notes, Arc official context, Circle product feedback, implementation boundaries.
 
 ## Current Boundaries
@@ -61,12 +62,12 @@ The strongest next gate is a real end-to-end Arc Testnet run with tx hashes for 
 
 ```mermaid
 flowchart LR
-  U[User or business] --> BA[Buyer agent]
+  U[SME importer] --> BA[Importer agent]
   BA --> ID[ERC-8004 identity proof]
-  BA --> JOB[ERC-8183 job creation]
-  JOB --> BUDGET[Provider setBudget]
+  BA --> JOB[ERC-8183 trade job]
+  JOB --> BUDGET[Supplier setBudget]
   BUDGET --> ESCROW[USDC approval and escrow funding]
-  ESCROW --> WORK[Provider deliverable hash]
+  ESCROW --> WORK[Supplier deliverable hash]
   WORK --> EVAL[Evaluator approval]
   EVAL --> RECEIPT[Settlement receipt]
 
@@ -78,8 +79,8 @@ flowchart LR
 
 ## Product Pages
 
-- `/` - product overview for agent-paid services on Arc.
-- `/jobs` - agentic commerce console for creating and advancing settlement jobs.
+- `/` - product overview for SME cross-border trade settlement on Arc.
+- `/jobs` - trade settlement console for creating and advancing invoice-backed settlement jobs.
 - `/identity` - ERC-8004 identity preparation and verifier.
 - `/challenge` - hidden submission pack for external review contexts; not part of the user flow.
 
@@ -140,7 +141,7 @@ Best Agentic Economy Experience on Arc
 Recommended short description:
 
 ```text
-An agentic commerce settlement MVP on Arc where buyer agents purchase services with USDC, verify agent identity, enforce provider budgets, escrow settlement, bind deliverable proof, and export auditable receipts.
+An SME trade settlement product on Arc where importer agents settle cross-border invoices with USDC, verify agent identity, enforce supplier budgets, escrow settlement, bind deliverable proof, and export auditable receipts.
 ```
 
 Recommended products to claim as live:
@@ -164,6 +165,7 @@ Recommended products to treat as gated or conceptual unless access is granted:
 ## Documents
 
 - [Challenge submission pack](docs/CHALLENGE_SUBMISSION_PACK.md)
+- [Submission readiness](docs/SUBMISSION_READINESS.md)
 - [Circle Product Feedback](docs/CIRCLE_PRODUCT_FEEDBACK.md)
 - [Arc Agentic Settlement Lab plan](docs/ARC_AGENTIC_SETTLEMENT_LAB_PLAN.md)
 - [Arc official context for engineering](docs/ARC_OFFICIAL_CONTEXT_FOR_ENGINEERING.md)

@@ -70,6 +70,7 @@ export async function createJob(
     | "amount"
     | "currency"
     | "description"
+    | "tradeProfile"
     | "agentIdentity"
   >
 ): Promise<ArcSettlementJob> {

@@ -6,15 +6,15 @@ This section is prepared for **The Stablecoins Commerce Stack Challenge** submis
 
 ### USDC
 
-USDC is the correct settlement asset for the MVP because the business action is denominated in dollars: a buyer agent purchases a report, API result, dataset, or service. Arc's USDC-denominated execution environment keeps the cost model easier to explain to non-crypto-native users.
+USDC is the correct settlement asset for the MVP because the business action is denominated in dollars: an importer agent settles an invoice or trade document package with an overseas supplier. Arc's USDC-denominated execution environment keeps the cost model easier to explain to non-crypto-native users.
 
 ### Circle Wallets
 
-Circle Wallets are the natural next integration for agent-controlled treasury and policy-based spending. The current MVP uses browser wallet execution because it is easier to verify publicly, but a production agentic commerce flow needs controlled wallets, role-based permissions, and repeatable backend execution.
+Circle Wallets are the natural next integration for agent-controlled treasury and policy-based spending. The current MVP uses browser wallet execution because it is easier to verify publicly, but a production trade-agent flow needs controlled wallets, role-based permissions, and repeatable backend execution.
 
 ### Gateway / Nanopayments
 
-Gateway and Nanopayments fit the next version of the product: pay-per-report, pay-per-API-call, pay-per-inference, and usage-based access. They should complement ERC-8183 job escrow rather than replace it.
+Gateway and Nanopayments fit the next version of the product: paid supplier verification, paid document access, pay-per-API-call, and usage-based agent services. They should complement ERC-8183 trade escrow rather than replace it.
 
 ### CCTP / Bridge Kit
 

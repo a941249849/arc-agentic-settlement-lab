@@ -1,9 +1,9 @@
 import type { ArcSettlementBlueprint } from "./types";
 
 export const arcSettlementBlueprint: ArcSettlementBlueprint = {
-  product: "Arc Agentic Commerce Settlement",
+  product: "Arc Trade Agent Settlement",
   version: "0.1.0",
-  phase: "Testnet MVP - Agent service settlement on Arc",
+  phase: "Testnet MVP - SME cross-border trade settlement on Arc",
   network: "Arc Testnet",
 
   contracts: {
@@ -24,22 +24,22 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
 
   capabilities: [
     {
-      name: "Agent commerce job store",
+      name: "Trade settlement job store",
       status: "implemented",
       description:
-        "Create and manage buyer-agent service jobs for the public MVP. Production storage remains a follow-up.",
+        "Create and manage importer-agent trade settlement jobs with invoice, route, and compliance context.",
     },
     {
       name: "Offchain lifecycle state machine",
       status: "implemented",
       description:
-        "Full draft -> open -> budgeted -> funded -> submitted -> settled/failed lifecycle for agent-purchased services.",
+        "Full draft -> open -> budgeted -> funded -> submitted -> settled/failed lifecycle for invoice-backed trade settlement.",
     },
     {
       name: "Deterministic receipt export",
       status: "implemented",
       description:
-        "JSON and Markdown receipts with SHA-256 hash binding job id, parties, amount, deliverable hash, settlement mode, and agent identity.",
+        "JSON and Markdown receipts with SHA-256 hash binding trade context, job id, parties, amount, deliverable hash, settlement mode, and agent identity.",
     },
     {
       name: "ERC-8183 onchain execution",
@@ -54,16 +54,16 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
         "IdentityRegistry read verification for agent owner and metadata URI. Live registration calldata preparation is implemented; connected wallet confirmation remains external.",
     },
     {
-      name: "Circle Agent Stack",
+      name: "Circle Wallets / Agent Stack",
       status: "blueprint",
       description:
-        "Agent Wallets, agent-side authorization, and paid-access primitives documented as the next live integration layer.",
+        "Policy-controlled agent treasury, server-side wallet execution, and paid-access primitives documented as the next live integration layer.",
     },
     {
       name: "Gateway nanopayments",
       status: "blueprint",
       description:
-        "Gas-efficient paid API, data-product, and agent-to-service payment layer for pay-per-report or pay-per-inference services.",
+        "Gas-efficient paid API, data-product, invoice-document, and agent-to-service payment layer.",
     },
     {
       name: "Embedded wallet and policy signing",
@@ -94,6 +94,8 @@ export const arcSettlementBlueprint: ArcSettlementBlueprint = {
     evaluatorAddress: "string - 0x...",
     amount: "string - decimal USDC amount",
     currency: "string - USDC",
+    tradeProfile:
+      "object - { useCase, invoiceId, buyerCountry, supplierCountry, goodsOrService, complianceCheck, fundingSource, settlementRail }",
     budget: "object - { amount, txHash? } - provider setBudget amount and tx reference",
     deliverableHash: "string - SHA-256 or IPFS CID of deliverable artifact",
     onchainJobId: "string - ERC-8183 AgenticCommerce job id, present after live createJob",

@@ -31,31 +31,6 @@ interface JobCardProps {
   defaultExpanded?: boolean;
 }
 
-const NEXT_ACTIONS: Partial<
-  Record<
-    ArcSettlementJob["status"],
-    { label: string; nextStatus: ArcSettlementJob["status"]; deliverableRequired?: boolean }[]
-  >
-> = {
-  draft: [{ label: "Publish request", nextStatus: "open" }],
-  open: [
-    { label: "Set provider budget", nextStatus: "budgeted" },
-    { label: "Stop settlement", nextStatus: "failed" },
-  ],
-  budgeted: [
-    { label: "Mark escrow funded", nextStatus: "funded" },
-    { label: "Stop settlement", nextStatus: "failed" },
-  ],
-  funded: [
-    { label: "Submit deliverable", nextStatus: "submitted", deliverableRequired: true },
-    { label: "Stop settlement", nextStatus: "failed" },
-  ],
-  submitted: [
-    { label: "Complete settlement", nextStatus: "settled" },
-    { label: "Reject settlement", nextStatus: "failed" },
-  ],
-};
-
 const LIFECYCLE = [
   { key: "createTxHash", label: "Create job", role: "Client", status: "open" },
   { key: "setBudgetTxHash", label: "Set budget", role: "Provider", status: "budgeted" },
@@ -590,6 +565,28 @@ function NetworkPanel() {
   );
 }
 
+function getExecutionNotice(job: ArcSettlementJob, hasOnchainEvidence: boolean) {
+  if (hasOnchainEvidence) {
+    return {
+      title: "Arc execution mode",
+      body: "This settlement is using Arc transaction evidence. Continue with the onchain execution controls.",
+      tone: "emerald",
+    };
+  }
+  if (job.status === "settled") {
+    return {
+      title: "No Arc evidence",
+      body: "This record has no Arc transaction evidence. Create a new settlement and execute it on Arc Testnet.",
+      tone: "amber",
+    };
+  }
+  return {
+    title: "Next step: execute on Arc",
+    body: "Use the wallet-signed Arc Testnet controls below. Settlement is not complete until Arc transaction evidence is recorded.",
+    tone: "slate",
+  };
+}
+
 function GuidedFlow({
   jobs,
   onCreate,
@@ -626,7 +623,7 @@ function GuidedFlow({
     {
       label: "Execute or export",
       done: hasOnchainEvidence || hasReceipt,
-      detail: hasOnchainEvidence ? "Arc tx evidence recorded" : "Export receipt",
+      detail: hasOnchainEvidence ? "Arc tx evidence recorded" : "Execute on Arc first",
     },
   ];
 
@@ -636,8 +633,8 @@ function GuidedFlow({
         <div>
           <div className="text-base font-semibold text-slate-950">Settlement path</div>
           <p className="mt-1 text-sm text-slate-500">
-            Start with a wallet, create an invoice-backed settlement, review the delivery, then
-            either execute on Arc or export a proof receipt.
+            Start with a wallet, create an invoice-backed settlement, execute each step on Arc, then
+            export a receipt backed by transaction evidence.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -688,33 +685,12 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
   const [actionError, setActionError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<ArcSettlementReceipt | null>(null);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
-  const [showOnchain, setShowOnchain] = useState(false);
-
-  async function transition(
-    nextStatus: ArcSettlementJob["status"],
-    needsDeliverable?: boolean
-  ) {
-    setActionError(null);
-    if (needsDeliverable && !deliverableHash.trim()) {
-      setActionError("Enter a deliverable hash before submitting.");
-      return;
-    }
-    if (nextStatus === "settled" && job.agentReview?.verdict !== "approve") {
-      setActionError("Run the AI evaluator and get approval before completing settlement.");
-      return;
-    }
-    try {
-      const patch: Partial<ArcSettlementJob> = { status: nextStatus };
-      if (nextStatus === "budgeted") patch.budgetAmount = job.amount;
-      if (needsDeliverable && deliverableHash.trim()) patch.deliverableHash = deliverableHash.trim();
-      const updated = await updateJob(job.id, patch);
-      onUpdate(updated);
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Update failed");
-    }
-  }
 
   async function loadReceipt() {
+    if (!hasOnchainEvidence) {
+      setActionError("Run the Arc onchain execution steps before generating a receipt.");
+      return;
+    }
     setLoadingReceipt(true);
     try {
       const nextReceipt = await fetchReceipt(job.id);
@@ -744,10 +720,7 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
   const txCount = LIFECYCLE.filter((step) => jobTx(job, step.key)).length;
   const reviewApproved = job.agentReview?.verdict === "approve";
   const hasOnchainEvidence = txCount > 0 || job.settlementMode !== "simulated";
-  const localActionsDisabled = hasOnchainEvidence;
-  const actions = (NEXT_ACTIONS[job.status] ?? []).filter(
-    (action) => !localActionsDisabled && (action.nextStatus !== "settled" || reviewApproved)
-  );
+  const modeNotice = getExecutionNotice(job, hasOnchainEvidence);
   const route = job.tradeProfile
     ? `${job.tradeProfile.buyerCountry} → ${job.tradeProfile.supplierCountry}`
     : "Custom route";
@@ -780,6 +753,23 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
         <div className="border-t border-slate-100 px-4 pb-4">
           <div className="grid gap-5 pt-4">
             <div className="space-y-5">
+              <section
+                className={`rounded-lg border p-4 ${
+                  modeNotice.tone === "emerald"
+                    ? "border-emerald-200 bg-emerald-50"
+                    : modeNotice.tone === "amber"
+                    ? "border-amber-200 bg-amber-50"
+                    : "border-slate-200 bg-slate-50"
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-950">{modeNotice.title}</div>
+                    <p className="mt-1 text-xs text-slate-600">{modeNotice.body}</p>
+                  </div>
+                </div>
+              </section>
+
               <section>
                 <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Trade parties
@@ -871,61 +861,24 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
               />
 
               <section className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
                   <div>
                     <div className="text-sm font-semibold text-slate-950">Onchain execution</div>
                     <div className="text-xs text-slate-500">
-                      {job.status === "settled" && job.settlementMode === "simulated" && !hasOnchainEvidence
-                        ? "This record is completed as a local proof. Create a new settlement for Arc execution."
-                        : "Wallet-signed ERC-8183 settlement on Arc Testnet."}
+                      Wallet-signed ERC-8183 settlement on Arc Testnet.
                     </div>
                   </div>
-                  {!(job.status === "settled" && job.settlementMode === "simulated" && !hasOnchainEvidence) && (
-                    <button
-                      onClick={() => setShowOnchain((value) => !value)}
-                      className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      {showOnchain ? "Hide controls" : "Execute on Arc"}
-                    </button>
-                  )}
                 </div>
-                {showOnchain && !(job.status === "settled" && job.settlementMode === "simulated" && !hasOnchainEvidence) && (
-                  <OnchainExecutionPanel
-                    job={job}
-                    deliverableHash={deliverableHash || job.deliverableHash || ""}
-                    onUpdate={onUpdate}
-                  />
-                )}
+                <OnchainExecutionPanel
+                  job={job}
+                  deliverableHash={deliverableHash || job.deliverableHash || ""}
+                  onUpdate={onUpdate}
+                />
               </section>
-
-              {localActionsDisabled && (
-                <p className="text-xs text-slate-500">
-                  Local lifecycle buttons are locked once Arc transaction evidence exists. Continue
-                  from the onchain execution panel.
-                </p>
-              )}
-
-              {actions.length > 0 && (
-                <section className="flex flex-wrap gap-2">
-                  {actions.map((action) => (
-                    <button
-                      key={action.nextStatus}
-                      onClick={() => transition(action.nextStatus, action.deliverableRequired)}
-                      className={`rounded-lg px-3 py-2 text-xs font-semibold ${
-                        action.nextStatus === "failed"
-                          ? "border border-red-200 text-red-700 hover:bg-red-50"
-                          : "bg-slate-950 text-white hover:bg-slate-800"
-                      }`}
-                    >
-                      {action.label}
-                    </button>
-                  ))}
-                </section>
-              )}
 
               {job.status === "submitted" && !reviewApproved && (
                 <p className="text-xs text-amber-700">
-                  AI evaluator approval is required before local or onchain completion.
+                  AI evaluator approval is required before onchain completion.
                 </p>
               )}
 
@@ -945,13 +898,13 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
                   <div>
                     <div className="text-sm font-semibold text-slate-950">Evidence receipt</div>
                     <div className="mt-1 text-xs text-slate-500">
-                      Export the business record after tx hashes are recorded.
+                      Export after Arc transaction hashes are recorded.
                     </div>
                   </div>
                   <button
                     onClick={loadReceipt}
-                    disabled={loadingReceipt}
-                    className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                    disabled={loadingReceipt || !hasOnchainEvidence}
+                    className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {loadingReceipt ? "Loading..." : "Generate"}
                   </button>

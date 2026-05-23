@@ -159,7 +159,7 @@ function checkOnchainState(job: ArcSettlementJob, checks: AgentReviewCheck[]) {
     addCheck(checks, {
       label: "Arc execution evidence",
       status: "warning",
-      detail: "This settlement is still local/simulated. Use Arc Testnet execution for production evidence.",
+      detail: "Arc transaction evidence is not recorded yet. Execute on Arc Testnet before treating this as a final settlement.",
     });
     return;
   }

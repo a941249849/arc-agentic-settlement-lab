@@ -125,6 +125,10 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
       const clientAddress = form.clientAddress || account || "";
       const providerAddress = form.providerAddress || account || "";
       const evaluatorAddress = form.evaluatorAddress || account || "";
+      const invoiceId =
+        form.invoiceId === "ARC-NEW-ORDER"
+          ? `ARC-${Date.now().toString(36).toUpperCase()}`
+          : form.invoiceId;
       if (!clientAddress || !providerAddress || !evaluatorAddress) {
         throw new Error("Connect a wallet or fill all three role addresses.");
       }
@@ -137,7 +141,7 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
         currency: "USDC",
         tradeProfile: {
           useCase: form.useCase,
-          invoiceId: form.invoiceId,
+          invoiceId,
           buyerCountry: form.buyerCountry,
           supplierCountry: form.supplierCountry,
           goodsOrService: form.goodsOrService,
@@ -384,10 +388,7 @@ function AgentReviewPanel({
   const [error, setError] = useState<string | null>(null);
   const review = job.agentReview;
   const styles = review ? reviewStyles(review.verdict) : null;
-  const canReview =
-    job.status === "submitted" ||
-    job.status === "settled" ||
-    Boolean(deliverableHash.trim() || job.deliverableHash);
+  const canReview = job.status === "submitted" || job.status === "settled";
 
   async function runReview() {
     setRunning(true);
@@ -437,7 +438,7 @@ function AgentReviewPanel({
 
       {!canReview && (
         <p className="mt-3 text-xs text-slate-500">
-          Submit or enter a deliverable hash before the evaluator can make a release decision.
+          Submit the deliverable proof on Arc before the evaluator can make a release decision.
         </p>
       )}
 
@@ -483,8 +484,8 @@ function ReceiptSummary({
   jobs: ArcSettlementJob[];
   onSelect: (job: ArcSettlementJob) => void;
 }) {
-  const receiptReadyJobs = jobs.filter(
-    (job) => job.settlementMode === "onchain-verified" || job.settlementMode === "onchain-partial"
+  const receiptReadyJobs = jobs.filter((job) =>
+    LIFECYCLE.some((step) => Boolean(jobTx(job, step.key)))
   );
 
   if (receiptReadyJobs.length === 0) {
@@ -598,7 +599,11 @@ function GuidedFlow({
   const activeJob = jobs.find((job) => job.status !== "settled" && job.status !== "failed") ?? jobs[0];
   const hasReview = jobs.some((job) => job.agentReview?.verdict === "approve");
   const hasReceipt = jobs.some((job) => job.receiptHash || job.status === "settled");
-  const hasOnchainEvidence = jobs.some((job) => job.createTxHash || job.settlementMode !== "simulated");
+  const completedTxCount = jobs.reduce(
+    (count, job) => count + LIFECYCLE.filter((step) => Boolean(jobTx(job, step.key))).length,
+    0
+  );
+  const hasOnchainEvidence = completedTxCount > 0;
   const steps = [
     {
       label: "Connect wallet",
@@ -611,19 +616,19 @@ function GuidedFlow({
       detail: activeJob?.tradeProfile?.invoiceId ?? "Define invoice and roles",
     },
     {
-      label: "Delivery proof",
-      done: jobs.some((job) => Boolean(job.deliverableHash)),
-      detail: "Attach sha256 or IPFS evidence",
+      label: "Arc execution",
+      done: hasOnchainEvidence,
+      detail: hasOnchainEvidence ? `${completedTxCount} tx hashes recorded` : "Sign ERC-8183 steps",
     },
     {
       label: "AI review",
       done: hasReview,
-      detail: hasReview ? "Evaluator approved release" : "Review before release",
+      detail: hasReview ? "Evaluator approved release" : "Review after proof submit",
     },
     {
-      label: "Execute or export",
+      label: "Receipt",
       done: hasOnchainEvidence || hasReceipt,
-      detail: hasOnchainEvidence ? "Arc tx evidence recorded" : "Execute on Arc first",
+      detail: hasOnchainEvidence ? "Export tx-backed record" : "Available after Arc tx",
     },
   ];
 
@@ -634,7 +639,8 @@ function GuidedFlow({
           <div className="text-base font-semibold text-slate-950">Settlement path</div>
           <p className="mt-1 text-sm text-slate-500">
             Start with a wallet, create an invoice-backed settlement, execute each step on Arc, then
-            export a receipt backed by transaction evidence.
+            export a receipt backed by transaction evidence. No settlement is final until Arc
+            transaction hashes are recorded.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -719,7 +725,7 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
 
   const txCount = LIFECYCLE.filter((step) => jobTx(job, step.key)).length;
   const reviewApproved = job.agentReview?.verdict === "approve";
-  const hasOnchainEvidence = txCount > 0 || job.settlementMode !== "simulated";
+  const hasOnchainEvidence = txCount > 0;
   const modeNotice = getExecutionNotice(job, hasOnchainEvidence);
   const route = job.tradeProfile
     ? `${job.tradeProfile.buyerCountry} → ${job.tradeProfile.supplierCountry}`

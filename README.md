@@ -10,7 +10,7 @@ importer agent -> ERC-8004 identity -> ERC-8183 trade job -> supplier budget -> 
 
 ## Live Links
 
-- Demo: https://arc-agentic-settlement-lab.vercel.app
+- App: https://arc-agentic-settlement-lab.vercel.app
 - Trade console: https://arc-agentic-settlement-lab.vercel.app/jobs
 - Agent identity: https://arc-agentic-settlement-lab.vercel.app/identity
 - Arcscan: https://testnet.arcscan.app
@@ -35,9 +35,9 @@ This product wraps a payment in a trade workflow:
 
 - **USDC on Arc**: the settlement asset and gas-denominated rail used by the MVP.
 - **ERC-8004 identity proof**: prepare `register(string metadataURI)` calldata and verify existing identities by reading `ownerOf(agentId)` and `tokenURI(agentId)` from Arc Testnet.
-- **ERC-8183 AgenticCommerce lifecycle**: prepare wallet-submitted calls for `createJob`, `setBudget`, `approve`, `fund`, `submit`, and `complete`.
+- **ERC-8183 AgenticCommerce lifecycle**: prepare wallet-submitted calls for `createJob`, `setBudget`, `approve`, `fund`, `submit`, and `complete`; the UI only advances settlement state from Arc transaction evidence.
 - **Budgeted trade workflow**: importer-agent request, supplier budget, escrow funding, deliverable proof, evaluator approval.
-- **Receipt export**: JSON and Markdown receipts with invoice/trade context, receipt hash, deliverable hash, tx hash slots, agent identity, lifecycle status, and settlement mode.
+- **Receipt export**: JSON and Markdown receipts with invoice/trade context, receipt hash, deliverable hash, tx hash slots, agent identity, lifecycle status, and settlement mode. Receipt generation is disabled until Arc transaction evidence exists.
 - **Implementation documentation**: architecture notes, Arc official context, Circle product feedback, implementation boundaries.
 
 ## Current Boundaries
@@ -170,13 +170,12 @@ Recommended products to treat as gated or conceptual unless access is granted:
 - [Arc Agentic Settlement Lab plan](docs/ARC_AGENTIC_SETTLEMENT_LAB_PLAN.md)
 - [Arc official context for engineering](docs/ARC_OFFICIAL_CONTEXT_FOR_ENGINEERING.md)
 - [Arc Discord and X research notes](docs/ARC_DISCORD_X_RESEARCH_NOTES.md)
-- [Copilot Arc strategy review](docs/COPILOT_ARC_STRATEGY_REVIEW.md)
-- [Engineering handoff](docs/ENGINEERING_HANDOFF.md)
 
 ## Public Repo Hygiene
 
 - Do not commit API keys, entity secrets, private keys, mnemonics, local logs, or browser session data.
 - Do not claim onchain completion without transaction hashes.
 - Do not claim Circle Wallets, Gateway, CCTP, USYC, or StableFX execution unless a working integration is present.
-- Settlement can remain simulated, onchain-partial, or onchain-verified. Only mark `onchain-verified` after every relevant tx hash is recorded.
+- A draft settlement is only a workspace record. Do not treat it as settled until Arc transaction hashes are recorded.
+- Only mark `onchain-verified` after every relevant ERC-8183 tx hash is recorded.
 - Not financial advice. Not a production financial system.

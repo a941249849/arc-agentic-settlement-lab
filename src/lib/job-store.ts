@@ -1,46 +1,11 @@
 // In-memory job store for Arc Trade Agent Settlement.
 // In a production deployment this would be replaced with a persistent database.
 
-import { randomUUID } from "crypto";
 import type { ArcSettlementJob, JobStatus } from "./types";
+import { randomUUID } from "crypto";
 
 // Singleton store – lives for the lifetime of the Node.js process.
 const jobs = new Map<string, ArcSettlementJob>();
-
-/** Seed a couple of demo jobs so the UI has something to show on first load. */
-function seed() {
-  if (jobs.size > 0) return;
-  const now = new Date().toISOString();
-
-  const demo: Omit<ArcSettlementJob, "id"> = {
-    status: "open",
-    clientAddress: "0x1111111111111111111111111111111111111111",
-    providerAddress: "0x2222222222222222222222222222222222222222",
-    evaluatorAddress: "0x3333333333333333333333333333333333333333",
-    amount: "25.00",
-    currency: "USDC",
-    description:
-      "US importer agent purchases a supplier verification report for a Singapore exporter and releases USDC after deliverable review.",
-    tradeProfile: {
-      useCase: "cross-border-trade",
-      invoiceId: "ARC-INV-2026-001",
-      buyerCountry: "United States",
-      supplierCountry: "Singapore",
-      goodsOrService: "Supplier verification report",
-      complianceCheck: "pending",
-      fundingSource: "buyer-wallet",
-      settlementRail: "USDC-on-Arc",
-    },
-    createdAt: now,
-    updatedAt: now,
-    settlementMode: "simulated",
-  };
-
-  const id = randomUUID();
-  jobs.set(id, { ...demo, id });
-}
-
-seed();
 
 export const jobStore = {
   /** Return all jobs sorted newest-first */

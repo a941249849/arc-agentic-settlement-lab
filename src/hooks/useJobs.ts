@@ -15,58 +15,35 @@ const VALID_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
   failed: [],
 };
 
-function seedJobs(): ArcSettlementJob[] {
-  const now = new Date().toISOString();
-  return [
-    {
-      id: crypto.randomUUID(),
-      status: "open",
-      clientAddress: "0x1111111111111111111111111111111111111111",
-      providerAddress: "0x2222222222222222222222222222222222222222",
-      evaluatorAddress: "0x3333333333333333333333333333333333333333",
-      amount: "25.00",
-      currency: "USDC",
-      description:
-        "US importer agent purchases a supplier verification report for a Singapore exporter and releases USDC after deliverable review.",
-      tradeProfile: {
-        useCase: "cross-border-trade",
-        invoiceId: "ARC-INV-2026-001",
-        buyerCountry: "United States",
-        supplierCountry: "Singapore",
-        goodsOrService: "Supplier verification report",
-        complianceCheck: "pending",
-        fundingSource: "buyer-wallet",
-        settlementRail: "USDC-on-Arc",
-      },
-      createdAt: now,
-      updatedAt: now,
-      settlementMode: "simulated",
-    },
-  ];
-}
-
 function sortJobs(jobs: ArcSettlementJob[]) {
   return [...jobs].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
 
+function isLegacySeedJob(job: ArcSettlementJob) {
+  return (
+    job.clientAddress === "0x1111111111111111111111111111111111111111" &&
+    job.providerAddress === "0x2222222222222222222222222222222222222222" &&
+    job.evaluatorAddress === "0x3333333333333333333333333333333333333333" &&
+    job.settlementMode === "simulated" &&
+    !job.createTxHash
+  );
+}
+
 function readJobs(): ArcSettlementJob[] {
   if (typeof window === "undefined") return [];
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    const seeded = seedJobs();
-    writeJobs(seeded);
-    return seeded;
-  }
+  if (!stored) return [];
   try {
     const parsed = JSON.parse(stored) as ArcSettlementJob[];
     if (!Array.isArray(parsed)) throw new Error("Stored jobs are not an array");
-    return sortJobs(parsed);
+    const jobs = sortJobs(parsed.filter((job) => !isLegacySeedJob(job)));
+    if (jobs.length !== parsed.length) writeJobs(jobs);
+    return jobs;
   } catch {
-    const seeded = seedJobs();
-    writeJobs(seeded);
-    return seeded;
+    writeJobs([]);
+    return [];
   }
 }
 
@@ -83,7 +60,8 @@ function updateStoredJob(
   if (!existing) throw new Error("Job not found");
 
   if (patch.status && patch.status !== existing.status) {
-    const valid = VALID_TRANSITIONS[existing.status]?.includes(patch.status);
+    const startingArcExecution = patch.status === "open" && Boolean(patch.createTxHash);
+    const valid = startingArcExecution || VALID_TRANSITIONS[existing.status]?.includes(patch.status);
     if (!valid) throw new Error(`Invalid transition: ${existing.status} -> ${patch.status}`);
   }
 
@@ -163,7 +141,7 @@ async function generateClientReceipt(job: ArcSettlementJob): Promise<ArcSettleme
 
 export function useJobs() {
   const [jobs, setJobs] = useState<ArcSettlementJob[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {

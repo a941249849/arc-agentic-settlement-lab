@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { decodeEventLog, type Hex } from "viem";
 import type { ArcSettlementJob } from "@/lib/types";
 import { updateJob } from "@/hooks/useJobs";
 import { ARC_TESTNET_EXPLORER } from "@/lib/arc-chain";
-import type { ArcCommerceAction } from "@/lib/arc-commerce";
+import { agenticCommerceAbi, type ArcCommerceAction } from "@/lib/arc-commerce";
 import { useArcWallet, walletErrorMessage } from "./ArcWalletProvider";
 
 interface Props {
@@ -14,12 +15,12 @@ interface Props {
 }
 
 const ACTION_LABELS: Record<ArcCommerceAction, string> = {
-  createJob: "Create Onchain Job",
-  setBudget: "Set Budget",
-  approve: "Approve USDC",
-  fund: "Fund Escrow",
-  submit: "Submit Deliverable",
-  complete: "Complete Job",
+  createJob: "1. Create onchain job",
+  setBudget: "2. Set budget",
+  approve: "3. Approve USDC",
+  fund: "4. Fund escrow",
+  submit: "5. Submit deliverable",
+  complete: "6. Complete settlement",
 };
 
 function shortHash(hash: string) {
@@ -80,6 +81,43 @@ function recommendedActions(job: ArcSettlementJob): ArcCommerceAction[] {
   return [];
 }
 
+function actionHelp(action?: ArcCommerceAction) {
+  if (action === "createJob") return "Creates the ERC-8183 settlement job on Arc Testnet.";
+  if (action === "setBudget") return "Records the supplier budget for this settlement.";
+  if (action === "approve") return "Approves USDC spend before funding escrow.";
+  if (action === "fund") return "Moves USDC into the settlement escrow.";
+  if (action === "submit") return "Submits the delivery proof hash to the onchain job.";
+  if (action === "complete") return "Releases the settlement after AI evaluator approval.";
+  return "All required wallet-signed actions are complete.";
+}
+
+function normalizeReceiptStatus(status: unknown) {
+  if (status === "success" || status === "0x1" || status === 1) return "success";
+  if (status === "reverted" || status === "0x0" || status === 0) return "reverted";
+  return "unknown";
+}
+
+function parseJobIdFromLogs(logs: unknown) {
+  if (!Array.isArray(logs)) return undefined;
+  for (const log of logs) {
+    const item = log as { data?: Hex; topics?: Hex[] };
+    if (!item.data || !Array.isArray(item.topics) || item.topics.length === 0) continue;
+    try {
+      const decoded = decodeEventLog({
+        abi: agenticCommerceAbi,
+        data: item.data,
+        topics: item.topics as [Hex, ...Hex[]],
+      });
+      if (decoded.eventName === "JobCreated") {
+        return decoded.args.jobId.toString();
+      }
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+}
+
 export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }: Props) {
   const {
     activeProvider,
@@ -106,16 +144,35 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
     evaluator: string;
   } | null>(null);
 
-  async function waitForParsedTx(hash: string) {
-    for (let i = 0; i < 30; i++) {
+  async function waitForParsedTx(provider: ReturnType<typeof getProvider>, hash: string) {
+    for (let i = 0; i < 36; i++) {
       const res = await fetch(`/api/arc-commerce/tx/${hash}`);
       if (res.ok) {
         const data = await res.json();
         return data.tx as { status: "success" | "reverted"; jobId?: string };
       }
+      const walletReceipt = (await provider
+        .request({
+          method: "eth_getTransactionReceipt",
+          params: [hash],
+        })
+        .catch(() => null)) as { status?: unknown; logs?: unknown } | null;
+      if (walletReceipt) {
+        const status = normalizeReceiptStatus(walletReceipt.status);
+        if (status === "unknown") {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          continue;
+        }
+        return {
+          status,
+          jobId: parseJobIdFromLogs(walletReceipt.logs),
+        };
+      }
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
-    throw new Error("Transaction was submitted, but Arc RPC did not return a receipt in time.");
+    throw new Error(
+      "Wallet returned a transaction hash, but neither Arc RPC nor wallet RPC returned a receipt yet. Use Read getJob() or retry verification after propagation."
+    );
   }
 
   async function execute(action: ArcCommerceAction) {
@@ -162,7 +219,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       })) as string;
 
       setLastTx({ hash, action });
-      const parsed = await waitForParsedTx(hash);
+      const parsed = await waitForParsedTx(provider, hash);
       if (parsed.status !== "success") throw new Error("Transaction reverted on Arc Testnet.");
 
       const updated = await updateJob(
@@ -194,6 +251,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
   }
 
   const actions = recommendedActions(job);
+  const nextAction = actions[0];
 
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
@@ -201,8 +259,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
         <div>
           <div className="text-sm font-semibold text-slate-950">Arc Testnet transaction steps</div>
           <p className="text-xs text-slate-500 mt-1">
-            Uses the global wallet from the top-right menu. Connect once, then submit each payment
-            step from this settlement record.
+            Uses the global wallet from the top-right menu. Next: {actionHelp(nextAction)}
           </p>
         </div>
       </div>

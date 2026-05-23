@@ -43,7 +43,7 @@ export default function LifecycleBadge({ status, mode, size = "md" }: Props) {
             ? "Onchain"
             : mode === "onchain-partial"
             ? "Partial"
-            : "Sim"}
+            : "Pending tx"}
         </span>
       )}
     </span>

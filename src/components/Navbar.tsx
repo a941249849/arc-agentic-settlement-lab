@@ -7,8 +7,8 @@ import { useArcWallet } from "./ArcWalletProvider";
 
 const NAV_LINKS = [
   { href: "/", label: "Overview" },
-  { href: "/identity", label: "Agent Identity" },
-  { href: "/jobs", label: "Settlement Workspace" },
+  { href: "/jobs", label: "Deal Room" },
+  { href: "/identity", label: "Agent Proof" },
 ];
 
 export default function Navbar() {
@@ -46,7 +46,7 @@ export default function Navbar() {
             A
           </span>
           <span className="font-semibold text-slate-950 tracking-tight truncate">
-            Arc Settlement Workspace
+            Arc Escrow Deal Room
           </span>
           <span className="ml-2 px-2 py-0.5 rounded-lg text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
             Testnet
@@ -97,7 +97,7 @@ export default function Navbar() {
                   <div>
                     <div className="font-semibold text-slate-950">Wallet</div>
                     <div className="mt-1 text-xs text-slate-500">
-                      Connect once. The app will add or switch to Arc Testnet automatically.
+                      OKX Wallet and MetaMask are supported. The app will add or switch to Arc Testnet before signing.
                     </div>
                   </div>
                   <button
@@ -191,7 +191,7 @@ export default function Navbar() {
             rel="noopener noreferrer"
             className="text-xs text-emerald-700 hover:underline"
           >
-            Arcscan ↗
+            Arcscan
           </a>
         </div>
       </div>

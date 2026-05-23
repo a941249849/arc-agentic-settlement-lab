@@ -1,9 +1,9 @@
 import JobConsole from "@/components/JobConsole";
 
 export const metadata = {
-  title: "Trade Settlement Console - Arc Trade Agent Settlement",
+  title: "Escrow Deal Room - Arc Trade Agent Settlement",
   description:
-    "Create SME trade settlement jobs, verify ERC-8004 identity, prepare ERC-8183 wallet execution, and export receipts.",
+    "Create proof-gated USDC escrow deals on Arc with delivery evidence, evaluator approval, and auditable receipts.",
 };
 
 export default function JobsPage() {

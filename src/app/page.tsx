@@ -2,16 +2,16 @@ import Link from "next/link";
 import { arcSettlementBlueprint } from "@/lib/arc-blueprint";
 
 const FLOW = [
-  ["Buyer agent", "opens a settlement request"],
-  ["Supplier agent", "sets budget and submits proof"],
-  ["USDC escrow", "locks value on Arc Testnet"],
-  ["Evaluator", "approves completion"],
-  ["Receipt", "exports business and tx evidence"],
+  ["Create the deal", "buyer, supplier, amount, route, and release condition"],
+  ["Lock USDC", "Arc escrow holds funds before the supplier is paid"],
+  ["Submit proof", "delivery evidence is attached to the settlement"],
+  ["Run evaluator", "the release agent approves or rejects payment"],
+  ["Export receipt", "business context and Arc evidence are bound together"],
 ];
 
 const DIFFERENCES = [
-  ["Payment app", "Optimizes for balance, send, receive, checkout, or invoice links."],
-  ["This workspace", "Optimizes for trade context, agent roles, escrow lifecycle, delivery proof, and audit receipts."],
+  ["Normal transfer", "A wallet sends tokens to another address. It proves movement, not the business reason."],
+  ["This product", "USDC is locked first, proof is required, an evaluator decision gates release, and the receipt keeps the evidence."],
 ];
 
 export default function OverviewPage() {
@@ -23,27 +23,28 @@ export default function OverviewPage() {
         <section className="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
           <div>
             <div className="inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-              Arc Testnet · USDC settlement · Agentic commerce
+              Arc Testnet · USDC escrow · Agentic commerce
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-              A settlement workspace for AI-agent trade workflows.
+              Proof-gated USDC payments for cross-border deals.
             </h1>
             <p className="mt-4 max-w-2xl text-base text-slate-600">
-              Create a cross-border trade request, lock USDC in escrow, attach delivery evidence,
-              complete evaluator approval, and export a receipt with every Arc transaction hash.
+              Open a deal room, lock USDC on Arc, require delivery proof, let an evaluator agent approve release,
+              and export an auditable receipt. This is built for trade workflows where payment should not behave
+              like a blind token transfer.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/jobs"
                 className="rounded-lg bg-slate-950 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
               >
-                Open workspace
+                Open deal room
               </Link>
               <Link
                 href="/identity"
                 className="rounded-lg border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
-                Verify agent identity
+                Verify agent proof
               </Link>
             </div>
           </div>
@@ -80,7 +81,7 @@ export default function OverviewPage() {
         </section>
 
         <section className="rounded-lg border border-slate-200 bg-white p-5">
-          <div className="text-lg font-semibold text-slate-950">How it differs from a normal transfer</div>
+          <div className="text-lg font-semibold text-slate-950">Why this is not a normal transfer</div>
           <div className="mt-4 divide-y divide-slate-100">
             {DIFFERENCES.map(([label, value]) => (
               <div key={label} className="grid gap-2 py-3 text-sm md:grid-cols-[180px_1fr]">
@@ -93,7 +94,7 @@ export default function OverviewPage() {
 
         <section className="grid gap-4 md:grid-cols-2">
           <div className="rounded-lg border border-slate-200 bg-white p-5">
-            <div className="text-sm font-semibold text-slate-950">AgenticCommerce contract</div>
+            <div className="text-sm font-semibold text-slate-950">AgenticCommerce escrow contract</div>
             <code className="mt-2 block break-all text-xs text-emerald-700">
               {blueprint.contracts.agenticCommerce}
             </code>

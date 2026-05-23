@@ -1,18 +1,18 @@
 # Arc Trade Agent Settlement
 
-Arc Trade Agent Settlement is a testnet product for SME cross-border trade settlement on Arc.
+Arc Trade Agent Settlement is a testnet product for proof-gated USDC payments on Arc.
 
-The app models an importer agent settling an invoice or trade document package with a supplier agent using USDC. It verifies agent identity, captures invoice and country-route context, creates a budgeted ERC-8183 job, prepares wallet-submitted Arc Testnet transactions, records deliverable evidence, and exports a deterministic trade settlement receipt.
+The app models a buyer opening a deal room with a supplier, locking USDC in Arc escrow, requiring delivery proof, running an evaluator decision, and exporting a deterministic settlement receipt. It is built for cross-border trade and agentic commerce workflows where payment should be released only after evidence exists.
 
 ```text
-importer agent -> ERC-8004 identity -> ERC-8183 trade job -> supplier budget -> USDC escrow -> trade proof -> evaluator approval -> settlement receipt
+deal room -> optional ERC-8004 agent proof -> ERC-8183 settlement job -> supplier budget -> USDC escrow -> delivery proof -> evaluator approval -> settlement receipt
 ```
 
 ## Live Links
 
 - App: https://arc-agentic-settlement-lab.vercel.app
-- Trade console: https://arc-agentic-settlement-lab.vercel.app/jobs
-- Agent identity: https://arc-agentic-settlement-lab.vercel.app/identity
+- Deal room: https://arc-agentic-settlement-lab.vercel.app/jobs
+- Agent proof: https://arc-agentic-settlement-lab.vercel.app/identity
 - Arcscan: https://testnet.arcscan.app
 - Arc docs: https://docs.arc.network
 
@@ -20,12 +20,12 @@ importer agent -> ERC-8004 identity -> ERC-8183 trade job -> supplier budget -> 
 
 Normal stablecoin transfers prove that tokens moved. They usually do not prove why the payment happened, which agent acted, which invoice or trade route was involved, what budget was approved, whether the supplier submitted deliverable proof, or how the receipt can be audited later.
 
-This product wraps a payment in a trade workflow:
+This product wraps payment in an escrow workflow:
 
 | Stage | User meaning |
 | --- | --- |
 | Trade context | Invoice ID, buyer country, supplier country, goods/service, and compliance status are recorded. |
-| Agent identity | The importer or supplier can be tied to an ERC-8004 identity instead of only an address. |
+| Agent proof | The importer, supplier, or evaluator can be tied to an ERC-8004 identity instead of only an address. |
 | Budget | The supplier states the expected USDC amount before funding. |
 | Escrow | Funds are prepared for the ERC-8183 job lifecycle rather than sent as a blind transfer. |
 | Deliverable | The supplier records proof of completed trade documents or service output. |
@@ -36,7 +36,7 @@ This product wraps a payment in a trade workflow:
 - **USDC on Arc**: the settlement asset and gas-denominated rail used by the MVP.
 - **ERC-8004 identity proof**: prepare `register(string metadataURI)` calldata and verify existing identities by reading `ownerOf(agentId)` and `tokenURI(agentId)` from Arc Testnet.
 - **ERC-8183 AgenticCommerce lifecycle**: prepare wallet-submitted calls for `createJob`, `setBudget`, `approve`, `fund`, `submit`, and `complete`; the UI only advances settlement state from Arc transaction evidence.
-- **Budgeted trade workflow**: importer-agent request, supplier budget, escrow funding, deliverable proof, evaluator approval.
+- **Proof-gated deal room**: buyer request, supplier budget, escrow funding, deliverable proof, evaluator approval.
 - **Receipt export**: JSON and Markdown receipts with invoice/trade context, receipt hash, deliverable hash, tx hash slots, agent identity, lifecycle status, and settlement mode. Receipt generation is disabled until Arc transaction evidence exists.
 - **Implementation documentation**: architecture notes, Arc official context, Circle product feedback, implementation boundaries.
 
@@ -79,9 +79,9 @@ flowchart LR
 
 ## Product Pages
 
-- `/` - product overview for SME cross-border trade settlement on Arc.
-- `/jobs` - trade settlement console for creating and advancing invoice-backed settlement jobs.
-- `/identity` - ERC-8004 identity preparation and verifier.
+- `/` - product overview for proof-gated USDC escrow on Arc.
+- `/jobs` - deal room for creating and advancing escrow-backed settlement deals.
+- `/identity` - optional ERC-8004 agent proof preparation and verifier.
 - `/challenge` - hidden submission pack for external review contexts; not part of the user flow.
 
 ## API Surface
@@ -141,7 +141,7 @@ Best Agentic Economy Experience on Arc
 Recommended short description:
 
 ```text
-An SME trade settlement product on Arc where importer agents settle cross-border invoices with USDC, verify agent identity, enforce supplier budgets, escrow settlement, bind deliverable proof, and export auditable receipts.
+An Arc escrow deal room where USDC payments wait for delivery proof, evaluator approval, and auditable receipt evidence instead of behaving like blind wallet transfers.
 ```
 
 Recommended products to claim as live:
@@ -176,6 +176,6 @@ Recommended products to treat as gated or conceptual unless access is granted:
 - Do not commit API keys, entity secrets, private keys, mnemonics, local logs, or browser session data.
 - Do not claim onchain completion without transaction hashes.
 - Do not claim Circle Wallets, Gateway, CCTP, USYC, or StableFX execution unless a working integration is present.
-- A draft settlement is only a workspace record. Do not treat it as settled until Arc transaction hashes are recorded.
+- A draft settlement is only a local deal record. Do not treat it as settled until Arc transaction hashes are recorded.
 - Only mark `onchain-verified` after every relevant ERC-8183 tx hash is recorded.
 - Not financial advice. Not a production financial system.

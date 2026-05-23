@@ -15,12 +15,21 @@ interface Props {
 }
 
 const ACTION_LABELS: Record<ArcCommerceAction, string> = {
-  createJob: "1. Create onchain job",
-  setBudget: "2. Set budget",
-  approve: "3. Approve USDC",
-  fund: "4. Fund escrow",
-  submit: "5. Submit deliverable",
-  complete: "6. Complete settlement",
+  createJob: "Open settlement room",
+  setBudget: "Confirm supplier budget",
+  approve: "Authorize USDC",
+  fund: "Lock funds in escrow",
+  submit: "Submit delivery proof",
+  complete: "Release payment",
+};
+
+const TECHNICAL_LABELS: Record<ArcCommerceAction, string> = {
+  createJob: "createJob",
+  setBudget: "setBudget",
+  approve: "USDC approve",
+  fund: "fund",
+  submit: "submit",
+  complete: "complete",
 };
 
 function shortHash(hash: string) {
@@ -82,13 +91,20 @@ function recommendedActions(job: ArcSettlementJob): ArcCommerceAction[] {
 }
 
 function actionHelp(action?: ArcCommerceAction) {
-  if (action === "createJob") return "Creates the ERC-8183 settlement job on Arc Testnet.";
-  if (action === "setBudget") return "Records the supplier budget for this settlement.";
-  if (action === "approve") return "Approves USDC spend before funding escrow.";
-  if (action === "fund") return "Moves USDC into the settlement escrow.";
-  if (action === "submit") return "Submits the delivery proof hash to the onchain job.";
-  if (action === "complete") return "Releases the settlement after AI evaluator approval.";
-  return "All required wallet-signed actions are complete.";
+  if (action === "createJob") return "Create the Arc settlement record that binds the buyer, supplier, evaluator, invoice, and payment amount.";
+  if (action === "setBudget") return "Record the supplier budget so the escrow amount is tied to the business request.";
+  if (action === "approve") return "Authorize the settlement contract to move the selected USDC amount.";
+  if (action === "fund") return "Move USDC into escrow instead of sending it directly to the supplier.";
+  if (action === "submit") return "Attach the delivery proof to the settlement before any release decision.";
+  if (action === "complete") return "Release escrow only after the evaluator agent has approved the delivery evidence.";
+  return "The payment has enough Arc evidence for this stage.";
+}
+
+function nextSigner(action?: ArcCommerceAction) {
+  if (action === "createJob" || action === "approve" || action === "fund") return "buyer";
+  if (action === "setBudget" || action === "submit") return "supplier";
+  if (action === "complete") return "evaluator";
+  return "none";
 }
 
 function normalizeReceiptStatus(status: unknown) {
@@ -254,35 +270,56 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
   const nextAction = actions[0];
 
   return (
-    <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+    <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-sm font-semibold text-slate-950">Arc Testnet transaction steps</div>
-          <p className="text-xs text-slate-500 mt-1">
-            Uses the global wallet from the top-right menu. Next: {actionHelp(nextAction)}
+          <div className="text-sm font-semibold text-slate-950">Settlement action</div>
+          <p className="text-xs text-slate-600 mt-1">
+            The app captures each wallet transaction automatically. No manual hash copy is required.
           </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {actions.length ? (
-          actions.map((action) => (
+      {nextAction ? (
+        <div className="rounded-lg border border-emerald-200 bg-white p-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="text-base font-semibold text-slate-950">{ACTION_LABELS[nextAction]}</div>
+              <p className="mt-1 max-w-2xl text-sm text-slate-600">{actionHelp(nextAction)}</p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <span className="rounded-lg bg-slate-100 px-2 py-1 text-slate-600">
+                  Signer: {nextSigner(nextAction)}
+                </span>
+                <span className="rounded-lg bg-slate-100 px-2 py-1 text-slate-600">
+                  Wallet: {selectedWallet?.info.name ?? "OKX or MetaMask"}
+                </span>
+                <span
+                  className={`rounded-lg px-2 py-1 ${
+                    isArcNetwork ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                  }`}
+                >
+                  {isArcNetwork ? "Arc Testnet ready" : "Switches to Arc Testnet before signing"}
+                </span>
+              </div>
+            </div>
             <button
-              key={action}
-              onClick={() => execute(action)}
+              onClick={() => execute(nextAction)}
               disabled={running !== null || walletRunning !== null}
-              className="px-3 py-1.5 rounded-lg bg-slate-950 text-white text-xs font-semibold hover:bg-slate-800 disabled:opacity-50"
+              className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
             >
-              {running === action ? "Waiting..." : ACTION_LABELS[action]}
+              {running === nextAction ? "Waiting for wallet..." : ACTION_LABELS[nextAction]}
             </button>
-          ))
-        ) : (
-          <span className="text-xs font-semibold text-emerald-700">
-            {job.submitTxHash && !job.settleTxHash && job.agentReview?.verdict !== "approve"
-              ? "Run AI evaluator review before completing settlement."
-              : "All ERC-8183 actions have tx evidence."}
-          </span>
-        )}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-emerald-200 bg-white p-4 text-sm font-semibold text-emerald-700">
+          {job.submitTxHash && !job.settleTxHash && job.agentReview?.verdict !== "approve"
+            ? "Delivery proof is onchain. Run evaluator review to unlock release."
+            : "All required settlement actions for this stage are recorded."}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
         {job.onchainJobId && (
           <button
             onClick={verifyJob}
@@ -294,44 +331,28 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
         )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-2 text-xs">
-        <div>
-          <span className="text-slate-500">Wallet: </span>
-          <span className={selectedWallet ? "text-slate-950" : "text-amber-700"}>
-            {selectedWallet?.info.name ?? "not detected"}
-          </span>
+      <details className="rounded-lg border border-slate-200 bg-white p-3">
+        <summary className="cursor-pointer text-xs font-semibold text-slate-700">
+          Advanced Arc execution trail
+        </summary>
+        <div className="mt-3 grid gap-2 text-xs md:grid-cols-2">
+          <div>
+            <span className="text-slate-500">Wallet chain: </span>
+            <span className={isArcNetwork ? "text-emerald-700" : "text-amber-700"}>
+              {isArcNetwork ? "Arc Testnet" : chainId ?? "unknown"}
+            </span>
+          </div>
+          <div>
+            <span className="text-slate-500">ERC-8183 job ID: </span>
+            <span className="text-slate-950">{job.onchainJobId ?? "not created"}</span>
+          </div>
+          {actions.map((action) => (
+            <div key={action} className="text-slate-500">
+              Next contract call: <span className="font-semibold text-slate-950">{TECHNICAL_LABELS[action]}</span>
+            </div>
+          ))}
         </div>
-        <div>
-          <span className="text-slate-500">Wallet chain: </span>
-          <span className={isArcNetwork ? "text-emerald-700" : "text-amber-700"}>
-            {isArcNetwork ? "Arc Testnet" : chainId ?? "unknown"}
-          </span>
-        </div>
-        <div>
-          <span className="text-slate-500">Receipt state: </span>
-          <span className="text-slate-950">{job.settlementMode}</span>
-        </div>
-        <div>
-          <span className="text-slate-500">ERC-8183 job ID: </span>
-          <span className="text-slate-950">{job.onchainJobId ?? "not created"}</span>
-        </div>
-        <div>
-          <span className="text-slate-500">Next signer: </span>
-          <span className="text-slate-950">
-            {!job.onchainJobId
-              ? "client"
-              : !job.setBudgetTxHash
-              ? "provider"
-              : !job.approveTxHash || !job.fundTxHash
-              ? "client"
-              : !job.submitTxHash
-              ? "provider"
-              : !job.settleTxHash
-              ? "evaluator"
-              : "done"}
-          </span>
-        </div>
-      </div>
+      </details>
 
       {lastTx && (
         <a
@@ -340,7 +361,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
           rel="noopener noreferrer"
           className="block text-xs text-emerald-700 hover:underline"
         >
-          Last {lastTx.action}: {shortHash(lastTx.hash)}
+          Last transaction captured automatically: {shortHash(lastTx.hash)}
         </a>
       )}
 

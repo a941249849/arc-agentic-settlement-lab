@@ -31,6 +31,34 @@ function isLegacySeedJob(job: ArcSettlementJob) {
   );
 }
 
+function deriveStatusFromEvidence(job: ArcSettlementJob): JobStatus {
+  if (!job.createTxHash || !job.onchainJobId) return "draft";
+  if (job.settleTxHash) return "settled";
+  if (job.submitTxHash) return "submitted";
+  if (job.fundTxHash) return "funded";
+  if (job.setBudgetTxHash) return "budgeted";
+  return "open";
+}
+
+function normalizeJob(job: ArcSettlementJob): ArcSettlementJob {
+  const status = deriveStatusFromEvidence(job);
+  const settlementMode =
+    status === "draft"
+      ? "simulated"
+      : job.settleTxHash && job.createTxHash && job.setBudgetTxHash && job.approveTxHash && job.fundTxHash && job.submitTxHash
+      ? "onchain-verified"
+      : "onchain-partial";
+
+  if (status === job.status && settlementMode === job.settlementMode) return job;
+
+  return {
+    ...job,
+    status,
+    settlementMode,
+    updatedAt: job.updatedAt ?? job.createdAt,
+  };
+}
+
 function readJobs(): ArcSettlementJob[] {
   if (typeof window === "undefined") return [];
   const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -38,8 +66,8 @@ function readJobs(): ArcSettlementJob[] {
   try {
     const parsed = JSON.parse(stored) as ArcSettlementJob[];
     if (!Array.isArray(parsed)) throw new Error("Stored jobs are not an array");
-    const jobs = sortJobs(parsed.filter((job) => !isLegacySeedJob(job)));
-    if (jobs.length !== parsed.length) writeJobs(jobs);
+    const jobs = sortJobs(parsed.filter((job) => !isLegacySeedJob(job)).map(normalizeJob));
+    if (JSON.stringify(jobs) !== JSON.stringify(sortJobs(parsed))) writeJobs(jobs);
     return jobs;
   } catch {
     writeJobs([]);
@@ -60,7 +88,8 @@ function updateStoredJob(
   if (!existing) throw new Error("Job not found");
 
   if (patch.status && patch.status !== existing.status) {
-    const startingArcExecution = patch.status === "open" && Boolean(patch.createTxHash);
+    const startingArcExecution =
+      existing.status === "draft" && patch.status === "open" && Boolean(patch.createTxHash);
     const valid = startingArcExecution || VALID_TRANSITIONS[existing.status]?.includes(patch.status);
     if (!valid) throw new Error(`Invalid transition: ${existing.status} -> ${patch.status}`);
   }

@@ -134,7 +134,7 @@ export default function ChallengePage() {
             rel="noopener noreferrer"
             className="px-4 py-1.5 rounded border border-gray-600 text-gray-300 text-sm hover:bg-gray-800 transition-colors"
           >
-            Trade Console ↗
+            Deal Room ↗
           </a>
           <a
             href={ARCSCAN_URL}

@@ -5,7 +5,6 @@ import { createHash } from "crypto";
 import { createPublicClient, http, type Hex } from "viem";
 import { arcTestnet, ARC_TESTNET_RPC } from "./arc-chain";
 import {
-  agenticCommerceAbi,
   AGENTIC_COMMERCE_CONTRACT,
   ARC_USDC,
   getCommerceJob,
@@ -189,4 +188,3 @@ export async function generateReceipt(job: ArcSettlementJob): Promise<ArcSettlem
   const receiptHash = hashReceipt(base);
   return { ...base, receiptHash };
 }
-

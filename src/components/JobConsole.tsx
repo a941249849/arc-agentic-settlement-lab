@@ -222,7 +222,7 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
               onClick={() => setForm((current) => ({ ...current, evaluatorAddress: "0x3C6E03FB0CAE74925098CfbfB09e173ee9a54B68" }))}
               className="text-[10px] text-sky-400 hover:text-sky-300 font-semibold cursor-pointer"
             >
-              🤖 Use AI Agent (Auto-Release)
+              Use AI Agent (Auto-Release)
             </button>
           </div>
           <input
@@ -444,11 +444,13 @@ function ReviewPanel({
 
       setAutoReleaseStatus(data.autoReleaseStatus);
       if (data.autoReleaseStatus === "success") {
-        setError("🤖 Autonomous AI Agent evaluated the proof and successfully released locked funds on-chain!");
+        setError("Autonomous AI Agent evaluated the proof and released locked funds on-chain.");
       } else if (data.autoReleaseStatus === "insufficient-gas") {
-        setError("🤖 AI Agent approved the release, but lacks gas (0 USDC) on Arc Testnet to broadcast. Please use the button below to top up the agent, or release manually.");
+        setError("AI Agent approved the release, but lacks gas on Arc Testnet to broadcast. Use the button below to top up the agent, or release manually.");
+      } else if (data.autoReleaseStatus === "agent-not-configured") {
+        setError("AI Agent approved the release, but server-side auto-release is not configured. Use manual release for this deployment, or configure EVALUATOR_PRIVATE_KEY.");
       } else if (data.autoReleaseStatus === "failed" && data.error) {
-        setError(`🤖 AI Agent auto-release failed: ${data.error}`);
+        setError(`AI Agent auto-release failed: ${data.error}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Evaluator review failed");
@@ -494,7 +496,7 @@ function ReviewPanel({
             <span>Evaluator decision</span>
             {isAiEvaluator && (
               <span className="px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                🤖 Autonomous AI Agent Mode
+                Autonomous AI Agent Mode
               </span>
             )}
           </div>
@@ -528,7 +530,7 @@ function ReviewPanel({
       {autoReleaseStatus === "insufficient-gas" && (
         <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 text-xs text-amber-300 space-y-2">
           <div className="font-bold flex items-center gap-1">
-            <span>⚠️ AI Agent Gas Faucet Refill Required</span>
+            <span>AI Agent Gas Refill Required</span>
           </div>
           <p>
             The AI Agent evaluated and **APPROVED** the delivery proof. However, it cannot execute the release on-chain because its gas balance is empty (0 USDC).

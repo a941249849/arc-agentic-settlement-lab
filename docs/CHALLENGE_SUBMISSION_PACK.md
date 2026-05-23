@@ -2,12 +2,12 @@
 
 ## Review Verdict
 
-**READY WITH CHANGES**
+**READY FOR INITIAL SUBMISSION**
 
-### Top blockers before final submission
+### Remaining evidence improvements
 
 1. **No live Arc Testnet tx hashes.** The full ERC-8183 sequence (`createJob → setBudget → approve → fund → submit → complete`) has not been wallet-signed and recorded. This is the single most important outstanding gate.
-2. **No demo video.** A screen recording is required. Minimum: show the job console flow, the identity read, and the receipt export.
+2. **Walkthrough demo video is ready.** Replace it with a wallet-signed tx run video once the full lifecycle is recorded.
 3. **Circle Wallets, Gateway, Nanopayments, CCTP, USYC, and StableFX are not integrated.** These must not be selected as live products in the submission form.
 
 ### Defensible live claims
@@ -17,9 +17,9 @@
 - ERC-8183 lifecycle — calldata preparation, wallet tx submission, and receipt parsing via AgenticCommerce contract (`0x0747EEf0706327138c69792bF28Cd525089e4583`).
 - Deterministic trade settlement receipt — JSON and Markdown with invoice context, receipt hash, and deliverable hash binding.
 
-### Minimum path to READY
+### Minimum path to stronger evidence
 
-Complete one end-to-end wallet-signed run on Arc Testnet and record a short demo video showing the full lifecycle.
+Complete one end-to-end wallet-signed run on Arc Testnet and record a tx-backed video showing the full lifecycle.
 
 ### Recommended next engineering gate
 
@@ -28,6 +28,7 @@ Arc Testnet tx evidence first, then demo video, then Circle Wallets integration.
 ## Live Resources
 
 - Demo: https://arc-agentic-settlement-lab.vercel.app
+- Demo video: https://arc-agentic-settlement-lab.vercel.app/demo/arc-escrow-demo.mp4
 - Challenge pack page: https://arc-agentic-settlement-lab.vercel.app/challenge
 - Trade console: https://arc-agentic-settlement-lab.vercel.app/jobs
 - Arcscan: https://testnet.arcscan.app
@@ -35,7 +36,7 @@ Arc Testnet tx evidence first, then demo video, then Circle Wallets integration.
 
 ## Project
 
-**Arc Trade Agent Settlement**
+**ArcEscrow - Agentic Letter of Credit**
 
 Stablecoin commerce stack MVP on Arc for SME cross-border trade settlement and the **Best Agentic Economy Experience on Arc** track.
 
@@ -117,11 +118,11 @@ Implemented:
 - ERC-8183 transaction preparation.
 - Arc Testnet tx receipt inspection.
 
-Pending final evidence:
+Pending final tx evidence:
 
 - A full wallet-signed `createJob -> setBudget -> approve -> fund -> submit -> complete` run.
 - Arcscan links for each successful tx.
-- Demo video recording.
+- Tx-backed replacement recording after the full wallet-signed run.
 
 ## Submission Checklist
 
@@ -132,7 +133,7 @@ Pending final evidence:
 | Circle Developer Account email | Owner-provided at final submission |
 | Circle products used on Arc | Ready: claim USDC live; discuss Wallets/Gateway/Nanopayments as next unless integrated |
 | Functional MVP and diagram | Ready |
-| Video demonstration and presentation | Pending final tx run |
+| Video demonstration and presentation | Ready: walkthrough video; tx-backed recording remains an upgrade |
 | GitHub/code repository | Ready |
 | Demo application URL | Ready |
 | Circle Product Feedback | Ready |

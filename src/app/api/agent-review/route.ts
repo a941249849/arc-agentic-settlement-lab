@@ -6,7 +6,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { arcTestnet, ARC_TESTNET_RPC } from "@/lib/arc-chain";
 import { AGENTIC_COMMERCE_CONTRACT, agenticCommerceAbi, toBytes32 } from "@/lib/arc-commerce";
 
-const AGENT_PRIVATE_KEY = process.env.EVALUATOR_PRIVATE_KEY || "0x7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e";
+const AGENT_PRIVATE_KEY = process.env.EVALUATOR_PRIVATE_KEY;
 const AI_EVALUATOR_ADDRESS = "0x3C6E03FB0CAE74925098CfbfB09e173ee9a54B68";
 
 type ReviewRequest = {
@@ -352,47 +352,55 @@ export async function POST(request: Request) {
 
     if (isAiEvaluator && review.verdict === "approve" && body.job.status === "submitted" && body.job.onchainJobId) {
       try {
-        const account = privateKeyToAccount(AGENT_PRIVATE_KEY as `0x${string}`);
-        const publicClient = createPublicClient({
-          chain: arcTestnet,
-          transport: http(ARC_TESTNET_RPC),
-        });
-
-        const balance = await publicClient.getBalance({ address: account.address });
-        // Gas threshold: 2 * 10^15 wei (approx 0.002 USDC on Arc native gas)
-        const gasLimitThreshold = BigInt(2000000000000000); 
-
-        if (balance < gasLimitThreshold) {
-          autoReleaseStatus = "insufficient-gas";
+        if (!AGENT_PRIVATE_KEY) {
+          autoReleaseStatus = "agent-not-configured";
+          autoReleaseError = "EVALUATOR_PRIVATE_KEY is not configured for server-side auto-release.";
         } else {
-          const walletClient = createWalletClient({
-            account,
+          const account = privateKeyToAccount(AGENT_PRIVATE_KEY as `0x${string}`);
+          if (account.address.toLowerCase() !== AI_EVALUATOR_ADDRESS.toLowerCase()) {
+            throw new Error("Configured evaluator key does not match the selected AI evaluator address.");
+          }
+          const publicClient = createPublicClient({
             chain: arcTestnet,
             transport: http(ARC_TESTNET_RPC),
           });
 
-          const completeTx = {
-            to: AGENTIC_COMMERCE_CONTRACT as `0x${string}`,
-            data: encodeFunctionData({
-              abi: agenticCommerceAbi,
-              functionName: "complete",
-              args: [BigInt(body.job.onchainJobId), toBytes32("approved"), "0x"],
-            }),
-          };
+          const balance = await publicClient.getBalance({ address: account.address });
+          // Gas threshold: 2 * 10^15 wei (approx 0.002 USDC on Arc native gas)
+          const gasLimitThreshold = BigInt(2000000000000000);
 
-          const hash = await walletClient.sendTransaction({
-            to: completeTx.to,
-            data: completeTx.data,
-          });
-
-          const receipt = await publicClient.waitForTransactionReceipt({ hash });
-          if (receipt.status === "success") {
-            autoReleaseStatus = "success";
-            settleTxHash = hash;
-            newStatus = "settled";
+          if (balance < gasLimitThreshold) {
+            autoReleaseStatus = "insufficient-gas";
           } else {
-            autoReleaseStatus = "failed";
-            autoReleaseError = "Transaction reverted on Arc Testnet";
+            const walletClient = createWalletClient({
+              account,
+              chain: arcTestnet,
+              transport: http(ARC_TESTNET_RPC),
+            });
+
+            const completeTx = {
+              to: AGENTIC_COMMERCE_CONTRACT as `0x${string}`,
+              data: encodeFunctionData({
+                abi: agenticCommerceAbi,
+                functionName: "complete",
+                args: [BigInt(body.job.onchainJobId), toBytes32("approved"), "0x"],
+              }),
+            };
+
+            const hash = await walletClient.sendTransaction({
+              to: completeTx.to,
+              data: completeTx.data,
+            });
+
+            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+            if (receipt.status === "success") {
+              autoReleaseStatus = "success";
+              settleTxHash = hash;
+              newStatus = "settled";
+            } else {
+              autoReleaseStatus = "failed";
+              autoReleaseError = "Transaction reverted on Arc Testnet";
+            }
           }
         }
       } catch (err) {

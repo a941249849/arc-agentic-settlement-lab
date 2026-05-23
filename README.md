@@ -11,6 +11,7 @@
 - **App**: https://arc-agentic-settlement-lab.vercel.app
 - **Deal Room Console**: https://arc-agentic-settlement-lab.vercel.app/jobs
 - **Agent Proof Directory**: https://arc-agentic-settlement-lab.vercel.app/identity
+- **Demo Video**: https://arc-agentic-settlement-lab.vercel.app/demo/arc-escrow-demo.mp4
 - **Arcscan**: https://testnet.arcscan.app
 - **Arc Docs**: https://docs.arc.network
 
@@ -39,6 +40,7 @@ In global commerce, small-and-medium enterprises (SMEs) face a fundamental trust
 - **ERC-8004 identity proof**: prepare `register(string metadataURI)` calldata and verify existing identities by reading `ownerOf(agentId)` and `tokenURI(agentId)` from Arc Testnet.
 - **ERC-8183 AgenticCommerce lifecycle**: prepare wallet-submitted calls for `createJob`, `setBudget`, `approve`, `fund`, `submit`, and `complete`; the UI only advances settlement state from Arc transaction evidence.
 - **Proof-gated deal room**: buyer request, supplier budget, escrow funding, deliverable proof, evaluator approval.
+- **Evaluator auto-release path**: optional server-side release can be enabled with `EVALUATOR_PRIVATE_KEY`; no evaluator private key is committed or defaulted.
 - **Receipt export**: JSON and Markdown receipts with invoice/trade context, receipt hash, deliverable hash, tx hash slots, agent identity, lifecycle status, and settlement mode. Receipt generation is disabled until Arc transaction evidence exists.
 - **Implementation documentation**: architecture notes, Arc official context, Circle product feedback, implementation boundaries.
 
@@ -51,12 +53,14 @@ The project is intentionally explicit about what is live and what is not.
   - Wallet transaction preparation for ERC-8183.
   - Job lifecycle API and UI.
   - Deterministic receipt generation.
+  - Optional AI evaluator auto-release path when a server-side evaluator key is configured.
 - Not claimed as live yet:
   - Circle Wallets server-driven wallet flow.
   - Circle Gateway / Nanopayments buyer-seller setup.
   - CCTP / Bridge Kit funding.
   - USYC or StableFX execution.
   - Production database, secrets handling, or compliance workflow.
+  - Server-side autonomous release unless `EVALUATOR_PRIVATE_KEY` is configured in the deployment.
 
 The strongest next gate is a real end-to-end Arc Testnet run with tx hashes for the full ERC-8183 sequence.
 

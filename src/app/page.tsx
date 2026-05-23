@@ -23,15 +23,15 @@ export default function OverviewPage() {
         <section className="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
           <div>
             <div className="inline-flex rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-450">
-              Arc Testnet · USDC escrow · Agentic commerce
+              ArcEscrow · Agentic Letter of Credit · Arc Testnet
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-bold tracking-tight text-slate-100 md:text-5xl leading-tight">
-              Proof-gated USDC payments for cross-border deals.
+              Programmatic letters of credit for cross-border SME trade.
             </h1>
             <p className="mt-4 max-w-2xl text-base text-slate-400 leading-relaxed">
-              Open a deal room, lock USDC on Arc, require delivery proof, let an evaluator agent approve release,
-              and export an auditable receipt. This is built for trade workflows where payment should not behave
-              like a blind token transfer.
+              ArcEscrow replaces slow bank L/C workflows with USDC escrow on Arc. Buyers lock funds,
+              suppliers submit delivery proof, evaluator agents verify release conditions, and finance teams
+              export auditable settlement receipts.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link

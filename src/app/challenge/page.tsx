@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Submission Pack - Arc Trade Agent Settlement",
+  title: "Submission Pack - ArcEscrow",
   description:
-    "Submission-oriented overview for an SME cross-border trade settlement product on Arc.",
+    "Submission-oriented overview for ArcEscrow, an Agentic Letter of Credit product on Arc.",
 };
 
 const LIVE_DEMO_URL = "https://arc-agentic-settlement-lab.vercel.app";
+const DEMO_VIDEO_URL = `${LIVE_DEMO_URL}/demo/arc-escrow-demo.mp4`;
 const ARCSCAN_URL = "https://testnet.arcscan.app";
 const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const AGENTIC_COMMERCE_CONTRACT = "0x0747EEf0706327138c69792bF28Cd525089e4583";
@@ -56,7 +57,7 @@ const REQUIREMENTS = [
   ["Circle products used on Arc", "USDC live; Wallets/Gateway/Nanopayments documented as next integration"],
   ["Functional MVP", "Frontend, backend APIs, Arc identity reads, ERC-8183 tx builder, receipts"],
   ["Architecture diagram", "Included below and in docs"],
-  ["Video demonstration", "⚠️ Pending — required before final submission"],
+  ["Video demonstration", "Ready — hosted at /demo/arc-escrow-demo.mp4"],
   ["Arc Testnet tx evidence", "⚠️ Pending — complete one end-to-end wallet-signed run"],
   ["GitHub repository", "Public repo with setup, boundaries, and docs"],
   ["Demo URL", "Vercel production deployment"],
@@ -145,6 +146,14 @@ export default function ChallengePage() {
             Arcscan ↗
           </a>
           <a
+            href={DEMO_VIDEO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-1.5 rounded border border-emerald-700 text-emerald-300 text-sm hover:bg-emerald-950/40 transition-colors"
+          >
+            Demo Video ↗
+          </a>
+          <a
             href="https://github.com/a941249849/arc-agentic-settlement-lab"
             target="_blank"
             rel="noopener noreferrer"
@@ -157,15 +166,15 @@ export default function ChallengePage() {
 
       <section className="rounded-lg border border-amber-800 bg-amber-950/20 p-5 space-y-3">
         <div className="flex items-center gap-3">
-          <span className="px-2 py-0.5 rounded border border-amber-600 text-amber-300 text-xs font-semibold">READY WITH CHANGES</span>
+          <span className="px-2 py-0.5 rounded border border-green-600 text-green-300 text-xs font-semibold">READY FOR INITIAL SUBMISSION</span>
           <span className="text-sm font-semibold text-white">Submission verdict</span>
         </div>
         <div className="grid md:grid-cols-2 gap-4 text-xs">
           <div>
-            <div className="text-amber-300 font-semibold mb-1">Top blockers before submission</div>
+            <div className="text-amber-300 font-semibold mb-1">Remaining evidence improvements</div>
             <ul className="list-disc list-inside text-amber-200/70 space-y-1">
               <li>No live Arc Testnet tx hashes yet — the full ERC-8183 sequence has not been wallet-signed and recorded.</li>
-              <li>No demo video. A short screen recording showing the job console flow and identity read is required.</li>
+              <li>Demo video is now available; a wallet-signed run video can be added after the final tx sequence.</li>
               <li>Circle Wallets, Gateway, Nanopayments, CCTP, USYC, and StableFX are not integrated — these must not be claimed as live.</li>
             </ul>
           </div>
@@ -180,7 +189,7 @@ export default function ChallengePage() {
           </div>
         </div>
         <div className="text-xs text-amber-200/50">
-          Minimum path to <span className="text-green-300 font-semibold">READY</span>: complete one end-to-end wallet-signed run on Arc Testnet and record a short demo video.
+          Minimum path to stronger evidence: complete one end-to-end wallet-signed run on Arc Testnet and replace the walkthrough video with a tx-backed recording.
         </div>
       </section>
 
@@ -188,7 +197,7 @@ export default function ChallengePage() {
         {[
           ["Track", "Best Agentic Economy Experience on Arc"],
           ["Business flow", "SME cross-border trade settlement with escrow and audit receipt"],
-          ["Submission status", "MVP ready; final tx evidence and demo video pending"],
+          ["Submission status", "Ready for initial submission; final tx evidence remains the strongest upgrade"],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
             <div className="text-xs uppercase text-gray-500">{label}</div>

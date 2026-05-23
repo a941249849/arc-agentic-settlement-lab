@@ -2,7 +2,7 @@
 
 ## Product direction
 
-**Arc Trade Agent Settlement** targets the overlap between three official themes:
+**ArcEscrow - Agentic Letter of Credit** targets the overlap between three official themes:
 
 - cross-border stablecoin payment and remittance;
 - SME financing and trade workflow;

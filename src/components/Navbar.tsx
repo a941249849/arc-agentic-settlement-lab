@@ -46,7 +46,7 @@ export default function Navbar() {
             A
           </span>
           <span className="font-semibold text-slate-100 tracking-tight truncate">
-            Arc Escrow Deal Room
+            ArcEscrow
           </span>
           <span className="ml-2 px-2 py-0.5 rounded-lg text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             Testnet

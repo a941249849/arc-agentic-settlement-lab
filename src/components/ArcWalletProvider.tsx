@@ -101,11 +101,49 @@ export function ArcWalletProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const discovered = new Map<string, WalletProvider>();
 
+    function isLegacyWallet(wallet: WalletProvider) {
+      return wallet.info.uuid.startsWith("legacy-");
+    }
+
     function addWallet(wallet: WalletProvider) {
+      const incomingIsLegacy = isLegacyWallet(wallet);
+      const incomingName = wallet.info.name.toLowerCase();
+      const incomingRdns = wallet.info.rdns?.toLowerCase();
+
+      for (const [id, existing] of discovered.entries()) {
+        const existingIsLegacy = isLegacyWallet(existing);
+        const sameProvider = existing.provider === wallet.provider;
+        const sameName = existing.info.name.toLowerCase() === incomingName;
+        const sameRdns =
+          incomingRdns && existing.info.rdns?.toLowerCase() === incomingRdns;
+
+        if (sameProvider || sameName || sameRdns) {
+          if (!incomingIsLegacy || existingIsLegacy) {
+            discovered.delete(id);
+          } else {
+            return;
+          }
+        }
+      }
+
+      if (incomingIsLegacy && Array.from(discovered.values()).some((item) => !isLegacyWallet(item))) {
+        return;
+      }
+
+      if (!incomingIsLegacy) {
+        for (const [id, existing] of discovered.entries()) {
+          if (isLegacyWallet(existing)) discovered.delete(id);
+        }
+      }
+
       discovered.set(wallet.info.uuid, wallet);
       const nextWallets = Array.from(discovered.values());
       setWallets(nextWallets);
-      setSelectedWalletId((current) => current || wallet.info.uuid);
+      setSelectedWalletId((current) =>
+        nextWallets.some((item) => item.info.uuid === current)
+          ? current
+          : nextWallets[0]?.info.uuid ?? wallet.info.uuid
+      );
     }
 
     if (window.ethereum) {

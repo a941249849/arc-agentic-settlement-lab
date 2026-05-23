@@ -71,6 +71,7 @@ function nextPatch(
 }
 
 function recommendedActions(job: ArcSettlementJob): ArcCommerceAction[] {
+  if (job.status === "settled" && job.settlementMode === "simulated" && !job.createTxHash) return [];
   if (!job.onchainJobId) return ["createJob"];
   if (!job.setBudgetTxHash) return ["setBudget"];
   if (!job.approveTxHash) return ["approve"];
@@ -194,6 +195,8 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
   }
 
   const actions = recommendedActions(job);
+  const localSettlementLocked =
+    job.status === "settled" && job.settlementMode === "simulated" && !job.createTxHash;
 
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
@@ -208,7 +211,12 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {actions.length ? (
+        {localSettlementLocked ? (
+          <span className="text-xs font-semibold text-amber-700">
+            This settlement is already completed as a local receipt. Create a new settlement to run
+            the Arc onchain path.
+          </span>
+        ) : actions.length ? (
           actions.map((action) => (
             <button
               key={action}

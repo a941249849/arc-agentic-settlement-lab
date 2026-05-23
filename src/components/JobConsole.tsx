@@ -14,6 +14,7 @@ import LifecycleBadge from "./LifecycleBadge";
 import ReceiptExport from "./ReceiptExport";
 import IdentityConsole from "./IdentityConsole";
 import OnchainExecutionPanel from "./OnchainExecutionPanel";
+import { useArcWallet } from "./ArcWalletProvider";
 import { ARC_TESTNET_EXPLORER, ARC_TESTNET_RPC, arcTestnet } from "@/lib/arc-chain";
 import { AGENTIC_COMMERCE_CONTRACT, ARC_USDC } from "@/lib/arc-commerce";
 
@@ -107,14 +108,15 @@ function jobTx(job: ArcSettlementJob, key: (typeof LIFECYCLE)[number]["key"]) {
 }
 
 function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
+  const { account, isArcNetwork, connectWallet, running: walletRunning } = useArcWallet();
   const [form, setForm] = useState({
-    clientAddress: "0x1111111111111111111111111111111111111111",
-    providerAddress: "0x2222222222222222222222222222222222222222",
-    evaluatorAddress: "0x3333333333333333333333333333333333333333",
-    amount: "2500.00",
+    clientAddress: "",
+    providerAddress: "",
+    evaluatorAddress: "",
+    amount: "0.001",
     description:
       "US importer agent pays a Singapore supplier for a verified trade document package after evaluator approval.",
-    invoiceId: "ARC-INV-2026-002",
+    invoiceId: "ARC-NEW-ORDER",
     buyerCountry: "United States",
     supplierCountry: "Singapore",
     goodsOrService: "Trade document verification package",
@@ -124,15 +126,37 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function useConnectedWallet() {
+    setError(null);
+    try {
+      const nextAccount = account ?? (await connectWallet());
+      if (!nextAccount) throw new Error("Wallet account is not connected.");
+      setForm((current) => ({
+        ...current,
+        clientAddress: nextAccount,
+        providerAddress: nextAccount,
+        evaluatorAddress: nextAccount,
+      }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Wallet connection failed");
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
     try {
+      const clientAddress = form.clientAddress || account || "";
+      const providerAddress = form.providerAddress || account || "";
+      const evaluatorAddress = form.evaluatorAddress || account || "";
+      if (!clientAddress || !providerAddress || !evaluatorAddress) {
+        throw new Error("Connect a wallet or fill all three role addresses.");
+      }
       const job = await createJob({
-        clientAddress: form.clientAddress,
-        providerAddress: form.providerAddress,
-        evaluatorAddress: form.evaluatorAddress,
+        clientAddress,
+        providerAddress,
+        evaluatorAddress,
         amount: form.amount,
         description: form.description,
         currency: "USDC",
@@ -162,6 +186,37 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-slate-950">Wallet roles</div>
+            <div className="mt-1 text-xs text-slate-600">
+              Testing uses one connected wallet as buyer, supplier, and evaluator.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={useConnectedWallet}
+            disabled={walletRunning !== null}
+            className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {account ? "Use connected wallet" : "Connect and autofill"}
+          </button>
+        </div>
+        <div className="mt-2 text-xs text-slate-600">
+          {account ? (
+            <>
+              Connected: <code>{shortAddress(account)}</code>{" "}
+              <span className={isArcNetwork ? "text-emerald-700" : "text-amber-700"}>
+                {isArcNetwork ? "Arc Testnet ready" : "Switch to Arc Testnet"}
+              </span>
+            </>
+          ) : (
+            "No wallet connected yet."
+          )}
+        </div>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-4">
         {(
           [
@@ -174,7 +229,17 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
           <label key={id} className="space-y-1 text-xs font-medium text-slate-500">
             {label}
             <input
-              value={form[id]}
+              value={
+                form[id] ||
+                ((id === "clientAddress" || id === "providerAddress" || id === "evaluatorAddress") && account
+                  ? account
+                  : "")
+              }
+              placeholder={
+                (id === "clientAddress" || id === "providerAddress" || id === "evaluatorAddress") && account
+                  ? account
+                  : undefined
+              }
               onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
               className={`${inputClass} font-mono`}
               required
@@ -525,6 +590,98 @@ function NetworkPanel() {
   );
 }
 
+function GuidedFlow({
+  jobs,
+  onCreate,
+}: {
+  jobs: ArcSettlementJob[];
+  onCreate: () => void;
+}) {
+  const { account, isArcNetwork, connectWallet, running } = useArcWallet();
+  const activeJob = jobs.find((job) => job.status !== "settled" && job.status !== "failed") ?? jobs[0];
+  const hasReview = jobs.some((job) => job.agentReview?.verdict === "approve");
+  const hasReceipt = jobs.some((job) => job.receiptHash || job.status === "settled");
+  const hasOnchainEvidence = jobs.some((job) => job.createTxHash || job.settlementMode !== "simulated");
+  const steps = [
+    {
+      label: "Connect wallet",
+      done: Boolean(account && isArcNetwork),
+      detail: account ? `${shortAddress(account)} on ${isArcNetwork ? "Arc" : "another network"}` : "OKX or MetaMask",
+    },
+    {
+      label: "Create settlement",
+      done: Boolean(activeJob),
+      detail: activeJob?.tradeProfile?.invoiceId ?? "Define invoice and roles",
+    },
+    {
+      label: "Delivery proof",
+      done: jobs.some((job) => Boolean(job.deliverableHash)),
+      detail: "Attach sha256 or IPFS evidence",
+    },
+    {
+      label: "AI review",
+      done: hasReview,
+      detail: hasReview ? "Evaluator approved release" : "Review before release",
+    },
+    {
+      label: "Execute or export",
+      done: hasOnchainEvidence || hasReceipt,
+      detail: hasOnchainEvidence ? "Arc tx evidence recorded" : "Export receipt",
+    },
+  ];
+
+  return (
+    <section className="mb-6 rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-base font-semibold text-slate-950">Settlement path</div>
+          <p className="mt-1 text-sm text-slate-500">
+            Start with a wallet, create an invoice-backed settlement, review the delivery, then
+            either execute on Arc or export a proof receipt.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => connectWallet().catch(() => undefined)}
+            disabled={running !== null}
+            className="rounded-lg border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+          >
+            {account ? "Wallet connected" : "Connect wallet"}
+          </button>
+          <button
+            onClick={onCreate}
+            className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+          >
+            New settlement
+          </button>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-2 md:grid-cols-5">
+        {steps.map((step, index) => (
+          <div
+            key={step.label}
+            className={`rounded-lg border p-3 ${
+              step.done ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${
+                  step.done ? "bg-emerald-600 text-white" : "bg-white text-slate-500"
+                }`}
+              >
+                {step.done ? "✓" : index + 1}
+              </span>
+              <div className="text-xs font-semibold text-slate-950">{step.label}</div>
+            </div>
+            <div className="mt-2 text-xs text-slate-500">{step.detail}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }: JobCardProps) {
   const [expanded, setExpanded] = useState(Boolean(defaultExpanded));
   const [deliverableHash, setDeliverableHash] = useState(job.deliverableHash ?? "");
@@ -584,11 +741,13 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
     onDeleted();
   }
 
-  const reviewApproved = job.agentReview?.verdict === "approve";
-  const actions = (NEXT_ACTIONS[job.status] ?? []).filter(
-    (action) => action.nextStatus !== "settled" || reviewApproved
-  );
   const txCount = LIFECYCLE.filter((step) => jobTx(job, step.key)).length;
+  const reviewApproved = job.agentReview?.verdict === "approve";
+  const hasOnchainEvidence = txCount > 0 || job.settlementMode !== "simulated";
+  const localActionsDisabled = hasOnchainEvidence;
+  const actions = (NEXT_ACTIONS[job.status] ?? []).filter(
+    (action) => !localActionsDisabled && (action.nextStatus !== "settled" || reviewApproved)
+  );
   const route = job.tradeProfile
     ? `${job.tradeProfile.buyerCountry} → ${job.tradeProfile.supplierCountry}`
     : "Custom route";
@@ -716,17 +875,21 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
                   <div>
                     <div className="text-sm font-semibold text-slate-950">Onchain execution</div>
                     <div className="text-xs text-slate-500">
-                      Wallet-signed ERC-8183 settlement on Arc Testnet.
+                      {job.status === "settled" && job.settlementMode === "simulated" && !hasOnchainEvidence
+                        ? "This record is completed as a local proof. Create a new settlement for Arc execution."
+                        : "Wallet-signed ERC-8183 settlement on Arc Testnet."}
                     </div>
                   </div>
-                  <button
-                    onClick={() => setShowOnchain((value) => !value)}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    {showOnchain ? "Hide controls" : "Execute next step"}
-                  </button>
+                  {!(job.status === "settled" && job.settlementMode === "simulated" && !hasOnchainEvidence) && (
+                    <button
+                      onClick={() => setShowOnchain((value) => !value)}
+                      className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      {showOnchain ? "Hide controls" : "Execute on Arc"}
+                    </button>
+                  )}
                 </div>
-                {showOnchain && (
+                {showOnchain && !(job.status === "settled" && job.settlementMode === "simulated" && !hasOnchainEvidence) && (
                   <OnchainExecutionPanel
                     job={job}
                     deliverableHash={deliverableHash || job.deliverableHash || ""}
@@ -734,6 +897,13 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
                   />
                 )}
               </section>
+
+              {localActionsDisabled && (
+                <p className="text-xs text-slate-500">
+                  Local lifecycle buttons are locked once Arc transaction evidence exists. Continue
+                  from the onchain execution panel.
+                </p>
+              )}
 
               {actions.length > 0 && (
                 <section className="flex flex-wrap gap-2">
@@ -907,6 +1077,14 @@ export default function JobConsole() {
 
               {activeSection === "Settlements" && (
                 <>
+                  <GuidedFlow
+                    jobs={jobs}
+                    onCreate={() => {
+                      setShowCreate(true);
+                      setActiveJobId(null);
+                    }}
+                  />
+
                   <div className="mb-6 grid md:grid-cols-3 gap-3">
                     {[
                       ["Settlements", jobs.length.toString()],

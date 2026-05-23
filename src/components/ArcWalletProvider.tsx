@@ -67,9 +67,14 @@ export function walletErrorMessage(err: unknown, fallback: string) {
   if (err instanceof Error && err.message) return err.message;
   if (typeof err === "object" && err !== null) {
     const maybe = err as { message?: unknown; code?: unknown; data?: unknown };
+    const message = typeof maybe.message === "string" ? maybe.message : "";
+    const code = maybe.code !== undefined ? String(maybe.code) : "";
+    if (code === "4001" || message.toLowerCase().includes("user denied")) {
+      return "Wallet confirmation was cancelled. Reopen your wallet and confirm the request to continue.";
+    }
     const parts = [
-      typeof maybe.message === "string" ? maybe.message : null,
-      maybe.code !== undefined ? `code=${String(maybe.code)}` : null,
+      message || null,
+      code ? `code=${code}` : null,
       maybe.data !== undefined ? `data=${JSON.stringify(maybe.data)}` : null,
     ].filter(Boolean);
     if (parts.length) return parts.join(" ");

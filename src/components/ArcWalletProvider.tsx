@@ -88,6 +88,16 @@ function isUnknownChainError(message: string) {
   );
 }
 
+function walletRank(wallet: WalletProvider) {
+  const label = `${wallet.info.name} ${wallet.info.rdns ?? ""}`.toLowerCase();
+  if (label.includes("okx")) return 0;
+  if (label.includes("metamask")) return 1;
+  if (label.includes("tempo")) return 2;
+  if (label.includes("binance")) return 3;
+  if (label.includes("keplr")) return 8;
+  return 5;
+}
+
 export function ArcWalletProvider({ children }: { children: ReactNode }) {
   const [wallets, setWallets] = useState<WalletProvider[]>([]);
   const [selectedWalletId, setSelectedWalletId] = useState("");
@@ -137,7 +147,7 @@ export function ArcWalletProvider({ children }: { children: ReactNode }) {
       }
 
       discovered.set(wallet.info.uuid, wallet);
-      const nextWallets = Array.from(discovered.values());
+      const nextWallets = Array.from(discovered.values()).sort((a, b) => walletRank(a) - walletRank(b));
       setWallets(nextWallets);
       setSelectedWalletId((current) =>
         nextWallets.some((item) => item.info.uuid === current)
@@ -197,7 +207,7 @@ export function ArcWalletProvider({ children }: { children: ReactNode }) {
       (typeof window !== "undefined" ? window.okxwallet ?? window.ethereum : undefined);
     if (!provider) return null;
     const id = (await provider.request({ method: "eth_chainId" })) as string;
-    setChainId(id);
+    setChainId(id || null);
     return id;
   }, [activeProvider]);
 

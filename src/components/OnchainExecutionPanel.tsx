@@ -1,35 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import type { ArcSettlementJob } from "@/lib/types";
 import { updateJob } from "@/hooks/useJobs";
-import { ARC_TESTNET_EXPLORER, arcTestnet } from "@/lib/arc-chain";
+import { ARC_TESTNET_EXPLORER } from "@/lib/arc-chain";
 import type { ArcCommerceAction } from "@/lib/arc-commerce";
-
-type EthereumProvider = {
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-};
-
-type WalletProvider = {
-  info: {
-    uuid: string;
-    name: string;
-    icon?: string;
-    rdns?: string;
-  };
-  provider: EthereumProvider;
-};
-
-type Eip6963ProviderEvent = Event & {
-  detail?: WalletProvider;
-};
-
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-    okxwallet?: EthereumProvider;
-  }
-}
+import { useArcWallet, walletErrorMessage } from "./ArcWalletProvider";
 
 interface Props {
   job: ArcSettlementJob;
@@ -48,21 +24,6 @@ const ACTION_LABELS: Record<ArcCommerceAction, string> = {
 
 function shortHash(hash: string) {
   return `${hash.slice(0, 10)}...${hash.slice(-6)}`;
-}
-
-function walletErrorMessage(err: unknown, fallback: string) {
-  if (err instanceof Error && err.message) return err.message;
-  if (typeof err === "object" && err !== null) {
-    const maybe = err as { message?: unknown; code?: unknown; data?: unknown };
-    const parts = [
-      typeof maybe.message === "string" ? maybe.message : null,
-      maybe.code !== undefined ? `code=${String(maybe.code)}` : null,
-      maybe.data !== undefined ? `data=${JSON.stringify(maybe.data)}` : null,
-    ].filter(Boolean);
-    if (parts.length) return parts.join(" ");
-  }
-  if (typeof err === "string" && err) return err;
-  return fallback;
 }
 
 function nextPatch(
@@ -120,11 +81,20 @@ function recommendedActions(job: ArcSettlementJob): ArcCommerceAction[] {
 }
 
 export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }: Props) {
-  const [wallets, setWallets] = useState<WalletProvider[]>([]);
-  const [selectedWalletId, setSelectedWalletId] = useState<string>("");
-  const [account, setAccount] = useState<string | null>(null);
-  const [chainId, setChainId] = useState<string | null>(null);
-  const [running, setRunning] = useState<ArcCommerceAction | "verify" | "connect" | "switch" | "add" | null>(null);
+  const {
+    activeProvider,
+    account,
+    chainId,
+    arcChainIdHex,
+    isArcNetwork,
+    running: walletRunning,
+    connectWallet,
+    ensureArcNetwork,
+    refreshChainId,
+    getProvider,
+    selectedWallet,
+  } = useArcWallet();
+  const [running, setRunning] = useState<ArcCommerceAction | "verify" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastTx, setLastTx] = useState<{ hash: string; action: ArcCommerceAction } | null>(null);
   const [chainJob, setChainJob] = useState<{
@@ -135,130 +105,6 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
     provider: string;
     evaluator: string;
   } | null>(null);
-
-  const arcChainIdHex = `0x${arcTestnet.id.toString(16)}`;
-
-  useEffect(() => {
-    const discovered = new Map<string, WalletProvider>();
-
-    function addWallet(wallet: WalletProvider) {
-      discovered.set(wallet.info.uuid, wallet);
-      setWallets(Array.from(discovered.values()));
-      setSelectedWalletId((current) => current || wallet.info.uuid);
-    }
-
-    if (window.ethereum) {
-      addWallet({
-        info: { uuid: "legacy-window-ethereum", name: "Injected Wallet" },
-        provider: window.ethereum,
-      });
-    }
-
-    if (window.okxwallet) {
-      addWallet({
-        info: { uuid: "legacy-okx-wallet", name: "OKX Wallet" },
-        provider: window.okxwallet,
-      });
-    }
-
-    function onProvider(event: Event) {
-      const detail = (event as Eip6963ProviderEvent).detail;
-      if (detail?.provider && detail.info?.uuid) addWallet(detail);
-    }
-
-    window.addEventListener("eip6963:announceProvider", onProvider);
-    window.dispatchEvent(new Event("eip6963:requestProvider"));
-
-    return () => window.removeEventListener("eip6963:announceProvider", onProvider);
-  }, []);
-
-  const activeProvider = useMemo(() => {
-    return wallets.find((wallet) => wallet.info.uuid === selectedWalletId)?.provider ?? null;
-  }, [selectedWalletId, wallets]);
-
-  const selectedWallet = wallets.find((wallet) => wallet.info.uuid === selectedWalletId);
-
-  function requireProvider() {
-    const provider = activeProvider ?? window.okxwallet ?? window.ethereum;
-    if (!provider) {
-      throw new Error(
-        "No injected wallet found. Enable OKX Wallet, MetaMask, Tempo Wallet, or another EIP-1193 wallet for this site, then reload."
-      );
-    }
-    return provider;
-  }
-
-  async function refreshChainId() {
-    const provider = activeProvider ?? window.okxwallet ?? window.ethereum;
-    if (!provider) return null;
-    const id = (await provider.request({ method: "eth_chainId" })) as string;
-    setChainId(id);
-    return id;
-  }
-
-  async function addArcNetwork() {
-    setRunning("add");
-    setError(null);
-    try {
-      const provider = requireProvider();
-      await provider.request({
-        method: "wallet_addEthereumChain",
-        params: [
-          {
-            chainId: arcChainIdHex,
-            chainName: arcTestnet.name,
-            nativeCurrency: arcTestnet.nativeCurrency,
-            rpcUrls: arcTestnet.rpcUrls.default.http,
-            blockExplorerUrls: [ARC_TESTNET_EXPLORER],
-          },
-        ],
-      });
-      await refreshChainId();
-    } catch (err) {
-      setError(walletErrorMessage(err, "Could not add Arc Testnet."));
-    } finally {
-      setRunning(null);
-    }
-  }
-
-  async function switchToArcNetwork() {
-    setRunning("switch");
-    setError(null);
-    try {
-      const provider = requireProvider();
-      await provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: arcChainIdHex }],
-      });
-      await refreshChainId();
-    } catch (err) {
-      const message = walletErrorMessage(err, "");
-      if (message.includes("4902") || message.toLowerCase().includes("unrecognized")) {
-        await addArcNetwork();
-        return;
-      }
-      setError(message || "Could not switch to Arc Testnet.");
-    } finally {
-      setRunning(null);
-    }
-  }
-
-  async function connectWallet() {
-    setRunning("connect");
-    setError(null);
-    try {
-      const provider = requireProvider();
-      const accounts = (await provider.request({
-        method: "eth_requestAccounts",
-      })) as string[];
-      setAccount(accounts[0] ?? null);
-      await refreshChainId();
-    } catch (err) {
-      setError(walletErrorMessage(err, "Wallet connection failed."));
-    } finally {
-      setRunning(null);
-    }
-  }
 
   async function waitForParsedTx(hash: string) {
     for (let i = 0; i < 30; i++) {
@@ -279,12 +125,12 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       if (!activeProvider || !account) {
         await connectWallet();
       }
-      const provider = requireProvider();
+      const provider = activeProvider ?? getProvider();
       const from = account ?? (((await provider.request({ method: "eth_accounts" })) as string[])?.[0]);
       if (!from) throw new Error("Wallet account is not connected.");
       const currentChainId = await refreshChainId();
       if (currentChainId?.toLowerCase() !== arcChainIdHex.toLowerCase()) {
-        throw new Error("Wallet is not on Arc Testnet. Use 'Switch to Arc' before signing.");
+        await ensureArcNetwork();
       }
       if (action === "submit" && !deliverableHash.trim()) {
         throw new Error("Deliverable hash is required before submitting onchain.");
@@ -355,51 +201,10 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
         <div>
           <div className="text-sm font-semibold text-slate-950">Arc Testnet transaction steps</div>
           <p className="text-xs text-slate-500 mt-1">
-            Connect a wallet on Arc Testnet and submit each payment step. The receipt becomes fully
-            verified only after every required transaction hash is recorded.
+            Uses the global wallet from the top-right menu. Connect once, then submit each payment
+            step from this settlement record.
           </p>
         </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {wallets.length > 0 && (
-          <select
-            value={selectedWalletId}
-            onChange={(event) => setSelectedWalletId(event.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-xs text-slate-900"
-          >
-            {wallets.map((wallet) => (
-              <option key={wallet.info.uuid} value={wallet.info.uuid}>
-                {wallet.info.name}
-              </option>
-            ))}
-          </select>
-        )}
-        <button
-          onClick={connectWallet}
-          disabled={running !== null}
-          className="px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
-        >
-          {running === "connect"
-            ? "Connecting..."
-            : account
-            ? `${account.slice(0, 6)}...${account.slice(-4)}`
-            : "Connect Wallet"}
-        </button>
-        <button
-          onClick={switchToArcNetwork}
-          disabled={running !== null}
-          className="px-3 py-1.5 rounded-lg border border-sky-200 bg-white text-xs font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50"
-        >
-          {running === "switch" ? "Switching..." : "Switch to Arc"}
-        </button>
-        <button
-          onClick={addArcNetwork}
-          disabled={running !== null}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-        >
-          {running === "add" ? "Adding..." : "Add Arc Network"}
-        </button>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -408,7 +213,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
             <button
               key={action}
               onClick={() => execute(action)}
-              disabled={running !== null}
+              disabled={running !== null || walletRunning !== null}
               className="px-3 py-1.5 rounded-lg bg-slate-950 text-white text-xs font-semibold hover:bg-slate-800 disabled:opacity-50"
             >
               {running === action ? "Waiting..." : ACTION_LABELS[action]}
@@ -424,7 +229,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
         {job.onchainJobId && (
           <button
             onClick={verifyJob}
-            disabled={running !== null}
+            disabled={running !== null || walletRunning !== null}
             className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             {running === "verify" ? "Verifying..." : "Read getJob()"}
@@ -441,8 +246,8 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
         </div>
         <div>
           <span className="text-slate-500">Wallet chain: </span>
-          <span className={chainId?.toLowerCase() === arcChainIdHex.toLowerCase() ? "text-emerald-700" : "text-amber-700"}>
-            {chainId ?? "unknown"}
+          <span className={isArcNetwork ? "text-emerald-700" : "text-amber-700"}>
+            {isArcNetwork ? "Arc Testnet" : chainId ?? "unknown"}
           </span>
         </div>
         <div>

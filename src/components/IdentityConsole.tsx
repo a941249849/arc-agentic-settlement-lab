@@ -196,13 +196,13 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
       )}
 
       {identity && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-2">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="text-sm font-semibold text-emerald-800">
               Verified ERC-8004 Agent #{identity.agentId}
             </div>
             {onVerified && (
-              <span className="text-xs text-slate-500">Available for new jobs in this session</span>
+              <span className="text-xs text-slate-500 font-medium">Available for new jobs in this session</span>
             )}
           </div>
           <div className="grid md:grid-cols-2 gap-2 text-xs">
@@ -219,11 +219,43 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
               </code>
             </div>
           </div>
+
+          <div className="grid md:grid-cols-2 gap-3 text-xs pt-3 border-t border-emerald-100">
+            <div>
+              <span className="text-slate-500 block mb-1">Attested Reputation Score:</span>
+              {identity.reputationScore !== undefined ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-emerald-700">{identity.reputationScore}</span>
+                  <span className="text-slate-400">({identity.feedbackCount} feedbacks in 10k blocks)</span>
+                </div>
+              ) : (
+                <span className="text-slate-600 italic">No feedback found (last 10k blocks)</span>
+              )}
+            </div>
+            <div>
+              <span className="text-slate-500 block mb-1">Third-party Validation Status:</span>
+              <div className="flex items-center gap-1.5">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                  identity.validationStatus === "Validated"
+                    ? "bg-emerald-100 text-emerald-850 border border-emerald-205"
+                    : "bg-slate-200 text-slate-600 border border-slate-300"
+                }`}>
+                  {identity.validationStatus || "Unverified"}
+                </span>
+                {identity.validatorAddress && (
+                  <span className="text-slate-500 font-mono text-[10px] truncate" title={identity.validatorAddress}>
+                    by {identity.validatorAddress.slice(0, 6)}...{identity.validatorAddress.slice(-4)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
           {checks && (
-            <div className="flex flex-wrap gap-2 text-xs">
+            <div className="flex flex-wrap gap-2 text-xs pt-2">
               {checks.ownerMatches !== undefined && (
                 <span
-                  className={`px-2 py-1 rounded border ${
+                  className={`px-2 py-0.5 rounded border ${
                     checks.ownerMatches
                       ? "border-emerald-300 text-emerald-800"
                       : "border-red-300 text-red-700"
@@ -234,7 +266,7 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
               )}
               {checks.metadataMatches !== undefined && (
                 <span
-                  className={`px-2 py-1 rounded border ${
+                  className={`px-2 py-0.5 rounded border ${
                     checks.metadataMatches
                       ? "border-emerald-300 text-emerald-800"
                       : "border-red-300 text-red-700"

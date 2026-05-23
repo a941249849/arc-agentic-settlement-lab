@@ -4,6 +4,8 @@ import {
   getAddress,
   http,
   isAddress,
+  pad,
+  toHex,
 } from "viem";
 import { arcTestnet, ARC_TESTNET_EXPLORER, ARC_TESTNET_RPC } from "./arc-chain";
 import type { ArcAgentIdentity } from "./types";
@@ -59,6 +61,16 @@ export function prepareAgentRegistration(metadataURI: string) {
   };
 }
 
+function parseUint256ToSigned(hex: string): number {
+  const value = BigInt(hex.startsWith("0x") ? hex : `0x${hex}`);
+  const maxUint256 = 1n << 256n;
+  const halfUint256 = 1n << 255n;
+  if (value >= halfUint256) {
+    return Number(value - maxUint256);
+  }
+  return Number(value);
+}
+
 export async function verifyAgentIdentity(input: {
   agentId: string;
   expectedOwnerAddress?: string;
@@ -95,6 +107,74 @@ export async function verifyAgentIdentity(input: {
     }),
   ]);
 
+  const tokenIdHex = pad(toHex(tokenId), { size: 32 });
+  const latestBlock = await publicClient.getBlockNumber();
+  const blockRange = 10000n;
+  const fromBlock = latestBlock - blockRange > 0n ? latestBlock - blockRange : 0n;
+
+  // 1. Fetch reputation score and feedback count from logs
+  let reputationScore: number | undefined;
+  let feedbackCount = 0;
+  try {
+    const rawLogs = await publicClient.getLogs({
+      address: REPUTATION_REGISTRY,
+      fromBlock,
+      toBlock: latestBlock,
+    });
+    const repLogs = rawLogs.filter(
+      (log) =>
+        log.topics[0] === "0x6a4a61743519c9d648a14e6493f47dbe3ff1aa29e7785c96c8326a205e58febc" &&
+        log.topics[1]?.toLowerCase() === tokenIdHex.toLowerCase()
+    );
+    
+    feedbackCount = repLogs.length;
+    if (feedbackCount > 0) {
+      let scoreSum = 0;
+      for (const log of repLogs) {
+        const scoreWord = log.data.slice(66, 130);
+        const scoreVal = parseUint256ToSigned(scoreWord);
+        scoreSum += scoreVal;
+      }
+      reputationScore = Math.round((scoreSum / feedbackCount) * 10) / 10;
+    }
+  } catch (err) {
+    console.error("Failed to query reputation logs:", err);
+  }
+
+  // 2. Fetch validation status and validator from logs
+  let validationStatus: "Validated" | "Unverified" | "Pending" | "Failed" = "Unverified";
+  let validatorAddress: string | undefined;
+  try {
+    const rawLogs = await publicClient.getLogs({
+      address: VALIDATION_REGISTRY,
+      fromBlock,
+      toBlock: latestBlock,
+    });
+    const valLogs = rawLogs.filter(
+      (log) =>
+        log.topics[0] === "0xafddf629e874ccc3963b6a888c477bd464a6c8525024fc88759ea3b2326349ae" &&
+        log.topics[2]?.toLowerCase() === tokenIdHex.toLowerCase()
+    );
+    
+    if (valLogs.length > 0) {
+      const latestValLog = valLogs[valLogs.length - 1];
+      const validatorHex = latestValLog.topics[1];
+      if (validatorHex) {
+        validatorAddress = getAddress("0x" + validatorHex.slice(-40));
+      }
+      
+      const statusWord = latestValLog.data.slice(2, 66);
+      const statusVal = Number(BigInt(`0x${statusWord}`));
+      if (statusVal === 100 || statusVal > 0) {
+        validationStatus = "Validated";
+      } else {
+        validationStatus = "Failed";
+      }
+    }
+  } catch (err) {
+    console.error("Failed to query validation logs:", err);
+  }
+
   const checks = {
     ownerMatches: input.expectedOwnerAddress
       ? getAddress(ownerAddress) === getAddress(input.expectedOwnerAddress)
@@ -114,6 +194,10 @@ export async function verifyAgentIdentity(input: {
       registerTxHash: input.registerTxHash || undefined,
       isVerified: true,
       verifiedAt: new Date().toISOString(),
+      reputationScore,
+      feedbackCount,
+      validationStatus,
+      validatorAddress,
     },
     checks,
   };

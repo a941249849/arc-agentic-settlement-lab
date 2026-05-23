@@ -39,16 +39,16 @@ export default function Navbar() {
   }
 
   return (
-    <header className="border-b border-slate-200 bg-white/90 backdrop-blur sticky top-0 z-50">
+    <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-4 lg:gap-8">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-950 text-sm font-bold text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-emerald-400 text-sm font-bold text-slate-950 shadow-md shadow-sky-500/15">
             A
           </span>
-          <span className="font-semibold text-slate-950 tracking-tight truncate">
+          <span className="font-semibold text-slate-100 tracking-tight truncate">
             Arc Escrow Deal Room
           </span>
-          <span className="ml-2 px-2 py-0.5 rounded-lg text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="ml-2 px-2 py-0.5 rounded-lg text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             Testnet
           </span>
         </div>
@@ -58,10 +58,10 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-sm transition-all duration-200 border ${
                 pathname === href
-                  ? "bg-slate-950 text-white"
-                  : "text-slate-500 hover:text-slate-950 hover:bg-slate-100"
+                  ? "bg-sky-500/10 text-sky-450 border-sky-500/20 font-medium shadow-sm"
+                  : "text-slate-400 hover:text-slate-100 hover:bg-slate-900/50 border-transparent"
               }`}
             >
               {label}
@@ -70,16 +70,16 @@ export default function Navbar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <span className="px-2 py-1 rounded-lg text-xs bg-slate-100 text-slate-600 border border-slate-200">
+          <span className="px-2 py-1 rounded-lg text-xs bg-slate-900 text-slate-400 border border-slate-800">
             USDC on Arc
           </span>
           <div className="relative">
             <button
               onClick={() => setMenuOpen((value) => !value)}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 account && isArcNetwork
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 shadow-sm shadow-emerald-500/5"
+                  : "border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800"
               }`}
             >
               {running === "connect"
@@ -92,17 +92,17 @@ export default function Navbar() {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-80 rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-xl">
+              <div className="absolute right-0 mt-2 w-80 rounded-lg border border-slate-800 bg-slate-950/95 p-4 text-sm shadow-2xl backdrop-blur-xl">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
-                    <div className="font-semibold text-slate-950">Wallet</div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="font-semibold text-slate-100">Wallet</div>
+                    <div className="mt-1 text-xs text-slate-400">
                       OKX Wallet and MetaMask are supported. The app will add or switch to Arc Testnet before signing.
                     </div>
                   </div>
                   <button
                     onClick={() => setMenuOpen(false)}
-                    className="rounded-md px-2 py-1 text-xs text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                    className="rounded-md px-2 py-1 text-xs text-slate-400 hover:bg-slate-900 hover:text-slate-200 transition-colors"
                   >
                     Close
                   </button>
@@ -110,12 +110,12 @@ export default function Navbar() {
 
                 <div className="space-y-3">
                   {wallets.length > 0 && (
-                    <label className="block space-y-1 text-xs font-medium text-slate-500">
+                    <label className="block space-y-1 text-xs font-medium text-slate-400">
                       Wallet provider
                       <select
                         value={selectedWalletId}
                         onChange={(event) => setSelectedWalletId(event.target.value)}
-                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                        className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500"
                       >
                         {wallets.map((wallet) => (
                           <option key={wallet.info.uuid} value={wallet.info.uuid}>
@@ -126,20 +126,22 @@ export default function Navbar() {
                     </label>
                   )}
 
-                  <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs">
+                  <div className="rounded-lg border border-slate-900 bg-slate-900/40 p-3 text-xs space-y-2">
                     <div className="flex justify-between gap-3">
                       <span className="text-slate-500">Provider</span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-slate-100">
                         {selectedWallet?.info.name ?? "Not detected"}
                       </span>
                     </div>
                     <div className="mt-2 flex justify-between gap-3">
                       <span className="text-slate-500">Account</span>
-                      <span className="font-mono text-slate-900">{account ?? "Not connected"}</span>
+                      <span className="font-mono text-slate-300 truncate block max-w-[180px]" title={account ?? ""}>
+                        {account ?? "Not connected"}
+                      </span>
                     </div>
                     <div className="mt-2 flex justify-between gap-3">
                       <span className="text-slate-500">Network</span>
-                      <span className={isArcNetwork ? "font-semibold text-emerald-700" : "font-semibold text-amber-700"}>
+                      <span className={isArcNetwork ? "font-semibold text-emerald-450" : "font-semibold text-amber-450"}>
                         {isArcNetwork ? "Arc Testnet" : chainId ?? "Unknown"}
                       </span>
                     </div>
@@ -148,7 +150,7 @@ export default function Navbar() {
                   <button
                     onClick={handleConnect}
                     disabled={running !== null}
-                    className="w-full rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                    className="w-full rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50 transition-colors shadow-lg shadow-sky-500/20"
                   >
                     {account
                       ? isArcNetwork
@@ -161,26 +163,26 @@ export default function Navbar() {
                     <button
                       onClick={() => switchToArcNetwork().catch(() => undefined)}
                       disabled={running !== null}
-                      className="rounded-lg border border-sky-200 px-3 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50"
+                      className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs font-semibold text-sky-400 hover:bg-sky-500/20 disabled:opacity-50 transition-colors"
                     >
                       Switch to Arc
                     </button>
                     <button
                       onClick={() => addArcNetwork().catch(() => undefined)}
                       disabled={running !== null}
-                      className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 disabled:opacity-50 transition-colors"
                     >
                       Add Arc
                     </button>
                   </div>
 
                   {chainId && chainId.toLowerCase() !== arcChainIdHex.toLowerCase() && (
-                    <p className="text-xs text-amber-700">
+                    <p className="text-xs text-amber-500">
                       Current wallet network is not Arc Testnet. Use Connect or Switch before signing.
                     </p>
                   )}
 
-                  {error && <p className="break-words text-xs text-red-600">{error}</p>}
+                  {error && <p className="break-words text-xs text-red-400">{error}</p>}
                 </div>
               </div>
             )}
@@ -189,7 +191,7 @@ export default function Navbar() {
             href="https://testnet.arcscan.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-emerald-700 hover:underline"
+            className="text-xs text-emerald-400 hover:text-emerald-350 hover:underline transition-colors"
           >
             Arcscan
           </a>

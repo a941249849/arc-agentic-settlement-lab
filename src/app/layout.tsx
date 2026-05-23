@@ -16,11 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-[#f7f9f8] text-slate-950 font-sans">
+      <body className="min-h-full flex flex-col bg-background text-slate-100 font-sans antialiased">
         <ArcWalletProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
-          <footer className="py-4 text-center text-xs text-slate-400 border-t border-slate-200">
+          <footer className="py-6 text-center text-xs text-slate-500 border-t border-slate-900 bg-black/10 backdrop-blur-sm">
             Arc Escrow Deal Room · Arc Testnet · Not financial advice
           </footer>
         </ArcWalletProvider>

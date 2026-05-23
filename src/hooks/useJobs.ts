@@ -105,67 +105,20 @@ function updateStoredJob(
   return updated;
 }
 
-function orderedReceiptPayload(canonical: Omit<ArcSettlementReceipt, "receiptHash">) {
-  return {
-    jobId: canonical.jobId,
-    onchainJobId: canonical.onchainJobId,
-    lifecycleStatus: canonical.lifecycleStatus,
-    clientAddress: canonical.clientAddress,
-    providerAddress: canonical.providerAddress,
-    evaluatorAddress: canonical.evaluatorAddress,
-    amount: canonical.amount,
-    currency: canonical.currency,
-    tradeProfile: canonical.tradeProfile,
-    budget: canonical.budget,
-    deliverableHash: canonical.deliverableHash,
-    txHashes: canonical.txHashes,
-    agentIdentity: canonical.agentIdentity,
-    agentReview: canonical.agentReview,
-    settlementMode: canonical.settlementMode,
-    createdAt: canonical.createdAt,
-  };
-}
+export async function fetchReceipt(id: string): Promise<ArcSettlementReceipt> {
+  const job = readJobs().find((item) => item.id === id);
+  if (!job) throw new Error("Job not found");
 
-async function sha256Hex(value: string) {
-  const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-async function generateClientReceipt(job: ArcSettlementJob): Promise<ArcSettlementReceipt> {
-  const base: Omit<ArcSettlementReceipt, "receiptHash"> = {
-    receiptVersion: "arc-settlement-v1",
-    network: "Arc Testnet",
-    jobId: job.id,
-    onchainJobId: job.onchainJobId,
-    lifecycleStatus: job.status,
-    clientAddress: job.clientAddress,
-    providerAddress: job.providerAddress,
-    evaluatorAddress: job.evaluatorAddress,
-    amount: job.amount,
-    currency: job.currency,
-    tradeProfile: job.tradeProfile,
-    budget: {
-      amount: job.budgetAmount ?? job.amount,
-      txHash: job.setBudgetTxHash,
-    },
-    deliverableHash: job.deliverableHash ?? "",
-    txHashes: {
-      create: job.createTxHash,
-      setBudget: job.setBudgetTxHash,
-      approve: job.approveTxHash,
-      fund: job.fundTxHash,
-      submit: job.submitTxHash,
-      settle: job.settleTxHash,
-    },
-    agentIdentity: job.agentIdentity,
-    agentReview: job.agentReview,
-    settlementMode: job.settlementMode,
-    createdAt: job.createdAt,
-  };
-
-  const receiptHash = await sha256Hex(JSON.stringify(orderedReceiptPayload(base)));
-  return { ...base, receiptHash };
+  const res = await fetch(`/api/arc-settlement/jobs/${id}/receipt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error ?? "Failed to fetch verified receipt");
+  }
+  return data.receipt;
 }
 
 export function useJobs() {
@@ -230,8 +183,4 @@ export async function deleteJob(id: string): Promise<void> {
   writeJobs(readJobs().filter((job) => job.id !== id));
 }
 
-export async function fetchReceipt(id: string) {
-  const job = readJobs().find((item) => item.id === id);
-  if (!job) throw new Error("Job not found");
-  return generateClientReceipt(job);
-}
+

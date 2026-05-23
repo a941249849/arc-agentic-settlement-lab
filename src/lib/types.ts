@@ -42,6 +42,10 @@ export interface ArcAgentIdentity {
   registerTxHash?: string;
   isVerified: boolean;
   verifiedAt: string;
+  reputationScore?: number;
+  feedbackCount?: number;
+  validationStatus?: "Validated" | "Unverified" | "Pending" | "Failed";
+  validatorAddress?: string;
 }
 
 export interface AgentReviewCheck {

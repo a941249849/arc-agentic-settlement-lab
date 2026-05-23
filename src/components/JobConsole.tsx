@@ -160,15 +160,15 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
+    "w-full rounded-lg border border-slate-850 bg-slate-900/50 px-3 py-2 text-sm text-slate-100 shadow-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all placeholder-slate-500";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+      <div className="rounded-lg border border-sky-500/10 bg-sky-500/5 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-sm font-semibold text-slate-950">Deal roles</div>
-            <div className="mt-1 text-xs text-slate-600">
+            <div className="text-sm font-semibold text-slate-100">Deal roles</div>
+            <div className="mt-1 text-xs text-slate-400">
               For testnet, one wallet can act as buyer, supplier, and evaluator. In production these are separate parties or agents.
             </div>
           </div>
@@ -176,16 +176,16 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
             type="button"
             onClick={useConnectedWallet}
             disabled={walletRunning !== null}
-            className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-sky-600 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-500 transition-colors cursor-pointer disabled:opacity-50"
           >
             {account ? "Use connected wallet" : "Connect and autofill"}
           </button>
         </div>
-        <div className="mt-2 text-xs text-slate-600">
+        <div className="mt-2 text-xs text-slate-400">
           {account ? (
             <>
-              Connected: <code>{shortAddress(account)}</code>{" "}
-              <span className={isArcNetwork ? "text-emerald-700" : "text-amber-700"}>
+              Connected: <code className="text-sky-300">{shortAddress(account)}</code>{" "}
+              <span className={isArcNetwork ? "text-emerald-450 font-medium" : "text-amber-450 font-medium"}>
                 {isArcNetwork ? "Arc Testnet ready" : "Switch to Arc Testnet before signing"}
               </span>
             </>
@@ -204,7 +204,7 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
             { id: "amount", label: "Escrow amount (USDC)" },
           ] as const
         ).map(({ id, label }) => (
-          <label key={id} className="space-y-1 text-xs font-medium text-slate-500">
+          <label key={id} className="space-y-1 text-xs font-medium text-slate-400 block">
             {label}
             <input
               value={
@@ -221,7 +221,7 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
         ))}
       </div>
 
-      <label className="block space-y-1 text-xs font-medium text-slate-500">
+      <label className="block space-y-1 text-xs font-medium text-slate-400">
         Release condition
         <textarea
           value={form.description}
@@ -241,7 +241,7 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
             { id: "goodsOrService", label: "Goods or service" },
           ] as const
         ).map(({ id, label }) => (
-          <label key={id} className="space-y-1 text-xs font-medium text-slate-500">
+          <label key={id} className="space-y-1 text-xs font-medium text-slate-400 block">
             {label}
             <input
               value={form[id]}
@@ -252,12 +252,12 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
           </label>
         ))}
 
-        <label className="space-y-1 text-xs font-medium text-slate-500">
+        <label className="space-y-1 text-xs font-medium text-slate-400 block">
           Use case
           <select
             value={form.useCase}
             onChange={(e) => setForm((current) => ({ ...current, useCase: e.target.value as CommerceUseCase }))}
-            className={inputClass}
+            className={`${inputClass} [&>option]:bg-slate-950 [&>option]:text-slate-100`}
           >
             <option value="cross-border-trade">Cross-border trade</option>
             <option value="service-procurement">Service procurement</option>
@@ -267,7 +267,7 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
           </select>
         </label>
 
-        <label className="space-y-1 text-xs font-medium text-slate-500">
+        <label className="space-y-1 text-xs font-medium text-slate-400 block">
           Compliance state
           <select
             value={form.complianceCheck}
@@ -277,7 +277,7 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
                 complianceCheck: e.target.value as TradeProfile["complianceCheck"],
               }))
             }
-            className={inputClass}
+            className={`${inputClass} [&>option]:bg-slate-950 [&>option]:text-slate-100`}
           >
             <option value="pending">Pending</option>
             <option value="passed">Passed</option>
@@ -286,11 +286,11 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
         </label>
       </div>
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <button
         type="submit"
         disabled={submitting}
-        className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+        className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50 transition-colors shadow-lg shadow-sky-500/10 cursor-pointer"
       >
         {submitting ? "Creating deal..." : "Create deal room"}
       </button>
@@ -299,38 +299,67 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
 }
 
 function EvidenceRail({ job }: { job: ArcSettlementJob }) {
+  const currentStepIndex = EVIDENCE_STEPS.findIndex((step) => !jobTx(job, step.key));
+  const activeIndex = currentStepIndex === -1 ? EVIDENCE_STEPS.length : currentStepIndex;
+
   return (
-    <div className="grid gap-2 md:grid-cols-3">
+    <div className="relative pl-6 border-l border-slate-800 space-y-4 py-2">
       {EVIDENCE_STEPS.map((step, index) => {
         const hash = jobTx(job, step.key);
+        const isCompleted = Boolean(hash);
+        const isActive = index === activeIndex;
+
         return (
-          <div
-            key={step.key}
-            className={`rounded-lg border p-3 ${
-              hash ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-xs font-semibold text-slate-950">{step.label}</div>
-              <span
-                className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${
-                  hash ? "bg-emerald-600 text-white" : "bg-white text-slate-500"
-                }`}
-              >
-                {hash ? "✓" : index + 1}
-              </span>
+          <div key={step.key} className="relative group">
+            {/* Glowing dot */}
+            <span className={`absolute -left-[31px] top-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full border transition-all duration-300 ${
+              isCompleted
+                ? "bg-emerald-500 border-emerald-450 text-slate-950 shadow-md shadow-emerald-500/20"
+                : isActive
+                ? "bg-sky-500 border-sky-400 text-slate-950 pulse-glow-cyan"
+                : "bg-slate-950 border-slate-800 text-slate-550"
+            }`}>
+              {isCompleted ? (
+                <svg className="h-2.5 w-2.5 text-slate-950" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <span className="text-[10px] font-bold">{index + 1}</span>
+              )}
+            </span>
+
+            <div className={`p-3 rounded-xl border transition-all duration-300 ${
+              isCompleted
+                ? "bg-emerald-500/5 border-emerald-500/10 text-slate-100"
+                : isActive
+                ? "bg-sky-500/5 border-sky-500/20 text-slate-100 shadow-md shadow-sky-500/5"
+                : "bg-slate-950/20 border-slate-900/60 text-slate-400"
+            }`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className={`text-xs font-semibold ${isCompleted ? "text-emerald-400" : isActive ? "text-sky-400" : "text-slate-400"}`}>
+                  {step.label}
+                </div>
+                {isActive && (
+                  <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                    Awaiting Action
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 text-[11px] text-slate-400">{step.meaning}</div>
+              {hash && (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <span className="text-[9px] text-slate-500 font-mono">Tx:</span>
+                  <a
+                    href={txUrl(hash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="truncate font-mono text-[9px] text-sky-450 hover:text-sky-400 hover:underline transition-colors max-w-[160px]"
+                  >
+                    {txLabel(hash)}
+                  </a>
+                </div>
+              )}
             </div>
-            <div className="mt-1 text-xs text-slate-500">{step.meaning}</div>
-            {hash && (
-              <a
-                href={txUrl(hash)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 block truncate font-mono text-xs text-emerald-700 hover:underline"
-              >
-                {txLabel(hash)}
-              </a>
-            )}
           </div>
         );
       })}
@@ -353,10 +382,10 @@ function ReviewPanel({
   const canReview = job.status === "submitted" || job.status === "settled";
   const verdictClass =
     review?.verdict === "approve"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
       : review?.verdict === "reject"
-      ? "border-red-200 bg-red-50 text-red-800"
-      : "border-amber-200 bg-amber-50 text-amber-800";
+      ? "border-red-500/20 bg-red-500/5 text-red-300"
+      : "border-amber-500/20 bg-amber-500/5 text-amber-300";
 
   async function runReview() {
     setRunning(true);
@@ -382,25 +411,25 @@ function ReviewPanel({
   }
 
   return (
-    <section className={`rounded-lg border p-4 ${review ? verdictClass : "border-slate-200 bg-white"}`}>
+    <section className={`rounded-lg border p-4 ${review ? verdictClass : "border-slate-850 bg-slate-900/10"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-slate-950">Evaluator decision</div>
-          <p className="mt-1 text-xs text-slate-600">
+          <div className="text-sm font-semibold text-slate-100">Evaluator decision</div>
+          <p className="mt-1 text-xs text-slate-400">
             {evaluatorModeLabel(review)} checks the deal context, escrow amount, delivery proof, Arc evidence, and agent identity before release.
           </p>
         </div>
         <button
           onClick={runReview}
           disabled={running || !canReview}
-          className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-sky-600 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-lg shadow-sky-500/10 cursor-pointer"
         >
           {running ? "Reviewing..." : review ? "Rerun decision" : "Run evaluator"}
         </button>
       </div>
 
       {!canReview && (
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-slate-550">
           The evaluator unlocks after delivery proof is submitted on Arc. This prevents approving an unpaid or unproven deal.
         </p>
       )}
@@ -408,27 +437,27 @@ function ReviewPanel({
       {review && (
         <div className="mt-4 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-slate-950 px-2.5 py-1 text-xs font-semibold text-white">
+            <span className="rounded-full bg-slate-900 border border-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-100">
               {review.verdict.replace("_", " ")}
             </span>
-            <span className="text-xs font-semibold">{Math.round(review.confidence * 100)}% confidence</span>
-            <code className="break-all text-xs text-slate-500">{review.reviewHash}</code>
+            <span className="text-xs font-semibold text-slate-300">{Math.round(review.confidence * 100)}% confidence</span>
+            <code className="break-all text-[10px] text-slate-500">{review.reviewHash}</code>
           </div>
-          <p className="text-sm text-slate-700">{review.summary}</p>
+          <p className="text-sm text-slate-300 leading-relaxed">{review.summary}</p>
           <div className="grid gap-2">
             {review.checks.map((check) => (
-              <div key={`${check.label}-${check.status}`} className="rounded-lg border border-white/70 bg-white/70 p-3 text-xs">
-                <div className="font-semibold text-slate-900">
+              <div key={`${check.label}-${check.status}`} className="rounded-lg border border-slate-900 bg-slate-900/20 p-3 text-xs">
+                <div className="font-semibold text-slate-200">
                   {check.status.toUpperCase()} · {check.label}
                 </div>
-                <div className="mt-1 text-slate-600">{check.detail}</div>
+                <div className="mt-1 text-slate-400">{check.detail}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
     </section>
   );
 }
@@ -475,25 +504,25 @@ function DealRoom({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded 
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <section className="glass-panel rounded-xl overflow-hidden">
       <button
         onClick={() => setExpanded((value) => !value)}
-        className="w-full px-5 py-4 text-left focus:outline-none focus:ring-2 focus:ring-emerald-200"
+        className="w-full px-5 py-4 text-left focus:outline-none focus:ring-1 focus:ring-sky-500/20"
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-lg bg-slate-950 px-2 py-1 text-xs font-semibold text-white">
+              <span className="rounded-lg bg-slate-900 border border-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-200">
                 {releaseState(job)}
               </span>
-              <span className="font-mono text-xs text-slate-400">{profile?.invoiceId ?? job.id.slice(0, 8)}</span>
+              <span className="font-mono text-xs text-slate-500">{profile?.invoiceId ?? job.id.slice(0, 8)}</span>
             </div>
-            <div className="mt-2 text-base font-semibold text-slate-950">{job.description}</div>
-            <div className="mt-1 text-xs text-slate-500">{route}</div>
+            <div className="mt-2 text-base font-semibold text-slate-100">{job.description}</div>
+            <div className="mt-1 text-xs text-slate-400">{route}</div>
           </div>
           <div className="text-right">
-            <div className="text-xl font-semibold text-slate-950">
-              {job.amount} <span className="text-sm text-slate-500">USDC</span>
+            <div className="text-xl font-semibold text-slate-100">
+              {job.amount} <span className="text-sm text-slate-400">USDC</span>
             </div>
             <div className="text-xs text-slate-500">{evidenceCount}/6 Arc evidence events</div>
           </div>
@@ -501,90 +530,90 @@ function DealRoom({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded 
       </button>
 
       {expanded && (
-        <div className="border-t border-slate-100 p-5">
+        <div className="border-t border-slate-900 p-5 bg-slate-950/20">
           <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
             <div className="space-y-5">
-              <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                <div className="text-sm font-semibold text-slate-950">What this deal is doing</div>
-                <p className="mt-1 text-sm text-slate-700">{releaseCopy(job)}</p>
+              <section className="rounded-lg border border-sky-500/10 bg-sky-500/5 p-4">
+                <div className="text-sm font-semibold text-sky-400">What this deal is doing</div>
+                <p className="mt-1 text-sm text-slate-300">{releaseCopy(job)}</p>
                 <div className="mt-3 grid gap-2 text-xs md:grid-cols-3">
-                  <div className="rounded-lg bg-white/70 p-3">
-                    <div className="font-semibold text-slate-950">Not a transfer</div>
-                    <div className="mt-1 text-slate-600">Funds move through escrow and release conditions.</div>
+                  <div className="rounded-lg bg-slate-900/40 border border-slate-850 p-3">
+                    <div className="font-semibold text-slate-200">Not a transfer</div>
+                    <div className="mt-1 text-slate-400">Funds move through escrow and release conditions.</div>
                   </div>
-                  <div className="rounded-lg bg-white/70 p-3">
-                    <div className="font-semibold text-slate-950">Proof required</div>
-                    <div className="mt-1 text-slate-600">Supplier must submit delivery evidence before release.</div>
+                  <div className="rounded-lg bg-slate-900/40 border border-slate-850 p-3">
+                    <div className="font-semibold text-slate-200">Proof required</div>
+                    <div className="mt-1 text-slate-400">Supplier must submit delivery evidence before release.</div>
                   </div>
-                  <div className="rounded-lg bg-white/70 p-3">
-                    <div className="font-semibold text-slate-950">Decision recorded</div>
-                    <div className="mt-1 text-slate-600">Evaluator verdict is added to the final receipt.</div>
+                  <div className="rounded-lg bg-slate-900/40 border border-slate-850 p-3">
+                    <div className="font-semibold text-slate-200">Decision recorded</div>
+                    <div className="mt-1 text-slate-400">Evaluator verdict is added to the final receipt.</div>
                   </div>
                 </div>
               </section>
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <div className="mb-3 text-sm font-semibold text-slate-950">Deal terms</div>
+              <section className="rounded-lg border border-slate-850 bg-slate-900/10 p-4">
+                <div className="mb-3 text-sm font-semibold text-slate-100">Deal terms</div>
                 <div className="grid gap-3 text-sm md:grid-cols-2">
                   <div>
                     <div className="text-xs text-slate-500">Buyer</div>
-                    <code className="text-xs text-slate-950">{shortAddress(job.clientAddress)}</code>
+                    <code className="text-xs text-sky-350">{shortAddress(job.clientAddress)}</code>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Supplier</div>
-                    <code className="text-xs text-slate-950">{shortAddress(job.providerAddress)}</code>
+                    <code className="text-xs text-sky-350">{shortAddress(job.providerAddress)}</code>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Evaluator</div>
-                    <code className="text-xs text-slate-950">{shortAddress(job.evaluatorAddress)}</code>
+                    <code className="text-xs text-sky-350">{shortAddress(job.evaluatorAddress)}</code>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Use case</div>
-                    <div className="font-medium text-slate-950">{profile?.useCase ?? "custom"}</div>
+                    <div className="font-medium text-slate-300">{profile?.useCase ?? "custom"}</div>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Goods or service</div>
-                    <div className="font-medium text-slate-950">{profile?.goodsOrService ?? "Not specified"}</div>
+                    <div className="font-medium text-slate-300">{profile?.goodsOrService ?? "Not specified"}</div>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Compliance state</div>
-                    <div className="font-medium text-slate-950">{profile?.complianceCheck ?? "pending"}</div>
+                    <div className="font-medium text-slate-300">{profile?.complianceCheck ?? "pending"}</div>
                   </div>
                 </div>
               </section>
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <div className="mb-3 text-sm font-semibold text-slate-950">Escrow and proof</div>
+              <section className="rounded-lg border border-slate-850 bg-slate-900/10 p-4">
+                <div className="mb-3 text-sm font-semibold text-slate-100">Escrow and proof</div>
                 <OnchainExecutionPanel
                   job={job}
                   deliverableHash={deliverableHash || job.deliverableHash || ""}
                   onUpdate={onUpdate}
                 />
-                <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="mt-4 rounded-lg border border-slate-900 bg-slate-900/30 p-4">
                   {job.status === "funded" ? (
-                    <label className="block space-y-1 text-xs font-medium text-slate-500">
+                    <label className="block space-y-1 text-xs font-medium text-slate-400">
                       Delivery proof
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-1">
                         <input
                           value={deliverableHash}
                           onChange={(e) => setDeliverableHash(e.target.value)}
                           placeholder="sha256:... or ipfs://..."
-                          className="w-full rounded-lg border border-slate-200 px-3 py-2 font-mono text-sm text-slate-900 outline-none focus:border-emerald-500"
+                          className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 font-mono text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
                         />
                         <button
                           type="button"
                           onClick={() => setDeliverableHash("sha256:verified-trade-document-package")}
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
                         >
                           Sample
                         </button>
                       </div>
                     </label>
                   ) : (
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-slate-400">
                       {job.deliverableHash ? (
                         <>
-                          Delivery proof: <code className="break-all text-slate-950">{job.deliverableHash}</code>
+                          Delivery proof: <code className="break-all text-sky-300 font-mono">{job.deliverableHash}</code>
                         </>
                       ) : (
                         "Delivery proof entry unlocks after escrow is funded."
@@ -596,19 +625,19 @@ function DealRoom({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded 
 
               <ReviewPanel job={job} deliverableHash={deliverableHash} onUpdate={onUpdate} />
 
-              {error && <p className="text-xs text-red-600">{error}</p>}
+              {error && <p className="text-xs text-red-400">{error}</p>}
             </div>
 
             <aside className="space-y-5">
-              <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm font-semibold text-slate-950">Evidence receipt</div>
-                <p className="mt-1 text-xs text-slate-500">
+              <section className="rounded-lg border border-slate-850 bg-slate-900/20 p-4">
+                <div className="text-sm font-semibold text-slate-100">Evidence receipt</div>
+                <p className="mt-1 text-xs text-slate-400">
                   Exports business context, escrow lifecycle, delivery proof, evaluator verdict, and Arc tx references.
                 </p>
                 <button
                   onClick={loadReceipt}
                   disabled={loadingReceipt || evidenceCount === 0}
-                  className="mt-3 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-emerald-500/10"
                 >
                   {loadingReceipt ? "Generating..." : "Generate receipt"}
                 </button>
@@ -616,25 +645,25 @@ function DealRoom({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded 
 
               {receipt && <ReceiptExport receipt={receipt} />}
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <div className="mb-3 text-sm font-semibold text-slate-950">Arc evidence trail</div>
+              <section className="rounded-lg border border-slate-850 bg-slate-900/10 p-4">
+                <div className="mb-3 text-sm font-semibold text-slate-100">Arc evidence trail</div>
                 <EvidenceRail job={job} />
               </section>
 
               {job.agentIdentity ? (
-                <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                <section className="rounded-lg border border-emerald-500/10 bg-emerald-500/5 p-3 text-xs text-emerald-400 border border-emerald-500/20">
                   ERC-8004 agent #{job.agentIdentity.agentId} verified for {shortAddress(job.agentIdentity.ownerAddress)}
                 </section>
               ) : verifiedIdentity ? (
                 <button
                   onClick={attachIdentity}
-                  className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+                  className="w-full rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all cursor-pointer"
                 >
                   Attach verified agent #{verifiedIdentity.agentId}
                 </button>
               ) : null}
 
-              <button onClick={handleDelete} className="text-xs font-semibold text-red-600 hover:underline">
+              <button onClick={handleDelete} className="text-xs font-semibold text-red-400 hover:text-red-350 hover:underline transition-colors cursor-pointer block">
                 Delete deal
               </button>
             </aside>
@@ -647,15 +676,15 @@ function DealRoom({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded 
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <section className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
+    <section className="rounded-xl border border-dashed border-slate-800 bg-slate-950/20 p-8 text-center">
       <div className="mx-auto max-w-xl">
-        <div className="text-base font-semibold text-slate-950">Create an escrow-backed deal</div>
-        <p className="mt-2 text-sm text-slate-500">
+        <div className="text-base font-semibold text-slate-100">Create an escrow-backed deal</div>
+        <p className="mt-2 text-sm text-slate-400">
           Start with a buyer, supplier, release condition, and USDC amount. The payment is only released after proof and evaluator approval.
         </p>
         <button
           onClick={onCreate}
-          className="mt-4 rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+          className="mt-4 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 transition-colors shadow-lg shadow-sky-500/10 cursor-pointer"
         >
           Create deal
         </button>
@@ -683,18 +712,18 @@ export default function JobConsole() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f9f8] text-slate-950">
+    <div className="min-h-screen bg-[#030712] text-slate-100 pb-12">
       <div className="mx-auto max-w-7xl px-4 py-6">
-        <section className="mb-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="mb-6 glass-panel rounded-2xl p-6 md:p-8 shadow-xl bg-slate-950/40 backdrop-blur-md">
           <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+              <div className="text-xs font-bold uppercase tracking-wider text-sky-400">
                 Arc agentic escrow
               </div>
-              <h1 className="mt-2 max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl">
+              <h1 className="mt-2 max-w-3xl text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
                 Stablecoin payments that wait for proof.
               </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
                 This is not a wallet transfer page. It creates a business deal room where USDC is locked in Arc escrow,
                 the supplier submits delivery proof, an evaluator agent makes a release decision, and the final receipt
                 binds business context with chain evidence.
@@ -702,23 +731,23 @@ export default function JobConsole() {
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
                   onClick={() => setShowCreate((value) => !value)}
-                  className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                  className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 transition-colors shadow-lg shadow-sky-500/10 cursor-pointer"
                 >
                   {showCreate ? "Close deal form" : "Create deal"}
                 </button>
                 <button
                   onClick={() => connectWallet().catch(() => undefined)}
                   disabled={running !== null}
-                  className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                  className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-350 hover:bg-slate-800 disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   {account ? (isArcNetwork ? "Wallet ready" : "Switch wallet to Arc") : "Connect wallet"}
                 </button>
               </div>
             </div>
 
-            <div className="rounded-lg bg-slate-950 p-5 text-white">
-              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Why Arc matters</div>
-              <div className="mt-3 space-y-3 text-sm text-slate-300">
+            <div className="rounded-xl bg-slate-900/50 border border-slate-850 p-5">
+              <div className="text-xs font-bold uppercase tracking-wider text-sky-450">Why Arc matters</div>
+              <div className="mt-3 space-y-3 text-xs text-slate-400 leading-relaxed">
                 <p>USDC is the fee unit and settlement asset, so payment accounting stays dollar-native.</p>
                 <p>Deterministic finality lets the receipt treat confirmed escrow actions as final business evidence.</p>
                 <p>ERC-8004 and ERC-8183 map agent identity and job settlement into the same workflow.</p>
@@ -727,7 +756,7 @@ export default function JobConsole() {
                 href={ARC_TESTNET_EXPLORER}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-slate-100"
+                className="mt-4 inline-flex items-center rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
               >
                 Open Arcscan
               </a>
@@ -735,16 +764,16 @@ export default function JobConsole() {
           </div>
         </section>
 
-        <section className="mb-6 grid gap-3 md:grid-cols-4">
+        <section className="mb-6 grid gap-3 grid-cols-2 md:grid-cols-4">
           {[
             ["Deals", jobs.length.toString()],
             ["Escrow active", lockedDeals.toString()],
             ["Released", releasedDeals.toString()],
             ["Tracked value", `$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 3 })}`],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-xs text-slate-500">{label}</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-950">{value}</div>
+            <div key={label} className="glass-panel rounded-xl p-4">
+              <div className="text-xs text-slate-550">{label}</div>
+              <div className="mt-1 text-2xl font-bold text-slate-100">{value}</div>
             </div>
           ))}
         </section>
@@ -752,10 +781,10 @@ export default function JobConsole() {
         <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
           <main className="space-y-5">
             {showCreate && (
-              <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <section className="glass-panel rounded-xl p-5 shadow-lg">
                 <div className="mb-4">
-                  <div className="text-base font-semibold text-slate-950">New deal room</div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="text-base font-semibold text-slate-100">New deal room</div>
+                  <div className="mt-1 text-xs text-slate-400">
                     Define the business condition first. Arc transactions only execute after the deal is clear.
                   </div>
                 </div>
@@ -764,21 +793,21 @@ export default function JobConsole() {
             )}
 
             {loading ? (
-              <p className="text-sm text-slate-500">Loading deals...</p>
+              <p className="text-sm text-slate-400">Loading deals...</p>
             ) : error ? (
-              <p className="text-sm text-red-600">Error: {error}</p>
+              <p className="text-sm text-red-400">Error: {error}</p>
             ) : jobs.length === 0 ? (
               <EmptyState onCreate={() => setShowCreate(true)} />
             ) : (
               <div className="space-y-4">
                 {jobs.map((job) => (
                   <DealRoom
-                    key={job.id}
-                    job={job}
-                    onUpdate={refresh}
-                    onDeleted={refresh}
-                    verifiedIdentity={verifiedIdentity}
-                    defaultExpanded={job.id === (activeDeal?.id ?? activeJobId)}
+                     key={job.id}
+                     job={job}
+                     onUpdate={refresh}
+                     onDeleted={refresh}
+                     verifiedIdentity={verifiedIdentity}
+                     defaultExpanded={job.id === (activeDeal?.id ?? activeJobId)}
                   />
                 ))}
               </div>
@@ -786,40 +815,40 @@ export default function JobConsole() {
           </main>
 
           <aside className="space-y-5">
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="text-sm font-semibold text-slate-950">Evaluator agent</div>
-              <p className="mt-2 text-sm text-slate-600">
+            <section className="glass-panel rounded-xl p-5">
+              <div className="text-sm font-semibold text-slate-100">Evaluator agent</div>
+              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
                 This is the release gate. It reviews the deal terms, escrow evidence, delivery proof, and agent proof before the final payment action becomes available.
               </p>
-              <div className="mt-3 grid gap-2 text-xs text-slate-600">
-                <div className="rounded-lg bg-slate-50 p-3">Checks invoice context and route.</div>
-                <div className="rounded-lg bg-slate-50 p-3">Checks escrow budget and delivery proof.</div>
-                <div className="rounded-lg bg-slate-50 p-3">Checks Arc tx evidence before release.</div>
+              <div className="mt-3 grid gap-2 text-xs text-slate-400">
+                <div className="rounded-lg bg-slate-900/40 border border-slate-850 p-2.5">Checks invoice context and route.</div>
+                <div className="rounded-lg bg-slate-900/40 border border-slate-850 p-2.5">Checks escrow budget and delivery proof.</div>
+                <div className="rounded-lg bg-slate-900/40 border border-slate-850 p-2.5">Checks Arc tx evidence before release.</div>
               </div>
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-[11px] text-slate-550 leading-relaxed">
                 Default mode is deterministic policy review. If an OpenAI API key is configured, the same verdict can be enriched with a clearer AI-written explanation.
               </p>
             </section>
 
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="mb-3 text-sm font-semibold text-slate-950">Agent identity</div>
+            <section className="glass-panel rounded-xl p-5">
+              <div className="mb-3 text-sm font-semibold text-slate-100">Agent identity</div>
               <IdentityConsole compact onVerified={setVerifiedIdentity} />
             </section>
 
-            <section className="rounded-lg border border-slate-200 bg-white p-5 text-xs text-slate-600 shadow-sm">
-              <div className="text-sm font-semibold text-slate-950">Execution contracts</div>
+            <section className="glass-panel rounded-xl p-5 text-xs text-slate-400">
+              <div className="text-sm font-semibold text-slate-100">Execution contracts</div>
               <div className="mt-3 space-y-2">
                 <div>
                   <span className="text-slate-500">Network: </span>
-                  <span className="font-semibold text-slate-950">{arcTestnet.name}</span>
+                  <span className="font-semibold text-slate-300">{arcTestnet.name}</span>
                 </div>
                 <div>
                   <span className="text-slate-500">USDC: </span>
-                  <code className="break-all text-slate-950">{ARC_USDC}</code>
+                  <code className="break-all text-sky-400 font-mono">{ARC_USDC}</code>
                 </div>
                 <div>
                   <span className="text-slate-500">Settlement: </span>
-                  <code className="break-all text-slate-950">{AGENTIC_COMMERCE_CONTRACT}</code>
+                  <code className="break-all text-sky-400 font-mono">{AGENTIC_COMMERCE_CONTRACT}</code>
                 </div>
               </div>
             </section>

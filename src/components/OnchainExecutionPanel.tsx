@@ -50,6 +50,21 @@ function shortHash(hash: string) {
   return `${hash.slice(0, 10)}...${hash.slice(-6)}`;
 }
 
+function walletErrorMessage(err: unknown, fallback: string) {
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "object" && err !== null) {
+    const maybe = err as { message?: unknown; code?: unknown; data?: unknown };
+    const parts = [
+      typeof maybe.message === "string" ? maybe.message : null,
+      maybe.code !== undefined ? `code=${String(maybe.code)}` : null,
+      maybe.data !== undefined ? `data=${JSON.stringify(maybe.data)}` : null,
+    ].filter(Boolean);
+    if (parts.length) return parts.join(" ");
+  }
+  if (typeof err === "string" && err) return err;
+  return fallback;
+}
+
 function nextPatch(
   action: ArcCommerceAction,
   txHash: string,
@@ -200,7 +215,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       });
       await refreshChainId();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not add Arc Testnet.");
+      setError(walletErrorMessage(err, "Could not add Arc Testnet."));
     } finally {
       setRunning(null);
     }
@@ -217,7 +232,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       });
       await refreshChainId();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "";
+      const message = walletErrorMessage(err, "");
       if (message.includes("4902") || message.toLowerCase().includes("unrecognized")) {
         await addArcNetwork();
         return;
@@ -239,7 +254,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       setAccount(accounts[0] ?? null);
       await refreshChainId();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Wallet connection failed.");
+      setError(walletErrorMessage(err, "Wallet connection failed."));
     } finally {
       setRunning(null);
     }
@@ -307,7 +322,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       );
       onUpdate(updated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Onchain execution failed");
+      setError(walletErrorMessage(err, "Onchain execution failed"));
     } finally {
       setRunning(null);
     }

@@ -36,18 +36,18 @@ export default function ReceiptExport({ receipt }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-700 bg-gray-900 overflow-hidden">
+    <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-800/60">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-slate-200 bg-slate-50">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-white">Trade Settlement Receipt</span>
+          <span className="text-sm font-semibold text-slate-950">Trade Settlement Receipt</span>
           <span
-            className={`px-2 py-0.5 rounded text-xs border ${
+            className={`px-2 py-0.5 rounded-lg text-xs border ${
               receipt.settlementMode === "onchain-verified"
-                ? "bg-green-900/60 text-green-300 border-green-700"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : receipt.settlementMode === "onchain-partial"
-                ? "bg-emerald-900/60 text-emerald-300 border-emerald-700"
-                : "bg-blue-900/60 text-blue-300 border-blue-700"
+                ? "bg-sky-50 text-sky-700 border-sky-200"
+                : "bg-slate-100 text-slate-600 border-slate-200"
             }`}
           >
             {receipt.settlementMode === "onchain-verified"
@@ -60,11 +60,11 @@ export default function ReceiptExport({ receipt }: Props) {
 
         <div className="flex items-center gap-2">
           {/* Tab selector */}
-          <div className="flex rounded border border-gray-600 overflow-hidden text-xs">
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs">
             <button
               onClick={() => setTab("json")}
               className={`px-3 py-1 ${
-                tab === "json" ? "bg-blue-700 text-white" : "text-gray-400 hover:bg-gray-700"
+                tab === "json" ? "bg-slate-950 text-white" : "text-slate-500 hover:bg-slate-100"
               }`}
             >
               JSON
@@ -72,7 +72,7 @@ export default function ReceiptExport({ receipt }: Props) {
             <button
               onClick={() => setTab("markdown")}
               className={`px-3 py-1 ${
-                tab === "markdown" ? "bg-blue-700 text-white" : "text-gray-400 hover:bg-gray-700"
+                tab === "markdown" ? "bg-slate-950 text-white" : "text-slate-500 hover:bg-slate-100"
               }`}
             >
               Markdown
@@ -80,13 +80,13 @@ export default function ReceiptExport({ receipt }: Props) {
           </div>
           <button
             onClick={copy}
-            className="px-3 py-1 rounded border border-gray-600 text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+            className="px-3 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
           >
             {copied ? "Copied!" : "Copy"}
           </button>
           <button
             onClick={download}
-            className="px-3 py-1 rounded border border-blue-700 text-xs text-blue-300 hover:bg-blue-900/40 transition-colors"
+            className="px-3 py-1 rounded-lg border border-emerald-200 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors"
           >
             Download
           </button>
@@ -94,13 +94,13 @@ export default function ReceiptExport({ receipt }: Props) {
       </div>
 
       {/* Receipt hash */}
-      <div className="px-4 py-2 bg-gray-800/30 border-b border-gray-700 flex items-center gap-2">
-        <span className="text-xs text-gray-500">Receipt hash:</span>
-        <code className="text-xs font-mono text-green-400 break-all">{receipt.receiptHash}</code>
+      <div className="px-4 py-2 bg-white border-b border-slate-200 flex items-center gap-2">
+        <span className="text-xs text-slate-500">Receipt hash:</span>
+        <code className="text-xs font-mono text-emerald-700 break-all">{receipt.receiptHash}</code>
       </div>
 
       {/* Content */}
-      <pre className="p-4 overflow-auto text-xs font-mono text-gray-300 max-h-96 whitespace-pre-wrap">
+      <pre className="p-4 overflow-auto text-xs font-mono text-slate-700 max-h-96 whitespace-pre-wrap">
         {content}
       </pre>
     </div>

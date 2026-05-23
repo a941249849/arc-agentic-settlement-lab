@@ -15,11 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-gray-950 text-gray-100 font-sans">
+      <body className="min-h-full flex flex-col bg-[#f7f9f8] text-slate-950 font-sans">
         <Navbar />
         <main className="flex-1">{children}</main>
-        <footer className="py-4 text-center text-xs text-gray-600 border-t border-gray-800">
-          Arc Trade Agent Settlement · Arc Testnet · Not financial advice
+        <footer className="py-4 text-center text-xs text-slate-400 border-t border-slate-200">
+          Arc Settlement Workspace · Arc Testnet · Not financial advice
         </footer>
       </body>
     </html>

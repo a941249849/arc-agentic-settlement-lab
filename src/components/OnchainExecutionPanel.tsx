@@ -347,11 +347,11 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
   const actions = recommendedActions(job);
 
   return (
-    <div className="rounded-lg border border-green-900 bg-green-950/10 p-4 space-y-3">
+    <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-sm font-semibold text-green-300">Arc Testnet transaction steps</div>
-          <p className="text-xs text-gray-500 mt-1">
+          <div className="text-sm font-semibold text-slate-950">Arc Testnet transaction steps</div>
+          <p className="text-xs text-slate-500 mt-1">
             Connect a wallet on Arc Testnet and submit each payment step. The receipt becomes fully
             verified only after every required transaction hash is recorded.
           </p>
@@ -363,7 +363,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
           <select
             value={selectedWalletId}
             onChange={(event) => setSelectedWalletId(event.target.value)}
-            className="px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-xs text-gray-200"
+            className="px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-xs text-slate-900"
           >
             {wallets.map((wallet) => (
               <option key={wallet.info.uuid} value={wallet.info.uuid}>
@@ -375,7 +375,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
         <button
           onClick={connectWallet}
           disabled={running !== null}
-          className="px-3 py-1.5 rounded border border-green-800 text-xs text-green-300 hover:bg-green-900/30 disabled:opacity-50"
+          className="px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
         >
           {running === "connect"
             ? "Connecting..."
@@ -386,14 +386,14 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
         <button
           onClick={switchToArcNetwork}
           disabled={running !== null}
-          className="px-3 py-1.5 rounded border border-blue-800 text-xs text-blue-300 hover:bg-blue-900/30 disabled:opacity-50"
+          className="px-3 py-1.5 rounded-lg border border-sky-200 bg-white text-xs font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50"
         >
           {running === "switch" ? "Switching..." : "Switch to Arc"}
         </button>
         <button
           onClick={addArcNetwork}
           disabled={running !== null}
-          className="px-3 py-1.5 rounded border border-gray-700 text-xs text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
           {running === "add" ? "Adding..." : "Add Arc Network"}
         </button>
@@ -406,19 +406,19 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
               key={action}
               onClick={() => execute(action)}
               disabled={running !== null}
-              className="px-3 py-1.5 rounded bg-green-800 text-green-100 text-xs font-semibold hover:bg-green-700 disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg bg-slate-950 text-white text-xs font-semibold hover:bg-slate-800 disabled:opacity-50"
             >
               {running === action ? "Waiting..." : ACTION_LABELS[action]}
             </button>
           ))
         ) : (
-          <span className="text-xs text-green-300">All ERC-8183 actions have tx evidence.</span>
+          <span className="text-xs font-semibold text-emerald-700">All ERC-8183 actions have tx evidence.</span>
         )}
         {job.onchainJobId && (
           <button
             onClick={verifyJob}
             disabled={running !== null}
-            className="px-3 py-1.5 rounded border border-gray-700 text-xs text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             {running === "verify" ? "Verifying..." : "Read getJob()"}
           </button>
@@ -427,28 +427,28 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
 
       <div className="grid md:grid-cols-3 gap-2 text-xs">
         <div>
-          <span className="text-gray-500">Wallet: </span>
-          <span className={selectedWallet ? "text-white" : "text-yellow-300"}>
+          <span className="text-slate-500">Wallet: </span>
+          <span className={selectedWallet ? "text-slate-950" : "text-amber-700"}>
             {selectedWallet?.info.name ?? "not detected"}
           </span>
         </div>
         <div>
-          <span className="text-gray-500">Wallet chain: </span>
-          <span className={chainId?.toLowerCase() === arcChainIdHex.toLowerCase() ? "text-green-300" : "text-yellow-300"}>
+          <span className="text-slate-500">Wallet chain: </span>
+          <span className={chainId?.toLowerCase() === arcChainIdHex.toLowerCase() ? "text-emerald-700" : "text-amber-700"}>
             {chainId ?? "unknown"}
           </span>
         </div>
         <div>
-          <span className="text-gray-500">Receipt state: </span>
-          <span className="text-white">{job.settlementMode}</span>
+          <span className="text-slate-500">Receipt state: </span>
+          <span className="text-slate-950">{job.settlementMode}</span>
         </div>
         <div>
-          <span className="text-gray-500">ERC-8183 job ID: </span>
-          <span className="text-white">{job.onchainJobId ?? "not created"}</span>
+          <span className="text-slate-500">ERC-8183 job ID: </span>
+          <span className="text-slate-950">{job.onchainJobId ?? "not created"}</span>
         </div>
         <div>
-          <span className="text-gray-500">Next signer: </span>
-          <span className="text-white">
+          <span className="text-slate-500">Next signer: </span>
+          <span className="text-slate-950">
             {!job.onchainJobId
               ? "client"
               : !job.setBudgetTxHash
@@ -469,30 +469,30 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
           href={`${ARC_TESTNET_EXPLORER}/tx/${lastTx.hash}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-xs text-blue-400 hover:underline"
+          className="block text-xs text-emerald-700 hover:underline"
         >
           Last {lastTx.action}: {shortHash(lastTx.hash)}
         </a>
       )}
 
       {chainJob && (
-        <div className="rounded border border-gray-800 bg-gray-950/60 p-3 text-xs grid md:grid-cols-3 gap-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs grid md:grid-cols-3 gap-2">
           <div>
-            <span className="text-gray-500">Status: </span>
-            <span className="text-green-300">{chainJob.statusName}</span>
+            <span className="text-slate-500">Status: </span>
+            <span className="text-emerald-700">{chainJob.statusName}</span>
           </div>
           <div>
-            <span className="text-gray-500">Budget: </span>
-            <span className="text-white">{chainJob.budget} USDC</span>
+            <span className="text-slate-500">Budget: </span>
+            <span className="text-slate-950">{chainJob.budget} USDC</span>
           </div>
           <div>
-            <span className="text-gray-500">Job ID: </span>
-            <span className="text-white">{chainJob.id}</span>
+            <span className="text-slate-500">Job ID: </span>
+            <span className="text-slate-950">{chainJob.id}</span>
           </div>
         </div>
       )}
 
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }

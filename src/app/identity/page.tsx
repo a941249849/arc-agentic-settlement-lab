@@ -7,10 +7,10 @@ export const metadata = {
 
 export default function IdentityPage() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 py-10 space-y-8 text-slate-950">
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-white">Agent Identity</h1>
-        <p className="text-sm text-gray-400 max-w-3xl">
+        <h1 className="text-2xl font-bold text-slate-950">Agent Identity</h1>
+        <p className="text-sm text-slate-500 max-w-3xl">
           Agent identity turns an autonomous supplier or buyer into a verifiable commercial actor.
           This page prepares registration calldata and verifies existing ERC-8004 identities through
           Arc Testnet contract reads.

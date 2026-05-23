@@ -13,14 +13,71 @@ import LifecycleBadge from "./LifecycleBadge";
 import ReceiptExport from "./ReceiptExport";
 import IdentityConsole from "./IdentityConsole";
 import OnchainExecutionPanel from "./OnchainExecutionPanel";
-
-// ──────────────────────────────────────────────
-// Create Job Form
-// ──────────────────────────────────────────────
+import { ARC_TESTNET_EXPLORER } from "@/lib/arc-chain";
 
 interface CreateFormProps {
   onCreated: (job: ArcSettlementJob) => void;
   verifiedIdentity: ArcAgentIdentity | null;
+}
+
+interface JobCardProps {
+  job: ArcSettlementJob;
+  onUpdate: (job: ArcSettlementJob) => void;
+  onDeleted: () => void;
+  verifiedIdentity: ArcAgentIdentity | null;
+  defaultExpanded?: boolean;
+}
+
+const NEXT_ACTIONS: Partial<
+  Record<
+    ArcSettlementJob["status"],
+    { label: string; nextStatus: ArcSettlementJob["status"]; deliverableRequired?: boolean }[]
+  >
+> = {
+  draft: [{ label: "Publish request", nextStatus: "open" }],
+  open: [
+    { label: "Set provider budget", nextStatus: "budgeted" },
+    { label: "Stop settlement", nextStatus: "failed" },
+  ],
+  budgeted: [
+    { label: "Mark escrow funded", nextStatus: "funded" },
+    { label: "Stop settlement", nextStatus: "failed" },
+  ],
+  funded: [
+    { label: "Submit deliverable", nextStatus: "submitted", deliverableRequired: true },
+    { label: "Stop settlement", nextStatus: "failed" },
+  ],
+  submitted: [
+    { label: "Complete settlement", nextStatus: "settled" },
+    { label: "Reject settlement", nextStatus: "failed" },
+  ],
+};
+
+const LIFECYCLE = [
+  { key: "createTxHash", label: "Create job", role: "Client", status: "open" },
+  { key: "setBudgetTxHash", label: "Set budget", role: "Provider", status: "budgeted" },
+  { key: "approveTxHash", label: "Approve USDC", role: "Client", status: "budgeted" },
+  { key: "fundTxHash", label: "Fund escrow", role: "Client", status: "funded" },
+  { key: "submitTxHash", label: "Submit proof", role: "Provider", status: "submitted" },
+  { key: "settleTxHash", label: "Complete", role: "Evaluator", status: "settled" },
+] as const;
+
+const SIDE_NAV = ["Settlements", "Agents", "Receipts", "Network"];
+
+function shortAddress(value: string) {
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function txUrl(hash: string) {
+  return `${ARC_TESTNET_EXPLORER}/tx/${hash}`;
+}
+
+function txLabel(hash: string) {
+  return `${hash.slice(0, 10)}...${hash.slice(-6)}`;
+}
+
+function jobTx(job: ArcSettlementJob, key: (typeof LIFECYCLE)[number]["key"]) {
+  return job[key] as string | undefined;
 }
 
 function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
@@ -68,218 +125,157 @@ function CreateJobForm({ onCreated, verifiedIdentity }: CreateFormProps) {
       setForm((f) => ({ ...f, description: "" }));
       onCreated(job);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create job");
+      setError(err instanceof Error ? err.message : "Failed to create settlement");
     } finally {
       setSubmitting(false);
     }
   }
+
+  const inputClass =
+    "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid md:grid-cols-2 gap-4">
         {(
           [
-            { id: "clientAddress", label: "Buyer / Importer Address" },
-            { id: "providerAddress", label: "Supplier / Agent Address" },
-            { id: "evaluatorAddress", label: "Evaluator / Trade Desk Address" },
+            { id: "clientAddress", label: "Buyer / importer" },
+            { id: "providerAddress", label: "Supplier / agent" },
+            { id: "evaluatorAddress", label: "Evaluator" },
             { id: "amount", label: "Amount (USDC)" },
           ] as const
         ).map(({ id, label }) => (
-          <div key={id} className="space-y-1">
-            <label htmlFor={id} className="block text-xs text-gray-400">
-              {label}
-            </label>
+          <label key={id} className="space-y-1 text-xs font-medium text-slate-500">
+            {label}
             <input
-              id={id}
               value={form[id]}
               onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
-              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm font-mono focus:outline-none focus:border-blue-500"
+              className={`${inputClass} font-mono`}
               required
             />
-          </div>
+          </label>
         ))}
       </div>
-      <div className="space-y-1">
-        <label htmlFor="description" className="block text-xs text-gray-400">
-          Trade settlement request
-        </label>
+
+      <label className="space-y-1 text-xs font-medium text-slate-500 block">
+        Settlement request
         <textarea
-          id="description"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           rows={2}
-          placeholder="Describe the cross-border trade, service, invoice, or deliverable being settled..."
-          className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
+          className={inputClass}
           required
         />
+      </label>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {(
+          [
+            { id: "invoiceId", label: "Invoice / order ID" },
+            { id: "buyerCountry", label: "Buyer country" },
+            { id: "supplierCountry", label: "Supplier country" },
+            { id: "goodsOrService", label: "Goods or service" },
+          ] as const
+        ).map(({ id, label }) => (
+          <label key={id} className="space-y-1 text-xs font-medium text-slate-500">
+            {label}
+            <input
+              value={form[id]}
+              onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
+              className={inputClass}
+              required
+            />
+          </label>
+        ))}
+
+        <label className="space-y-1 text-xs font-medium text-slate-500">
+          Use case
+          <select
+            value={form.useCase}
+            onChange={(e) => setForm((f) => ({ ...f, useCase: e.target.value as CommerceUseCase }))}
+            className={inputClass}
+          >
+            <option value="cross-border-trade">Cross-border trade</option>
+            <option value="service-procurement">Service procurement</option>
+            <option value="invoice-finance">SME invoice finance</option>
+            <option value="tokenized-asset-settlement">Tokenized asset settlement</option>
+            <option value="agentic-economy">Agentic economy</option>
+          </select>
+        </label>
+
+        <label className="space-y-1 text-xs font-medium text-slate-500">
+          Compliance check
+          <select
+            value={form.complianceCheck}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                complianceCheck: e.target.value as TradeProfile["complianceCheck"],
+              }))
+            }
+            className={inputClass}
+          >
+            <option value="pending">Pending</option>
+            <option value="passed">Passed</option>
+            <option value="needs-review">Needs review</option>
+          </select>
+        </label>
       </div>
-      <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4 space-y-3">
-        <div className="text-sm font-semibold text-white">Trade context</div>
-        <div className="grid md:grid-cols-2 gap-4">
-          {(
-            [
-              { id: "invoiceId", label: "Invoice / order ID" },
-              { id: "buyerCountry", label: "Buyer country" },
-              { id: "supplierCountry", label: "Supplier country" },
-              { id: "goodsOrService", label: "Goods or service" },
-            ] as const
-          ).map(({ id, label }) => (
-            <div key={id} className="space-y-1">
-              <label htmlFor={id} className="block text-xs text-gray-400">
-                {label}
-              </label>
-              <input
-                id={id}
-                value={form[id]}
-                onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
-                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-          ))}
-          <div className="space-y-1">
-            <label htmlFor="useCase" className="block text-xs text-gray-400">
-              Use case
-            </label>
-            <select
-              id="useCase"
-              value={form.useCase}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, useCase: e.target.value as CommerceUseCase }))
-              }
-              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
-            >
-              <option value="cross-border-trade">Cross-border trade</option>
-              <option value="service-procurement">Service procurement</option>
-              <option value="invoice-finance">SME invoice finance</option>
-              <option value="tokenized-asset-settlement">Tokenized asset settlement</option>
-              <option value="agentic-economy">Agentic economy</option>
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="complianceCheck" className="block text-xs text-gray-400">
-              Compliance check
-            </label>
-            <select
-              id="complianceCheck"
-              value={form.complianceCheck}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  complianceCheck: e.target.value as TradeProfile["complianceCheck"],
-                }))
-              }
-              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm focus:outline-none focus:border-blue-500"
-            >
-              <option value="pending">Pending</option>
-              <option value="passed">Passed</option>
-              <option value="needs-review">Needs review</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      {error && <p className="text-red-400 text-xs">{error}</p>}
-      {verifiedIdentity && (
-        <div className="rounded-lg border border-green-800 bg-green-950/20 px-3 py-2 text-xs text-green-300">
-          New job will include verified ERC-8004 agent #{verifiedIdentity.agentId}.
-        </div>
-      )}
+
+      {error && <p className="text-xs text-red-600">{error}</p>}
       <button
         type="submit"
         disabled={submitting}
-        className="px-5 py-2 rounded bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+        className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
       >
-        {submitting ? "Creating..." : "Create trade settlement"}
+        {submitting ? "Creating..." : "Create settlement"}
       </button>
     </form>
   );
 }
 
-// ──────────────────────────────────────────────
-// Job Row / Card
-// ──────────────────────────────────────────────
-
-interface JobCardProps {
-  job: ArcSettlementJob;
-  onUpdate: (updated: ArcSettlementJob) => void;
-  onDeleted: () => void;
-  verifiedIdentity: ArcAgentIdentity | null;
-  defaultExpanded?: boolean;
+function SettlementActivity({ job }: { job: ArcSettlementJob }) {
+  return (
+    <div className="space-y-3">
+      {LIFECYCLE.map((step) => {
+        const hash = jobTx(job, step.key);
+        return (
+          <div key={step.key} className="grid grid-cols-[28px_1fr] gap-3">
+            <div
+              className={`mt-1 h-7 w-7 rounded-full border flex items-center justify-center text-xs ${
+                hash
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                  : "border-slate-200 bg-slate-50 text-slate-400"
+              }`}
+            >
+              {hash ? "✓" : "·"}
+            </div>
+            <div className="min-w-0 border-b border-slate-100 pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold text-slate-950">{step.label}</div>
+                  <div className="text-xs text-slate-500">{step.role}</div>
+                </div>
+                {hash ? (
+                  <a
+                    href={txUrl(hash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-xs text-emerald-700 hover:underline"
+                  >
+                    {txLabel(hash)}
+                  </a>
+                ) : (
+                  <span className="text-xs text-slate-400">Waiting</span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
-
-const NEXT_ACTIONS: Record<
-  string,
-  { label: string; nextStatus: ArcSettlementJob["status"]; deliverableRequired?: boolean }[]
-> = {
-  draft: [{ label: "Publish request", nextStatus: "open" }],
-  open: [
-    { label: "Set provider budget", nextStatus: "budgeted" },
-    { label: "Mark failed", nextStatus: "failed" },
-  ],
-  budgeted: [
-    { label: "Fund escrow", nextStatus: "funded" },
-    { label: "Mark failed", nextStatus: "failed" },
-  ],
-  funded: [
-    {
-      label: "Submit deliverable",
-      nextStatus: "submitted",
-      deliverableRequired: true,
-    },
-    { label: "Mark failed", nextStatus: "failed" },
-  ],
-  submitted: [
-    { label: "Approve and settle", nextStatus: "settled" },
-    { label: "Reject", nextStatus: "failed" },
-  ],
-  settled: [],
-  failed: [],
-};
-
-const STATUS_GUIDE: Record<ArcSettlementJob["status"], { title: string; detail: string }> = {
-  draft: {
-    title: "Draft trade request",
-    detail: "Review the importer, supplier, invoice, trade context, and USDC amount.",
-  },
-  open: {
-    title: "Waiting for provider budget",
-    detail: "The provider should confirm the service price before funds are locked.",
-  },
-  budgeted: {
-    title: "Ready to fund escrow",
-    detail: "The buyer can approve and fund USDC escrow for the agreed amount.",
-  },
-  funded: {
-    title: "Waiting for deliverable",
-    detail: "Add a SHA-256 hash, IPFS CID, or other stable proof of the completed work.",
-  },
-  submitted: {
-    title: "Ready for review",
-    detail: "The evaluator checks the deliverable proof and approves settlement or rejects it.",
-  },
-  settled: {
-    title: "Settled",
-    detail: "The receipt can now be exported as the business record for this payment.",
-  },
-  failed: {
-    title: "Stopped",
-    detail: "The job was rejected or stopped before settlement.",
-  },
-};
-
-const WORKFLOW_STEPS = [
-  ["1", "Create trade", "Capture invoice, countries, supplier, evaluator, and USDC amount."],
-  ["2", "Control funds", "Provider sets budget before buyer funds escrow."],
-  ["3", "Prove delivery", "Attach a deliverable hash for the trade document or service output."],
-  ["4", "Export evidence", "Generate a receipt with trade context, identity, and tx slots."],
-];
-
-const STACK_FIT = [
-  ["Cross-border payments", "USDC settlement between buyer and supplier countries."],
-  ["SME trade workflow", "Invoice, budget, escrow, deliverable proof, evaluator approval."],
-  ["Agentic economy", "Buyer and supplier agents can act with verifiable identity and receipts."],
-  ["Compliant DeFi path", "Receipt-first workflow can extend into USYC, StableFX, and financing."],
-];
 
 function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }: JobCardProps) {
   const [expanded, setExpanded] = useState(Boolean(defaultExpanded));
@@ -295,17 +291,13 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
   ) {
     setActionError(null);
     if (needsDeliverable && !deliverableHash.trim()) {
-      setActionError("Please enter a deliverable hash before submitting.");
+      setActionError("Enter a deliverable hash before submitting.");
       return;
     }
     try {
       const patch: Partial<ArcSettlementJob> = { status: nextStatus };
-      if (nextStatus === "budgeted") {
-        patch.budgetAmount = job.amount;
-      }
-      if (needsDeliverable && deliverableHash.trim()) {
-        patch.deliverableHash = deliverableHash.trim();
-      }
+      if (nextStatus === "budgeted") patch.budgetAmount = job.amount;
+      if (needsDeliverable && deliverableHash.trim()) patch.deliverableHash = deliverableHash.trim();
       const updated = await updateJob(job.id, patch);
       onUpdate(updated);
     } catch (err) {
@@ -316,8 +308,8 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
   async function loadReceipt() {
     setLoadingReceipt(true);
     try {
-      const r = await fetchReceipt(job.id);
-      setReceipt(r);
+      const nextReceipt = await fetchReceipt(job.id);
+      setReceipt(nextReceipt);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Receipt fetch failed");
     } finally {
@@ -327,7 +319,6 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
 
   async function attachIdentity() {
     if (!verifiedIdentity) return;
-    setActionError(null);
     try {
       const updated = await updateJob(job.id, { agentIdentity: verifiedIdentity });
       onUpdate(updated);
@@ -337,285 +328,208 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
   }
 
   async function handleDelete() {
-    setActionError(null);
-    try {
-      await deleteJob(job.id);
-      onDeleted();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Delete failed");
-    }
+    await deleteJob(job.id);
+    onDeleted();
   }
 
   const actions = NEXT_ACTIONS[job.status] ?? [];
-  const guide = STATUS_GUIDE[job.status];
+  const txCount = LIFECYCLE.filter((step) => jobTx(job, step.key)).length;
+  const route = job.tradeProfile
+    ? `${job.tradeProfile.buyerCountry} → ${job.tradeProfile.supplierCountry}`
+    : "Custom route";
 
   return (
-    <div className="rounded-xl border border-gray-700 bg-gray-900 overflow-hidden">
-      {/* Card header */}
+    <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <button
-        className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-800/50 transition-colors"
-        onClick={() => setExpanded((e) => !e)}
+        className="w-full px-4 py-4 text-left focus:outline-none focus:ring-2 focus:ring-emerald-200"
+        onClick={() => setExpanded((value) => !value)}
       >
-        <LifecycleBadge status={job.status} mode={job.settlementMode} size="sm" />
-        <span className="font-mono text-xs text-gray-500">{job.id.slice(0, 8)}…</span>
-        <span className="text-sm text-white truncate flex-1">{job.description}</span>
-        <span className="text-xs text-gray-500">
-          {job.amount} {job.currency}
-        </span>
-        <span className="text-gray-600 text-xs">{expanded ? "▲" : "▼"}</span>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <LifecycleBadge status={job.status} mode={job.settlementMode} size="sm" />
+              <span className="font-mono text-xs text-slate-400">{job.id.slice(0, 8)}…</span>
+            </div>
+            <div className="mt-2 text-base font-semibold text-slate-950">{job.description}</div>
+            <div className="mt-1 text-xs text-slate-500">{route}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xl font-semibold text-slate-950">
+              {job.amount} <span className="text-sm text-slate-500">USDC</span>
+            </div>
+            <div className="text-xs text-slate-500">{txCount}/6 onchain steps</div>
+          </div>
+        </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-700 px-4 py-4 space-y-4">
-          <div className="rounded-lg border border-blue-900 bg-blue-950/20 p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-blue-200">{guide.title}</div>
-                <p className="text-xs text-gray-400 mt-1">{guide.detail}</p>
-              </div>
-              <div className="text-xs text-gray-500">
-                Local demo first. Use onchain signing only when you need tx evidence.
-              </div>
-            </div>
-          </div>
+        <div className="border-t border-slate-100 px-4 pb-4">
+          <div className="grid gap-5 pt-4">
+            <div className="space-y-5">
+              <section>
+                <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Trade parties
+                </div>
+                <div className="grid md:grid-cols-3 gap-3">
+                  {[
+                    ["Buyer", job.clientAddress],
+                    ["Supplier", job.providerAddress],
+                    ["Evaluator", job.evaluatorAddress],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                      <div className="text-xs text-slate-500">{label}</div>
+                      <code className="mt-1 block truncate text-xs text-slate-900" title={value}>
+                        {shortAddress(value)}
+                      </code>
+                    </div>
+                  ))}
+                </div>
+              </section>
 
-          {/* Parties */}
-          <div className="grid md:grid-cols-3 gap-3 text-xs">
-            {[
-              { label: "Client", value: job.clientAddress },
-              { label: "Provider", value: job.providerAddress },
-              { label: "Evaluator", value: job.evaluatorAddress },
-            ].map(({ label, value }) => (
-              <div key={label} className="min-w-0">
-                <span className="text-gray-500">{label}: </span>
-                <code className="block mt-1 text-blue-300 truncate" title={value}>
-                  {value}
-                </code>
-              </div>
-            ))}
-          </div>
+              {job.tradeProfile && (
+                <section className="grid md:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-xs text-slate-500">Invoice</div>
+                    <code className="text-slate-950">{job.tradeProfile.invoiceId}</code>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Settlement rail</div>
+                    <div className="font-medium text-slate-950">{job.tradeProfile.settlementRail}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Budget</div>
+                    <div className="font-medium text-slate-950">
+                      {job.budgetAmount ?? "Not set"} {job.budgetAmount ? "USDC" : ""}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Compliance</div>
+                    <div className="font-medium text-slate-950">{job.tradeProfile.complianceCheck}</div>
+                  </div>
+                </section>
+              )}
 
-          <div className="grid md:grid-cols-2 gap-3 text-xs">
-            <div>
-              <span className="text-gray-500">Requested amount: </span>
-              <span className="text-white">
-                {job.amount} {job.currency}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500">Provider budget: </span>
-              <span className={job.budgetAmount ? "text-violet-300" : "text-gray-600"}>
-                {job.budgetAmount ? `${job.budgetAmount} ${job.currency}` : "Not set"}
-              </span>
-            </div>
-          </div>
-
-          {job.tradeProfile && (
-            <div className="rounded-lg border border-cyan-900 bg-cyan-950/10 p-3 text-xs space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="font-semibold text-cyan-200">Trade context</div>
-                <span className="px-2 py-0.5 rounded border border-cyan-800 text-cyan-300">
-                  {job.tradeProfile.useCase}
-                </span>
-              </div>
-              <div className="grid md:grid-cols-4 gap-3">
-                <div>
-                  <span className="text-gray-500">Invoice: </span>
-                  <code className="text-white">{job.tradeProfile.invoiceId}</code>
-                </div>
-                <div>
-                  <span className="text-gray-500">Route: </span>
-                  <span className="text-white">
-                    {job.tradeProfile.buyerCountry} → {job.tradeProfile.supplierCountry}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Compliance: </span>
-                  <span className="text-white">{job.tradeProfile.complianceCheck}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Rail: </span>
-                  <span className="text-white">{job.tradeProfile.settlementRail}</span>
-                </div>
-              </div>
-              <div>
-                <span className="text-gray-500">Goods / service: </span>
-                <span className="text-gray-300">{job.tradeProfile.goodsOrService}</span>
-              </div>
-            </div>
-          )}
-
-          <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-xs space-y-2">
-            <div className="font-semibold text-gray-300">Agent identity</div>
-            {job.agentIdentity ? (
-              <div className="grid md:grid-cols-3 gap-2">
-                <div>
-                  <span className="text-gray-500">Agent ID: </span>
-                  <span className="text-green-300">#{job.agentIdentity.agentId}</span>
-                </div>
-                <div className="min-w-0">
-                  <span className="text-gray-500">Owner: </span>
-                  <code
-                    className="block text-blue-300 truncate"
-                    title={job.agentIdentity.ownerAddress}
-                  >
-                    {job.agentIdentity.ownerAddress}
-                  </code>
-                </div>
-                <div className="min-w-0">
-                  <span className="text-gray-500">Metadata: </span>
-                  <code
-                    className="block text-blue-300 truncate"
-                    title={job.agentIdentity.metadataURI}
-                  >
-                    {job.agentIdentity.metadataURI}
-                  </code>
-                </div>
-              </div>
-            ) : verifiedIdentity ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-gray-500">
-                  Verified agent #{verifiedIdentity.agentId} is available for this session.
-                </span>
+              {job.agentIdentity ? (
+                <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                  ERC-8004 agent #{job.agentIdentity.agentId} verified for {shortAddress(job.agentIdentity.ownerAddress)}
+                </section>
+              ) : verifiedIdentity ? (
                 <button
                   onClick={attachIdentity}
-                  className="px-3 py-1 rounded bg-green-800 text-green-100 hover:bg-green-700"
+                  className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
                 >
-                  Attach Verified Agent
+                  Attach verified agent #{verifiedIdentity.agentId}
                 </button>
-              </div>
-            ) : (
-              <span className="text-gray-600">
-                No ERC-8004 agent attached. Verify an agent above before treating this job as
-                identity-backed.
-              </span>
-            )}
-          </div>
+              ) : null}
 
-          {/* Deliverable input (only when funded) */}
-          {job.status === "funded" && (
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <label className="text-xs text-gray-400">Deliverable Hash (SHA-256 or IPFS CID)</label>
-                <button
-                  type="button"
-                  onClick={() => setDeliverableHash("sha256:demo-market-intelligence-report")}
-                  className="text-xs text-blue-300 hover:underline"
-                >
-                  Use sample hash
-                </button>
-              </div>
-              <input
-                value={deliverableHash}
-                onChange={(e) => setDeliverableHash(e.target.value)}
-                placeholder="e.g. sha256:abc123… or ipfs://Qm…"
-                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white text-sm font-mono focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          )}
+              {job.status === "funded" && (
+                <label className="block space-y-1 text-xs font-medium text-slate-500">
+                  Deliverable hash
+                  <div className="flex gap-2">
+                    <input
+                      value={deliverableHash}
+                      onChange={(e) => setDeliverableHash(e.target.value)}
+                      placeholder="sha256:... or ipfs://..."
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 font-mono text-sm text-slate-900 outline-none focus:border-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setDeliverableHash("sha256:verified-trade-document-package")}
+                      className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Sample
+                    </button>
+                  </div>
+                </label>
+              )}
 
-          {/* Existing deliverable hash */}
-          {job.deliverableHash && job.status !== "funded" && (
-            <div className="text-xs">
-              <span className="text-gray-500">Deliverable: </span>
-              <code className="text-yellow-300 break-all">{job.deliverableHash}</code>
-            </div>
-          )}
+              {job.deliverableHash && job.status !== "funded" && (
+                <div className="text-xs">
+                  <span className="text-slate-500">Deliverable: </span>
+                  <code className="break-all text-slate-900">{job.deliverableHash}</code>
+                </div>
+              )}
 
-          <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4 space-y-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-white">Step-by-step demo flow</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  This path lets anyone understand the trade settlement workflow without needing a wallet.
-                </p>
-              </div>
-              <span className="text-xs text-gray-500">Mode: simulated receipt</span>
-            </div>
-
-            {actions.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {actions.map((action) => (
+              <section className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-950">Onchain execution</div>
+                    <div className="text-xs text-slate-500">
+                      Wallet-signed ERC-8183 settlement on Arc Testnet.
+                    </div>
+                  </div>
                   <button
-                    key={action.nextStatus}
-                    onClick={() => transition(action.nextStatus, action.deliverableRequired)}
-                    className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
-                      action.nextStatus === "failed"
-                        ? "border border-red-700 text-red-400 hover:bg-red-900/30"
-                        : action.nextStatus === "settled"
-                        ? "bg-green-800 text-green-100 hover:bg-green-700"
-                        : "bg-blue-700 text-white hover:bg-blue-600"
-                    }`}
+                    onClick={() => setShowOnchain((value) => !value)}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                   >
-                    {action.label}
+                    {showOnchain ? "Hide controls" : "Execute next step"}
                   </button>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-green-300">
-                No more local workflow actions. Generate the receipt below.
-              </p>
-            )}
-          </div>
+                </div>
+                {showOnchain && (
+                  <OnchainExecutionPanel
+                    job={job}
+                    deliverableHash={deliverableHash || job.deliverableHash || ""}
+                    onUpdate={onUpdate}
+                  />
+                )}
+              </section>
 
-          <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-white">Arc Testnet evidence path</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Use wallet-signed ERC-8183 transactions when the submission needs real tx hashes.
-                </p>
-              </div>
+              {actions.length > 0 && (
+                <section className="flex flex-wrap gap-2">
+                  {actions.map((action) => (
+                    <button
+                      key={action.nextStatus}
+                      onClick={() => transition(action.nextStatus, action.deliverableRequired)}
+                      className={`rounded-lg px-3 py-2 text-xs font-semibold ${
+                        action.nextStatus === "failed"
+                          ? "border border-red-200 text-red-700 hover:bg-red-50"
+                          : "bg-slate-950 text-white hover:bg-slate-800"
+                      }`}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </section>
+              )}
+
+              {actionError && <p className="text-xs text-red-600">{actionError}</p>}
+            </div>
+
+            <aside className="space-y-5">
+              <section>
+                <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Settlement activity
+                </div>
+                <SettlementActivity job={job} />
+              </section>
+
+              <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-950">Evidence receipt</div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      Export the business record after tx hashes are recorded.
+                    </div>
+                  </div>
+                  <button
+                    onClick={loadReceipt}
+                    disabled={loadingReceipt}
+                    className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {loadingReceipt ? "Loading..." : "Generate"}
+                  </button>
+                </div>
+              </section>
+
+              {receipt && <ReceiptExport receipt={receipt} />}
+
               <button
-                onClick={() => setShowOnchain((v) => !v)}
-                className="px-3 py-1.5 rounded border border-gray-700 text-xs text-gray-300 hover:bg-gray-800"
+                onClick={handleDelete}
+                className="text-xs font-semibold text-red-600 hover:underline"
               >
-                {showOnchain ? "Hide onchain steps" : "Show onchain steps"}
+                Delete settlement
               </button>
-            </div>
-
-            {showOnchain && (
-              <OnchainExecutionPanel
-                job={job}
-                deliverableHash={deliverableHash || job.deliverableHash || ""}
-                onUpdate={onUpdate}
-              />
-            )}
-          </div>
-
-          {actionError && <p className="text-red-400 text-xs">{actionError}</p>}
-
-          {/* Receipt */}
-          <div className="rounded-lg border border-purple-900 bg-purple-950/20 p-4 space-y-3">
-            <div>
-              <div className="text-sm font-semibold text-white">Receipt</div>
-              <p className="text-xs text-gray-500 mt-1">
-                Export this after the trade flow or after wallet-signed tx hashes are attached.
-              </p>
-            </div>
-            <button
-              onClick={loadReceipt}
-              disabled={loadingReceipt}
-              className="px-4 py-1.5 rounded bg-purple-800 text-purple-50 text-xs font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50"
-            >
-              {loadingReceipt ? "Loading..." : "Generate Receipt"}
-            </button>
-          </div>
-
-          {receipt && <ReceiptExport receipt={receipt} />}
-
-          {/* Timestamps */}
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-600">
-            <div className="flex flex-wrap gap-4">
-              <span>Created: {new Date(job.createdAt).toLocaleString()}</span>
-              <span>Updated: {new Date(job.updatedAt).toLocaleString()}</span>
-            </div>
-            <button
-              onClick={handleDelete}
-              className="px-3 py-1 rounded border border-red-900 text-red-400 hover:bg-red-950/40"
-            >
-              Delete job
-            </button>
+            </aside>
           </div>
         </div>
       )}
@@ -623,15 +537,14 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
   );
 }
 
-// ──────────────────────────────────────────────
-// Main Job Console
-// ──────────────────────────────────────────────
-
 export default function JobConsole() {
   const { jobs, loading, error, refresh } = useJobs();
   const [showCreate, setShowCreate] = useState(false);
   const [verifiedIdentity, setVerifiedIdentity] = useState<ArcAgentIdentity | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+
+  const verifiedCount = jobs.filter((job) => job.settlementMode === "onchain-verified").length;
+  const totalValue = jobs.reduce((sum, job) => sum + Number(job.amount || 0), 0);
 
   function handleCreated(job: ArcSettlementJob) {
     setActiveJobId(job.id);
@@ -644,127 +557,144 @@ export default function JobConsole() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Trade Settlement Console</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Build a cross-border SME trade settlement: importer agent, supplier agent, evaluator,
-            USDC escrow, deliverable proof, and receipt evidence.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="px-2 py-1 rounded text-xs bg-blue-900/40 border border-blue-700 text-blue-300">
-            SME trade + agentic economy
-          </span>
-          <button
-            onClick={() => setShowCreate((s) => !s)}
-            className="px-4 py-2 rounded bg-blue-700 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
-          >
-            {showCreate ? "Cancel" : "+ New Job"}
-          </button>
-        </div>
-      </div>
-
-      <section className="rounded-xl border border-cyan-800 bg-cyan-950/20 p-5 space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="text-base font-semibold text-white">Start here</div>
-            <p className="text-xs text-gray-400 mt-1">
-              Complete the trade settlement flow in four steps. The Arc Testnet path is where final
-              submission evidence should be collected.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="px-4 py-1.5 rounded bg-cyan-800 text-cyan-50 text-xs font-semibold hover:bg-cyan-700"
-          >
-            Create trade
-          </button>
-        </div>
-        <div className="grid md:grid-cols-4 gap-3 text-xs">
-          {WORKFLOW_STEPS.map(([number, label, detail]) => (
-            <div key={number} className="rounded-lg border border-cyan-900 bg-gray-950/60 p-3">
-              <div className="flex items-center gap-2">
-                <span className="h-6 w-6 rounded-full border border-cyan-800 text-cyan-200 flex items-center justify-center font-semibold">
-                  {number}
-                </span>
-                <span className="text-cyan-300 font-semibold">{label}</span>
+    <div className="min-h-screen bg-[#f7f9f8] text-slate-950">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="grid lg:grid-cols-[240px_1fr_340px] min-h-[760px]">
+            <aside className="hidden border-b border-slate-200 bg-white p-5 lg:block lg:border-b-0 lg:border-r">
+              <div className="mb-8 flex items-center gap-2">
+                <div className="h-9 w-9 rounded-lg bg-slate-950 text-white flex items-center justify-center font-bold">
+                  A
+                </div>
+                <div>
+                  <div className="text-sm font-bold">Arc Settlement</div>
+                  <div className="text-xs text-slate-500">Agentic trade desk</div>
+                </div>
               </div>
-              <p className="text-gray-400 mt-2">{detail}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+              <nav className="space-y-1">
+                {SIDE_NAV.map((item, index) => (
+                  <button
+                    key={item}
+                    className={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold ${
+                      index === 0
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "text-slate-500 hover:bg-slate-50"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </nav>
+              <div className="mt-8 border-t border-slate-100 pt-5 text-xs text-slate-500">
+                Built for USDC-native settlement, deterministic finality, and auditable agent
+                workflows on Arc.
+              </div>
+            </aside>
 
-      <section className="grid md:grid-cols-4 gap-3">
-        {STACK_FIT.map(([title, detail]) => (
-          <div key={title} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
-            <div className="text-sm font-semibold text-white">{title}</div>
-            <p className="text-xs text-gray-500 mt-2">{detail}</p>
+            <main className="bg-[#fbfcfb] p-5 md:p-7">
+              <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                    Stablecoin commerce workspace
+                  </div>
+                  <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                    Agentic trade settlement
+                  </h1>
+                  <p className="mt-2 max-w-2xl text-sm text-slate-500">
+                    Coordinate buyer, supplier, and evaluator agents through USDC escrow, delivery
+                    proof, final approval, and a portable receipt.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowCreate((value) => !value)}
+                  className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                  {showCreate ? "Close form" : "New settlement"}
+                </button>
+              </div>
+
+              <div className="mb-6 grid md:grid-cols-3 gap-3">
+                {[
+                  ["Settlements", jobs.length.toString()],
+                  ["Verified receipts", verifiedCount.toString()],
+                  ["Tracked value", `$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 3 })}`],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-slate-200 bg-white p-4">
+                    <div className="text-xs text-slate-500">{label}</div>
+                    <div className="mt-1 text-2xl font-semibold text-slate-950">{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {showCreate && (
+                <section className="mb-6 rounded-lg border border-slate-200 bg-white p-5">
+                  <div className="mb-4">
+                    <div className="text-base font-semibold text-slate-950">Create settlement</div>
+                    <div className="text-xs text-slate-500">
+                      Use the same wallet for all roles when testing a full single-signer flow.
+                    </div>
+                  </div>
+                  <CreateJobForm onCreated={handleCreated} verifiedIdentity={verifiedIdentity} />
+                </section>
+              )}
+
+              {loading ? (
+                <p className="text-sm text-slate-500">Loading settlements...</p>
+              ) : error ? (
+                <p className="text-sm text-red-600">Error: {error}</p>
+              ) : jobs.length === 0 ? (
+                <p className="text-sm text-slate-500">No settlements yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {jobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onUpdate={handleUpdate}
+                      onDeleted={refresh}
+                      verifiedIdentity={verifiedIdentity}
+                      defaultExpanded={job.id === activeJobId}
+                    />
+                  ))}
+                </div>
+              )}
+            </main>
+
+            <aside className="border-t border-slate-200 bg-white p-5 lg:border-l lg:border-t-0">
+              <section className="mb-6 rounded-lg bg-slate-950 p-5 text-white">
+                <div className="text-xs font-semibold uppercase tracking-wide text-emerald-300">
+                  Arc Testnet
+                </div>
+                <div className="mt-2 text-xl font-semibold">USDC-native settlement rail</div>
+                <p className="mt-2 text-sm text-slate-300">
+                  Predictable dollar fees, EVM compatibility, and sub-second deterministic
+                  settlement for real-world finance workflows.
+                </p>
+                <a
+                  href={ARC_TESTNET_EXPLORER}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-slate-100"
+                >
+                  Open Arcscan
+                </a>
+              </section>
+
+              <section className="mb-6">
+                <div className="mb-3 text-sm font-semibold text-slate-950">Agent identity</div>
+                <IdentityConsole compact onVerified={setVerifiedIdentity} />
+              </section>
+
+              <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="text-sm font-semibold text-slate-950">What makes it different</div>
+                <div className="mt-3 space-y-3 text-sm text-slate-600">
+                  <p>It is not a balance wallet or checkout page.</p>
+                  <p>Every payment is tied to a trade context, agent roles, escrow state, delivery proof, and final receipt.</p>
+                </div>
+              </section>
+            </aside>
           </div>
-        ))}
-      </section>
-
-      <IdentityConsole compact onVerified={setVerifiedIdentity} />
-
-      {/* Create form */}
-      {showCreate && (
-        <div className="rounded-xl border border-blue-800 bg-blue-950/20 p-6">
-          <h2 className="text-base font-semibold text-white mb-4">Create trade settlement</h2>
-          <CreateJobForm onCreated={handleCreated} verifiedIdentity={verifiedIdentity} />
         </div>
-      )}
-
-      {/* Lifecycle legend */}
-      <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-        <span>Lifecycle:</span>
-        {(["draft", "open", "budgeted", "funded", "submitted", "settled", "failed"] as const).map(
-          (s) => (
-            <LifecycleBadge key={s} status={s} size="sm" />
-          )
-        )}
-      </div>
-
-      {/* Job list */}
-      {loading ? (
-        <p className="text-gray-500 text-sm">Loading jobs…</p>
-      ) : error ? (
-        <p className="text-red-400 text-sm">Error: {error}</p>
-      ) : jobs.length === 0 ? (
-        <p className="text-gray-500 text-sm">No jobs yet. Create one above.</p>
-      ) : (
-        <div className="space-y-3">
-          {jobs.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              onUpdate={handleUpdate}
-              onDeleted={refresh}
-              verifiedIdentity={verifiedIdentity}
-              defaultExpanded={job.id === activeJobId}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Blueprint notice */}
-      <div className="rounded-lg border border-gray-800 bg-gray-900/40 p-4 text-xs text-gray-600 space-y-1">
-        <div className="font-semibold text-gray-400">Circle and Arc stack status</div>
-        <ul className="list-disc list-inside space-y-0.5">
-          <li>Live: USDC-denominated trade settlement workflow on Arc Testnet</li>
-          <li>Live: ERC-8004 identity verifier reads ownerOf/tokenURI from Arc Testnet</li>
-          <li>
-            Live: wallet-submitted ERC-8183 AgenticCommerce execution on Arc Testnet (
-            <code>0x0747EEf0706327138c69792bF28Cd525089e4583</code>)
-          </li>
-          <li>Live: provider budget is recorded before escrow funding</li>
-          <li>Submission gate: capture a full wallet-signed tx sequence before final submission</li>
-          <li>Next: Circle Wallets for policy-controlled agent treasury</li>
-          <li>Next: Gateway / Nanopayments for paid API, report, and document access</li>
-          <li>Next: CCTP funding, StableFX routing, and USYC treasury extensions</li>
-        </ul>
       </div>
     </div>
   );

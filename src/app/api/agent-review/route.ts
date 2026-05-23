@@ -1,6 +1,13 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import type { AgentReview, AgentReviewCheck, ArcSettlementJob } from "@/lib/types";
+import { createPublicClient, createWalletClient, http, encodeFunctionData } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { arcTestnet, ARC_TESTNET_RPC } from "@/lib/arc-chain";
+import { AGENTIC_COMMERCE_CONTRACT, agenticCommerceAbi, toBytes32 } from "@/lib/arc-commerce";
+
+const AGENT_PRIVATE_KEY = process.env.EVALUATOR_PRIVATE_KEY || "0x7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e";
+const AI_EVALUATOR_ADDRESS = "0x3C6E03FB0CAE74925098CfbfB09e173ee9a54B68";
 
 type ReviewRequest = {
   job?: ArcSettlementJob;
@@ -332,7 +339,76 @@ export async function POST(request: Request) {
       ? { ...base, ...overlay, model: process.env.OPENAI_MODEL || "gpt-5.1" }
       : base;
 
-    return NextResponse.json({ review: attachFinalHash(body.job, review) });
+    const attachedReview = attachFinalHash(body.job, review);
+
+    // AI Agent Autonomous Settlement Release logic
+    const isAiEvaluator =
+      body.job.evaluatorAddress?.toLowerCase() === AI_EVALUATOR_ADDRESS.toLowerCase();
+    
+    let autoReleaseStatus = "none";
+    let settleTxHash: string | undefined = undefined;
+    let newStatus = body.job.status;
+    let autoReleaseError: string | undefined = undefined;
+
+    if (isAiEvaluator && review.verdict === "approve" && body.job.status === "submitted" && body.job.onchainJobId) {
+      try {
+        const account = privateKeyToAccount(AGENT_PRIVATE_KEY as `0x${string}`);
+        const publicClient = createPublicClient({
+          chain: arcTestnet,
+          transport: http(ARC_TESTNET_RPC),
+        });
+
+        const balance = await publicClient.getBalance({ address: account.address });
+        // Gas threshold: 2 * 10^15 wei (approx 0.002 USDC on Arc native gas)
+        const gasLimitThreshold = BigInt(2000000000000000); 
+
+        if (balance < gasLimitThreshold) {
+          autoReleaseStatus = "insufficient-gas";
+        } else {
+          const walletClient = createWalletClient({
+            account,
+            chain: arcTestnet,
+            transport: http(ARC_TESTNET_RPC),
+          });
+
+          const completeTx = {
+            to: AGENTIC_COMMERCE_CONTRACT as `0x${string}`,
+            data: encodeFunctionData({
+              abi: agenticCommerceAbi,
+              functionName: "complete",
+              args: [BigInt(body.job.onchainJobId), toBytes32("approved"), "0x"],
+            }),
+          };
+
+          const hash = await walletClient.sendTransaction({
+            to: completeTx.to,
+            data: completeTx.data,
+          });
+
+          const receipt = await publicClient.waitForTransactionReceipt({ hash });
+          if (receipt.status === "success") {
+            autoReleaseStatus = "success";
+            settleTxHash = hash;
+            newStatus = "settled";
+          } else {
+            autoReleaseStatus = "failed";
+            autoReleaseError = "Transaction reverted on Arc Testnet";
+          }
+        }
+      } catch (err) {
+        autoReleaseStatus = "failed";
+        autoReleaseError = err instanceof Error ? err.message : "Auto-release execution failed";
+      }
+    }
+
+    return NextResponse.json({
+      review: attachedReview,
+      autoReleaseStatus,
+      settleTxHash,
+      status: newStatus,
+      error: autoReleaseError,
+      agentAddress: AI_EVALUATOR_ADDRESS,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Agent review failed" },

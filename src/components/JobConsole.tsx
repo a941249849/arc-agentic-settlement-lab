@@ -196,29 +196,51 @@ function CreateDealForm({ onCreated, verifiedIdentity }: CreateDealFormProps) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {(
-          [
-            { id: "clientAddress", label: "Buyer / payer" },
-            { id: "providerAddress", label: "Supplier / receiver" },
-            { id: "evaluatorAddress", label: "Evaluator / release agent" },
-            { id: "amount", label: "Escrow amount (USDC)" },
-          ] as const
-        ).map(({ id, label }) => (
-          <label key={id} className="space-y-1 text-xs font-medium text-slate-400 block">
-            {label}
-            <input
-              value={
-                form[id] ||
-                ((id === "clientAddress" || id === "providerAddress" || id === "evaluatorAddress") && account
-                  ? account
-                  : "")
-              }
-              onChange={(e) => setForm((current) => ({ ...current, [id]: e.target.value }))}
-              className={`${inputClass} font-mono`}
-              required
-            />
-          </label>
-        ))}
+        <label className="space-y-1 text-xs font-medium text-slate-400 block">
+          Buyer / payer
+          <input
+            value={form.clientAddress || (form.clientAddress === "" && account ? account : "")}
+            onChange={(e) => setForm((current) => ({ ...current, clientAddress: e.target.value }))}
+            className={`${inputClass} font-mono`}
+            required
+          />
+        </label>
+        <label className="space-y-1 text-xs font-medium text-slate-400 block">
+          Supplier / receiver
+          <input
+            value={form.providerAddress || (form.providerAddress === "" && account ? account : "")}
+            onChange={(e) => setForm((current) => ({ ...current, providerAddress: e.target.value }))}
+            className={`${inputClass} font-mono`}
+            required
+          />
+        </label>
+        <label className="space-y-1 text-xs font-medium text-slate-400 block">
+          <div className="flex justify-between items-center mb-1">
+            <span>Evaluator / release agent</span>
+            <button
+              type="button"
+              onClick={() => setForm((current) => ({ ...current, evaluatorAddress: "0x3C6E03FB0CAE74925098CfbfB09e173ee9a54B68" }))}
+              className="text-[10px] text-sky-400 hover:text-sky-300 font-semibold cursor-pointer"
+            >
+              🤖 Use AI Agent (Auto-Release)
+            </button>
+          </div>
+          <input
+            value={form.evaluatorAddress || (form.evaluatorAddress === "" && account ? account : "")}
+            onChange={(e) => setForm((current) => ({ ...current, evaluatorAddress: e.target.value }))}
+            className={`${inputClass} font-mono`}
+            required
+          />
+        </label>
+        <label className="space-y-1 text-xs font-medium text-slate-400 block">
+          Escrow amount (USDC)
+          <input
+            value={form.amount}
+            onChange={(e) => setForm((current) => ({ ...current, amount: e.target.value }))}
+            className={`${inputClass} font-mono`}
+            required
+          />
+        </label>
       </div>
 
       <label className="block space-y-1 text-xs font-medium text-slate-400">
@@ -378,8 +400,14 @@ function ReviewPanel({
 }) {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoReleaseStatus, setAutoReleaseStatus] = useState<string | null>(null);
+  const [sendingGas, setSendingGas] = useState(false);
+  const { activeProvider, account } = useArcWallet();
+
   const review = job.agentReview;
   const canReview = job.status === "submitted" || job.status === "settled";
+  const isAiEvaluator = job.evaluatorAddress?.toLowerCase() === "0x3c6e03fb0cae74925098cfbfb09e173ee9a54b68";
+
   const verdictClass =
     review?.verdict === "approve"
       ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
@@ -390,6 +418,7 @@ function ReviewPanel({
   async function runReview() {
     setRunning(true);
     setError(null);
+    setAutoReleaseStatus(null);
     try {
       const res = await fetch("/api/agent-review", {
         method: "POST",
@@ -401,8 +430,26 @@ function ReviewPanel({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-      await updateJob(job.id, { agentReview: data.review as AgentReview });
+
+      const updateData: Partial<ArcSettlementJob> = {
+        agentReview: data.review as AgentReview,
+      };
+      if (data.settleTxHash) {
+        updateData.settleTxHash = data.settleTxHash;
+        updateData.status = data.status; // "settled"
+        updateData.settlementMode = "onchain-verified";
+      }
+      await updateJob(job.id, updateData);
       onUpdate();
+
+      setAutoReleaseStatus(data.autoReleaseStatus);
+      if (data.autoReleaseStatus === "success") {
+        setError("🤖 Autonomous AI Agent evaluated the proof and successfully released locked funds on-chain!");
+      } else if (data.autoReleaseStatus === "insufficient-gas") {
+        setError("🤖 AI Agent approved the release, but lacks gas (0 USDC) on Arc Testnet to broadcast. Please use the button below to top up the agent, or release manually.");
+      } else if (data.autoReleaseStatus === "failed" && data.error) {
+        setError(`🤖 AI Agent auto-release failed: ${data.error}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Evaluator review failed");
     } finally {
@@ -410,11 +457,47 @@ function ReviewPanel({
     }
   }
 
+  async function sendGasToAgent() {
+    if (!activeProvider || !account) {
+      setError("Please connect your wallet first to top up the agent.");
+      return;
+    }
+    setSendingGas(true);
+    setError(null);
+    try {
+      // Send 0.5 USDC native gas token (native gas has 18 decimals)
+      const hash = (await activeProvider.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: account,
+            to: "0x3C6E03FB0CAE74925098CfbfB09e173ee9a54B68",
+            value: "0x6f05b59d3b20000", // 0.5 USDC = 5 * 10^17 wei
+          },
+        ],
+      })) as string;
+      setError(`Gas sent! Tx hash: ${hash.slice(0, 10)}... waiting 5s for propagation.`);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      setError("Gas top-up successful! Click Rerun below to execute AI agent autonomous settlement.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gas top-up transfer failed");
+    } finally {
+      setSendingGas(false);
+    }
+  }
+
   return (
     <section className={`rounded-lg border p-4 ${review ? verdictClass : "border-slate-850 bg-slate-900/10"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-slate-100">Evaluator decision</div>
+          <div className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
+            <span>Evaluator decision</span>
+            {isAiEvaluator && (
+              <span className="px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                🤖 Autonomous AI Agent Mode
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-xs text-slate-400">
             {evaluatorModeLabel(review)} checks the deal context, escrow amount, delivery proof, Arc evidence, and agent identity before release.
           </p>
@@ -424,7 +507,15 @@ function ReviewPanel({
           disabled={running || !canReview}
           className="rounded-lg bg-sky-600 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-lg shadow-sky-500/10 cursor-pointer"
         >
-          {running ? "Reviewing..." : review ? "Rerun decision" : "Run evaluator"}
+          {running
+            ? "Reviewing..."
+            : isAiEvaluator
+            ? review
+              ? "Rerun Auto-Release"
+              : "Run AI & Auto-Release"
+            : review
+            ? "Rerun decision"
+            : "Run evaluator"}
         </button>
       </div>
 
@@ -432,6 +523,38 @@ function ReviewPanel({
         <p className="mt-3 text-xs text-slate-550">
           The evaluator unlocks after delivery proof is submitted on Arc. This prevents approving an unpaid or unproven deal.
         </p>
+      )}
+
+      {autoReleaseStatus === "insufficient-gas" && (
+        <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 text-xs text-amber-300 space-y-2">
+          <div className="font-bold flex items-center gap-1">
+            <span>⚠️ AI Agent Gas Faucet Refill Required</span>
+          </div>
+          <p>
+            The AI Agent evaluated and **APPROVED** the delivery proof. However, it cannot execute the release on-chain because its gas balance is empty (0 USDC).
+          </p>
+          <p>
+            Please send some Arc Testnet USDC (which is used as the native gas token) to the agent address:
+          </p>
+          <code className="block p-2 font-mono break-all text-[11px] bg-slate-950/50 rounded border border-slate-800 select-all">
+            0x3C6E03FB0CAE74925098CfbfB09e173ee9a54B68
+          </code>
+          <div className="pt-1 flex gap-2">
+            <button
+              onClick={sendGasToAgent}
+              disabled={sendingGas}
+              className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold disabled:opacity-50 cursor-pointer"
+            >
+              {sendingGas ? "Sending gas..." : "Send 0.5 USDC Gas to Agent"}
+            </button>
+            <button
+              onClick={runReview}
+              className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 font-semibold hover:bg-slate-700 cursor-pointer"
+            >
+              Rerun Agent Auto-Release
+            </button>
+          </div>
+        </div>
       )}
 
       {review && (
@@ -457,7 +580,11 @@ function ReviewPanel({
         </div>
       )}
 
-      {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
+      {error && (
+        <p className={`mt-3 text-xs p-3 rounded-lg border ${error.includes("successfully") ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-300" : "border-red-500/20 bg-red-500/5 text-red-400"}`}>
+          {error}
+        </p>
+      )}
     </section>
   );
 }

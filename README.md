@@ -1,35 +1,37 @@
-# Arc Trade Agent Settlement
+# ArcEscrow - Agentic Letter of Credit (ALC) for Cross-Border SME Trade
 
-Arc Trade Agent Settlement is a testnet product for proof-gated USDC payments on Arc.
-
-The app models a buyer opening a deal room with a supplier, locking USDC in Arc escrow, requiring delivery proof, running an evaluator decision, and exporting a deterministic settlement receipt. It is built for cross-border trade and agentic commerce workflows where payment should be released only after evidence exists.
+**ArcEscrow** is a decentralized, programmatic escrow platform built on Circle's Arc Settlement Protocol. It replaces slow and costly traditional bank Letters of Credit (L/C) with programmatically settled USDC escrows, gated by verifiable **ERC-8004 AI logistics-audit agents** and **ERC-8183 settlement lifecycles**.
 
 ```text
-deal room -> optional ERC-8004 agent proof -> ERC-8183 settlement job -> supplier budget -> USDC escrow -> delivery proof -> evaluator approval -> settlement receipt
+[Buyer/Party A] ➔ Create Escrow (USDC) ➔ [Supplier/Party B] ➔ Upload Delivery Proof ➔ [AI Evaluator/Party C] ➔ Verify & Release ➔ Settled Receipt
 ```
 
 ## Live Links
 
-- App: https://arc-agentic-settlement-lab.vercel.app
-- Deal room: https://arc-agentic-settlement-lab.vercel.app/jobs
-- Agent proof: https://arc-agentic-settlement-lab.vercel.app/identity
-- Arcscan: https://testnet.arcscan.app
-- Arc docs: https://docs.arc.network
+- **App**: https://arc-agentic-settlement-lab.vercel.app
+- **Deal Room Console**: https://arc-agentic-settlement-lab.vercel.app/jobs
+- **Agent Proof Directory**: https://arc-agentic-settlement-lab.vercel.app/identity
+- **Arcscan**: https://testnet.arcscan.app
+- **Arc Docs**: https://docs.arc.network
 
-## What Problem It Solves
+---
 
-Normal stablecoin transfers prove that tokens moved. They usually do not prove why the payment happened, which agent acted, which invoice or trade route was involved, what budget was approved, whether the supplier submitted deliverable proof, or how the receipt can be audited later.
+## The Real-World Landing Scenario
 
-This product wraps payment in an escrow workflow:
+### The Problem: The SME Cross-Border Trade trust gap
+In global commerce, small-and-medium enterprises (SMEs) face a fundamental trust gap:
+- **Party A (Buyer / Importer)** is hesitant to pay upfront, fearing shipping delays or sub-standard cargo.
+- **Party B (Supplier / Exporter)** is hesitant to ship cargo before securing payment, fearing default.
+- **Traditional Solution**: Bank **Letters of Credit (L/C)**. However, they are slow (taking weeks of paperwork), expensive (2-5% fee), and inaccessible for smaller enterprises.
 
-| Stage | User meaning |
-| --- | --- |
-| Trade context | Invoice ID, buyer country, supplier country, goods/service, and compliance status are recorded. |
-| Agent proof | The importer, supplier, or evaluator can be tied to an ERC-8004 identity instead of only an address. |
-| Budget | The supplier states the expected USDC amount before funding. |
-| Escrow | Funds are prepared for the ERC-8183 job lifecycle rather than sent as a blind transfer. |
-| Deliverable | The supplier records proof of completed trade documents or service output. |
-| Receipt | The final output binds trade context, identity, amount, deliverable hash, tx slots, and lifecycle status. |
+### Our Solution: Programmatic Escrow Gated by AI Audits
+**ArcEscrow** bridges this trust gap using Circle's USDC and decentralized evaluation:
+1. **Buyer (Party A)** locks USDC into the Arc Escrow contract, specifying the release conditions (e.g., invoice details, target cargo hash, and selected logistics auditor).
+2. **Supplier (Party B)** prepares the shipment and submits digital delivery evidence (e.g. carrier receipt hash) to the deal room.
+3. **AI Evaluator (Party C)**—an independent registered agent—validates the logistics documents on-chain and releases the locked USDC.
+4. **Instant Compliance**: CFOs export a tamper-proof cryptographic receipt containing logistics metadata, agent approvals, and transaction logs, directly suitable for financial audit.
+
+---
 
 ## What Is Implemented
 

@@ -1,62 +1,184 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { ArcSettlementJob } from "@/lib/types";
+import type { ArcSettlementJob, ArcSettlementReceipt, JobStatus } from "@/lib/types";
 
-async function fetchJobs(): Promise<ArcSettlementJob[]> {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 8000);
-  try {
-    const res = await fetch("/api/arc-settlement/jobs", {
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return data.jobs as ArcSettlementJob[];
-  } finally {
-    window.clearTimeout(timeout);
+const STORAGE_KEY = "arc-agentic-settlement-jobs-v1";
+
+const VALID_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
+  draft: ["open", "failed"],
+  open: ["budgeted", "failed"],
+  budgeted: ["funded", "failed"],
+  funded: ["submitted", "failed"],
+  submitted: ["settled", "failed"],
+  settled: [],
+  failed: [],
+};
+
+function seedJobs(): ArcSettlementJob[] {
+  const now = new Date().toISOString();
+  return [
+    {
+      id: crypto.randomUUID(),
+      status: "open",
+      clientAddress: "0x1111111111111111111111111111111111111111",
+      providerAddress: "0x2222222222222222222222222222222222222222",
+      evaluatorAddress: "0x3333333333333333333333333333333333333333",
+      amount: "25.00",
+      currency: "USDC",
+      description:
+        "US importer agent purchases a supplier verification report for a Singapore exporter and releases USDC after deliverable review.",
+      tradeProfile: {
+        useCase: "cross-border-trade",
+        invoiceId: "ARC-INV-2026-001",
+        buyerCountry: "United States",
+        supplierCountry: "Singapore",
+        goodsOrService: "Supplier verification report",
+        complianceCheck: "pending",
+        fundingSource: "buyer-wallet",
+        settlementRail: "USDC-on-Arc",
+      },
+      createdAt: now,
+      updatedAt: now,
+      settlementMode: "simulated",
+    },
+  ];
+}
+
+function sortJobs(jobs: ArcSettlementJob[]) {
+  return [...jobs].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+function readJobs(): ArcSettlementJob[] {
+  if (typeof window === "undefined") return [];
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (!stored) {
+    const seeded = seedJobs();
+    writeJobs(seeded);
+    return seeded;
   }
+  try {
+    const parsed = JSON.parse(stored) as ArcSettlementJob[];
+    if (!Array.isArray(parsed)) throw new Error("Stored jobs are not an array");
+    return sortJobs(parsed);
+  } catch {
+    const seeded = seedJobs();
+    writeJobs(seeded);
+    return seeded;
+  }
+}
+
+function writeJobs(jobs: ArcSettlementJob[]) {
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sortJobs(jobs)));
+}
+
+function updateStoredJob(
+  id: string,
+  patch: Partial<ArcSettlementJob>
+): ArcSettlementJob {
+  const jobs = readJobs();
+  const existing = jobs.find((job) => job.id === id);
+  if (!existing) throw new Error("Job not found");
+
+  if (patch.status && patch.status !== existing.status) {
+    const valid = VALID_TRANSITIONS[existing.status]?.includes(patch.status);
+    if (!valid) throw new Error(`Invalid transition: ${existing.status} -> ${patch.status}`);
+  }
+
+  const updated: ArcSettlementJob = {
+    ...existing,
+    ...patch,
+    id: existing.id,
+    createdAt: existing.createdAt,
+    updatedAt: new Date().toISOString(),
+  };
+  writeJobs(jobs.map((job) => (job.id === id ? updated : job)));
+  return updated;
+}
+
+function orderedReceiptPayload(canonical: Omit<ArcSettlementReceipt, "receiptHash">) {
+  return {
+    jobId: canonical.jobId,
+    onchainJobId: canonical.onchainJobId,
+    lifecycleStatus: canonical.lifecycleStatus,
+    clientAddress: canonical.clientAddress,
+    providerAddress: canonical.providerAddress,
+    evaluatorAddress: canonical.evaluatorAddress,
+    amount: canonical.amount,
+    currency: canonical.currency,
+    tradeProfile: canonical.tradeProfile,
+    budget: canonical.budget,
+    deliverableHash: canonical.deliverableHash,
+    txHashes: canonical.txHashes,
+    agentIdentity: canonical.agentIdentity,
+    settlementMode: canonical.settlementMode,
+    createdAt: canonical.createdAt,
+  };
+}
+
+async function sha256Hex(value: string) {
+  const data = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function generateClientReceipt(job: ArcSettlementJob): Promise<ArcSettlementReceipt> {
+  const base: Omit<ArcSettlementReceipt, "receiptHash"> = {
+    receiptVersion: "arc-settlement-v1",
+    network: "Arc Testnet",
+    jobId: job.id,
+    onchainJobId: job.onchainJobId,
+    lifecycleStatus: job.status,
+    clientAddress: job.clientAddress,
+    providerAddress: job.providerAddress,
+    evaluatorAddress: job.evaluatorAddress,
+    amount: job.amount,
+    currency: job.currency,
+    tradeProfile: job.tradeProfile,
+    budget: {
+      amount: job.budgetAmount ?? job.amount,
+      txHash: job.setBudgetTxHash,
+    },
+    deliverableHash: job.deliverableHash ?? "",
+    txHashes: {
+      create: job.createTxHash,
+      setBudget: job.setBudgetTxHash,
+      approve: job.approveTxHash,
+      fund: job.fundTxHash,
+      submit: job.submitTxHash,
+      settle: job.settleTxHash,
+    },
+    agentIdentity: job.agentIdentity,
+    settlementMode: job.settlementMode,
+    createdAt: job.createdAt,
+  };
+
+  const receiptHash = await sha256Hex(JSON.stringify(orderedReceiptPayload(base)));
+  return { ...base, receiptHash };
 }
 
 export function useJobs() {
   const [jobs, setJobs] = useState<ArcSettlementJob[]>([]);
-  // Start as true so we don't flash an empty list before the first fetch
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
-    setLoading(true);
-    fetchJobs()
-      .then((data) => {
-        setJobs(data);
-        setError(null);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to fetch jobs: unknown error"))
-      .finally(() => setLoading(false));
+    try {
+      setJobs(readJobs());
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load jobs");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    // loading is already true from initial state; no need to set it again
-    fetchJobs()
-      .then((data) => {
-        if (!cancelled) {
-          setJobs(data);
-          setError(null);
-        }
-      })
-      .catch((e) => {
-        if (!cancelled)
-          setError(e instanceof Error ? e.message : "Failed to fetch jobs: unknown error");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    const timer = window.setTimeout(refresh, 0);
+    return () => window.clearTimeout(timer);
+  }, [refresh]);
 
   return { jobs, loading, error, refresh };
 }
@@ -74,16 +196,17 @@ export async function createJob(
     | "agentIdentity"
   >
 ): Promise<ArcSettlementJob> {
-  const res = await fetch("/api/arc-settlement/jobs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? `HTTP ${res.status}`);
-  }
-  const { job } = await res.json();
+  const jobs = readJobs();
+  const now = new Date().toISOString();
+  const job: ArcSettlementJob = {
+    ...data,
+    id: crypto.randomUUID(),
+    status: "draft",
+    createdAt: now,
+    updatedAt: now,
+    settlementMode: "simulated",
+  };
+  writeJobs([job, ...jobs]);
   return job;
 }
 
@@ -91,32 +214,15 @@ export async function updateJob(
   id: string,
   patch: Partial<ArcSettlementJob>
 ): Promise<ArcSettlementJob> {
-  const res = await fetch(`/api/arc-settlement/jobs/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? `HTTP ${res.status}`);
-  }
-  const { job } = await res.json();
-  return job;
+  return updateStoredJob(id, patch);
 }
 
 export async function deleteJob(id: string): Promise<void> {
-  const res = await fetch(`/api/arc-settlement/jobs/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? `HTTP ${res.status}`);
-  }
+  writeJobs(readJobs().filter((job) => job.id !== id));
 }
 
 export async function fetchReceipt(id: string) {
-  const res = await fetch(`/api/arc-settlement/jobs/${id}/receipt`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const { receipt } = await res.json();
-  return receipt;
+  const job = readJobs().find((item) => item.id === id);
+  if (!job) throw new Error("Job not found");
+  return generateClientReceipt(job);
 }

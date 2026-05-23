@@ -13,7 +13,8 @@ import LifecycleBadge from "./LifecycleBadge";
 import ReceiptExport from "./ReceiptExport";
 import IdentityConsole from "./IdentityConsole";
 import OnchainExecutionPanel from "./OnchainExecutionPanel";
-import { ARC_TESTNET_EXPLORER } from "@/lib/arc-chain";
+import { ARC_TESTNET_EXPLORER, ARC_TESTNET_RPC, arcTestnet } from "@/lib/arc-chain";
+import { AGENTIC_COMMERCE_CONTRACT, ARC_USDC } from "@/lib/arc-commerce";
 
 interface CreateFormProps {
   onCreated: (job: ArcSettlementJob) => void;
@@ -62,7 +63,31 @@ const LIFECYCLE = [
   { key: "settleTxHash", label: "Complete", role: "Evaluator", status: "settled" },
 ] as const;
 
-const SIDE_NAV = ["Settlements", "Agents", "Receipts", "Network"];
+const SIDE_NAV = ["Settlements", "Agents", "Receipts", "Network"] as const;
+type WorkspaceSection = (typeof SIDE_NAV)[number];
+
+const SECTION_COPY: Record<WorkspaceSection, { eyebrow: string; title: string; body: string }> = {
+  Settlements: {
+    eyebrow: "Stablecoin commerce workspace",
+    title: "Agentic trade settlement",
+    body: "Coordinate buyer, supplier, and evaluator agents through USDC escrow, delivery proof, final approval, and a portable receipt.",
+  },
+  Agents: {
+    eyebrow: "Identity workspace",
+    title: "Verified agent identities",
+    body: "Prepare ERC-8004 registration calldata and verify existing Arc Testnet agent ownership before attaching an identity to a settlement.",
+  },
+  Receipts: {
+    eyebrow: "Evidence workspace",
+    title: "Settlement receipts",
+    body: "Review which settlements have complete onchain evidence and export receipt records for audit or challenge submission.",
+  },
+  Network: {
+    eyebrow: "Arc network workspace",
+    title: "Arc Testnet configuration",
+    body: "Check the network metadata, explorer, RPC endpoint, and live contract addresses used by this workspace.",
+  },
+};
 
 function shortAddress(value: string) {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
@@ -274,6 +299,89 @@ function SettlementActivity({ job }: { job: ArcSettlementJob }) {
         );
       })}
     </div>
+  );
+}
+
+function ReceiptSummary({
+  jobs,
+  onSelect,
+}: {
+  jobs: ArcSettlementJob[];
+  onSelect: (job: ArcSettlementJob) => void;
+}) {
+  const receiptReadyJobs = jobs.filter(
+    (job) => job.settlementMode === "onchain-verified" || job.settlementMode === "onchain-partial"
+  );
+
+  if (receiptReadyJobs.length === 0) {
+    return (
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <div className="text-base font-semibold text-slate-950">No onchain receipts yet</div>
+        <p className="mt-2 text-sm text-slate-500">
+          Run the Arc Testnet execution steps on a settlement. Receipts become useful once tx hashes
+          are attached to the lifecycle.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="space-y-3">
+      {receiptReadyJobs.map((job) => (
+        <button
+          key={job.id}
+          onClick={() => onSelect(job)}
+          className="w-full rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm hover:border-emerald-200 hover:bg-emerald-50/40"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <LifecycleBadge status={job.status} mode={job.settlementMode} size="sm" />
+              <div className="mt-2 text-sm font-semibold text-slate-950">{job.description}</div>
+              <div className="mt-1 text-xs text-slate-500">
+                {job.tradeProfile?.invoiceId ?? job.id.slice(0, 8)} · {job.amount} USDC
+              </div>
+            </div>
+            <div className="text-right text-xs text-slate-500">
+              {LIFECYCLE.filter((step) => jobTx(job, step.key)).length}/6 tx hashes
+            </div>
+          </div>
+        </button>
+      ))}
+    </section>
+  );
+}
+
+function NetworkPanel() {
+  const rows = [
+    ["Network", arcTestnet.name],
+    ["Chain ID", String(arcTestnet.id)],
+    ["Native fee unit", `${arcTestnet.nativeCurrency.symbol} (${arcTestnet.nativeCurrency.decimals} decimals)`],
+    ["RPC", ARC_TESTNET_RPC],
+    ["Explorer", ARC_TESTNET_EXPLORER],
+    ["USDC", ARC_USDC],
+    ["AgenticCommerce", AGENTIC_COMMERCE_CONTRACT],
+  ];
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-5">
+      <div className="mb-4 text-base font-semibold text-slate-950">Arc Testnet details</div>
+      <div className="divide-y divide-slate-100">
+        {rows.map(([label, value]) => (
+          <div key={label} className="grid gap-2 py-3 text-sm md:grid-cols-[180px_1fr]">
+            <div className="font-medium text-slate-500">{label}</div>
+            <code className="break-all text-slate-950">{value}</code>
+          </div>
+        ))}
+      </div>
+      <a
+        href={ARC_TESTNET_EXPLORER}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 inline-flex rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+      >
+        Open Arcscan
+      </a>
+    </section>
   );
 }
 
@@ -542,9 +650,11 @@ export default function JobConsole() {
   const [showCreate, setShowCreate] = useState(false);
   const [verifiedIdentity, setVerifiedIdentity] = useState<ArcAgentIdentity | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<WorkspaceSection>("Settlements");
 
   const verifiedCount = jobs.filter((job) => job.settlementMode === "onchain-verified").length;
   const totalValue = jobs.reduce((sum, job) => sum + Number(job.amount || 0), 0);
+  const section = SECTION_COPY[activeSection];
 
   function handleCreated(job: ArcSettlementJob) {
     setActiveJobId(job.id);
@@ -554,6 +664,11 @@ export default function JobConsole() {
 
   function handleUpdate() {
     refresh();
+  }
+
+  function selectReceiptJob(job: ArcSettlementJob) {
+    setActiveJobId(job.id);
+    setActiveSection("Settlements");
   }
 
   return (
@@ -572,11 +687,12 @@ export default function JobConsole() {
                 </div>
               </div>
               <nav className="space-y-1">
-                {SIDE_NAV.map((item, index) => (
+                {SIDE_NAV.map((item) => (
                   <button
                     key={item}
+                    onClick={() => setActiveSection(item)}
                     className={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold ${
-                      index === 0
+                      activeSection === item
                         ? "bg-emerald-50 text-emerald-700"
                         : "text-slate-500 hover:bg-slate-50"
                     }`}
@@ -595,69 +711,113 @@ export default function JobConsole() {
               <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                    Stablecoin commerce workspace
+                    {section.eyebrow}
                   </div>
                   <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                    Agentic trade settlement
+                    {section.title}
                   </h1>
                   <p className="mt-2 max-w-2xl text-sm text-slate-500">
-                    Coordinate buyer, supplier, and evaluator agents through USDC escrow, delivery
-                    proof, final approval, and a portable receipt.
+                    {section.body}
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowCreate((value) => !value)}
-                  className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-                >
-                  {showCreate ? "Close form" : "New settlement"}
-                </button>
+                {activeSection === "Settlements" && (
+                  <button
+                    onClick={() => setShowCreate((value) => !value)}
+                    className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                  >
+                    {showCreate ? "Close form" : "New settlement"}
+                  </button>
+                )}
               </div>
 
-              <div className="mb-6 grid md:grid-cols-3 gap-3">
-                {[
-                  ["Settlements", jobs.length.toString()],
-                  ["Verified receipts", verifiedCount.toString()],
-                  ["Tracked value", `$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 3 })}`],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-lg border border-slate-200 bg-white p-4">
-                    <div className="text-xs text-slate-500">{label}</div>
-                    <div className="mt-1 text-2xl font-semibold text-slate-950">{value}</div>
-                  </div>
+              <div className="mb-6 grid grid-cols-2 gap-2 lg:hidden">
+                {SIDE_NAV.map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => setActiveSection(item)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold ${
+                      activeSection === item
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-slate-200 bg-white text-slate-500"
+                    }`}
+                  >
+                    {item}
+                  </button>
                 ))}
               </div>
 
-              {showCreate && (
-                <section className="mb-6 rounded-lg border border-slate-200 bg-white p-5">
-                  <div className="mb-4">
-                    <div className="text-base font-semibold text-slate-950">Create settlement</div>
-                    <div className="text-xs text-slate-500">
-                      Use the same wallet for all roles when testing a full single-signer flow.
-                    </div>
+              {activeSection === "Settlements" && (
+                <>
+                  <div className="mb-6 grid md:grid-cols-3 gap-3">
+                    {[
+                      ["Settlements", jobs.length.toString()],
+                      ["Verified receipts", verifiedCount.toString()],
+                      [
+                        "Tracked value",
+                        `$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 3 })}`,
+                      ],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-lg border border-slate-200 bg-white p-4">
+                        <div className="text-xs text-slate-500">{label}</div>
+                        <div className="mt-1 text-2xl font-semibold text-slate-950">{value}</div>
+                      </div>
+                    ))}
                   </div>
-                  <CreateJobForm onCreated={handleCreated} verifiedIdentity={verifiedIdentity} />
+
+                  {showCreate && (
+                    <section className="mb-6 rounded-lg border border-slate-200 bg-white p-5">
+                      <div className="mb-4">
+                        <div className="text-base font-semibold text-slate-950">
+                          Create settlement
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Use the same wallet for all roles when testing a full single-signer flow.
+                        </div>
+                      </div>
+                      <CreateJobForm onCreated={handleCreated} verifiedIdentity={verifiedIdentity} />
+                    </section>
+                  )}
+
+                  {loading ? (
+                    <p className="text-sm text-slate-500">Loading settlements...</p>
+                  ) : error ? (
+                    <p className="text-sm text-red-600">Error: {error}</p>
+                  ) : jobs.length === 0 ? (
+                    <p className="text-sm text-slate-500">No settlements yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {jobs.map((job) => (
+                        <JobCard
+                          key={job.id}
+                          job={job}
+                          onUpdate={handleUpdate}
+                          onDeleted={refresh}
+                          verifiedIdentity={verifiedIdentity}
+                          defaultExpanded={job.id === activeJobId}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeSection === "Agents" && (
+                <section className="space-y-4">
+                  <IdentityConsole onVerified={setVerifiedIdentity} />
+                  {verifiedIdentity && (
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                      Verified agent #{verifiedIdentity.agentId} is ready to attach to new
+                      settlements.
+                    </div>
+                  )}
                 </section>
               )}
 
-              {loading ? (
-                <p className="text-sm text-slate-500">Loading settlements...</p>
-              ) : error ? (
-                <p className="text-sm text-red-600">Error: {error}</p>
-              ) : jobs.length === 0 ? (
-                <p className="text-sm text-slate-500">No settlements yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {jobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      onUpdate={handleUpdate}
-                      onDeleted={refresh}
-                      verifiedIdentity={verifiedIdentity}
-                      defaultExpanded={job.id === activeJobId}
-                    />
-                  ))}
-                </div>
+              {activeSection === "Receipts" && (
+                <ReceiptSummary jobs={jobs} onSelect={selectReceiptJob} />
               )}
+
+              {activeSection === "Network" && <NetworkPanel />}
             </main>
 
             <aside className="border-t border-slate-200 bg-white p-5 lg:border-l lg:border-t-0">

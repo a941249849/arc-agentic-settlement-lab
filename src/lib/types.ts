@@ -12,6 +12,9 @@ export type JobStatus =
 
 export type SettlementMode = "simulated" | "onchain-partial" | "onchain-verified";
 
+export type AgentReviewVerdict = "approve" | "reject" | "needs_review";
+export type AgentReviewCheckStatus = "pass" | "warning" | "fail";
+
 export type CommerceUseCase =
   | "cross-border-trade"
   | "service-procurement"
@@ -41,6 +44,27 @@ export interface ArcAgentIdentity {
   verifiedAt: string;
 }
 
+export interface AgentReviewCheck {
+  label: string;
+  status: AgentReviewCheckStatus;
+  detail: string;
+}
+
+export interface AgentReview {
+  agentName: string;
+  agentRole: "evaluator-agent";
+  policyVersion: "arc-evaluator-v1";
+  model: string;
+  verdict: AgentReviewVerdict;
+  confidence: number;
+  summary: string;
+  reasons: string[];
+  conditions: string[];
+  checks: AgentReviewCheck[];
+  reviewHash: string;
+  reviewedAt: string;
+}
+
 export interface ArcSettlementJob {
   id: string;
   status: JobStatus;
@@ -52,6 +76,7 @@ export interface ArcSettlementJob {
   description: string;
   tradeProfile?: TradeProfile;
   agentIdentity?: ArcAgentIdentity;
+  agentReview?: AgentReview;
   onchainJobId?: string;
   budgetAmount?: string;
   deliverableHash?: string;
@@ -96,6 +121,7 @@ export interface ArcSettlementReceipt {
     settle?: string;
   };
   agentIdentity?: ArcAgentIdentity;
+  agentReview?: AgentReview;
   appKitFunding?: {
     capability: "bridge" | "send" | "swap" | "unified-balance";
     reference?: string;

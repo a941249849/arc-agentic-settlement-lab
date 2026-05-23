@@ -30,6 +30,7 @@ function hashReceipt(canonical: Omit<ArcSettlementReceipt, "receiptHash">): stri
     ["deliverableHash", canonical.deliverableHash],
     ["txHashes", canonical.txHashes],
     ["agentIdentity", canonical.agentIdentity],
+    ["agentReview", canonical.agentReview],
     ["settlementMode", canonical.settlementMode],
     ["createdAt", canonical.createdAt],
   ] as const;
@@ -65,6 +66,7 @@ export function generateReceipt(job: ArcSettlementJob): ArcSettlementReceipt {
       settle: job.settleTxHash,
     },
     agentIdentity: job.agentIdentity,
+    agentReview: job.agentReview,
     settlementMode: job.settlementMode,
     createdAt: job.createdAt,
   };

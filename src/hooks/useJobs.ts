@@ -113,6 +113,7 @@ function orderedReceiptPayload(canonical: Omit<ArcSettlementReceipt, "receiptHas
     deliverableHash: canonical.deliverableHash,
     txHashes: canonical.txHashes,
     agentIdentity: canonical.agentIdentity,
+    agentReview: canonical.agentReview,
     settlementMode: canonical.settlementMode,
     createdAt: canonical.createdAt,
   };
@@ -151,6 +152,7 @@ async function generateClientReceipt(job: ArcSettlementJob): Promise<ArcSettleme
       settle: job.settleTxHash,
     },
     agentIdentity: job.agentIdentity,
+    agentReview: job.agentReview,
     settlementMode: job.settlementMode,
     createdAt: job.createdAt,
   };

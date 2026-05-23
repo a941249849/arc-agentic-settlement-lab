@@ -19,6 +19,12 @@ export function receiptToMarkdown(receipt: ArcSettlementReceipt): string {
   const tradeSection = receipt.tradeProfile
     ? `## Trade Context\n\n| Field | Value |\n|---|---|\n| Use case | ${receipt.tradeProfile.useCase} |\n| Invoice ID | \`${receipt.tradeProfile.invoiceId}\` |\n| Buyer country | ${receipt.tradeProfile.buyerCountry} |\n| Supplier country | ${receipt.tradeProfile.supplierCountry} |\n| Goods or service | ${receipt.tradeProfile.goodsOrService} |\n| Compliance check | ${receipt.tradeProfile.complianceCheck} |\n| Funding source | ${receipt.tradeProfile.fundingSource} |\n| Settlement rail | ${receipt.tradeProfile.settlementRail} |\n`
     : "";
+  const review = receipt.agentReview;
+  const reviewSection = review
+    ? `## AI Evaluator Review\n\n| Field | Value |\n|---|---|\n| Agent | ${review.agentName} |\n| Policy | \`${review.policyVersion}\` |\n| Model | \`${review.model}\` |\n| Verdict | **${review.verdict}** |\n| Confidence | ${Math.round(review.confidence * 100)}% |\n| Review hash | \`${review.reviewHash}\` |\n| Reviewed at | ${review.reviewedAt} |\n\n${review.summary}\n\n${review.checks
+        .map((check) => `- **${check.status}** ${check.label}: ${check.detail}`)
+        .join("\n")}\n`
+    : `## AI Evaluator Review\n\nNo evaluator review is attached to this receipt.\n`;
 
   return `# Arc Trade Agent Settlement Receipt
 
@@ -51,6 +57,7 @@ ${tradeSection}
 | Created at | ${receipt.createdAt} |
 
 ${txSection}
+${reviewSection}
 ## Agent Identity
 
 - Standard: **${receipt.agentIdentity?.standard ?? "—"}**

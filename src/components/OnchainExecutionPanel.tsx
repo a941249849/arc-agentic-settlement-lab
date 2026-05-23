@@ -115,7 +115,7 @@ function recommendedActions(job: ArcSettlementJob): ArcCommerceAction[] {
   if (!job.approveTxHash) return ["approve"];
   if (!job.fundTxHash) return ["fund"];
   if (!job.submitTxHash) return ["submit"];
-  if (!job.settleTxHash) return ["complete"];
+  if (!job.settleTxHash && job.agentReview?.verdict === "approve") return ["complete"];
   return [];
 }
 
@@ -289,6 +289,9 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       if (action === "submit" && !deliverableHash.trim()) {
         throw new Error("Deliverable hash is required before submitting onchain.");
       }
+      if (action === "complete" && job.agentReview?.verdict !== "approve") {
+        throw new Error("AI evaluator approval is required before completing settlement.");
+      }
 
       const prepared = await fetch("/api/arc-commerce/prepare", {
         method: "POST",
@@ -412,7 +415,11 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
             </button>
           ))
         ) : (
-          <span className="text-xs font-semibold text-emerald-700">All ERC-8183 actions have tx evidence.</span>
+          <span className="text-xs font-semibold text-emerald-700">
+            {job.submitTxHash && !job.settleTxHash && job.agentReview?.verdict !== "approve"
+              ? "Run AI evaluator review before completing settlement."
+              : "All ERC-8183 actions have tx evidence."}
+          </span>
         )}
         {job.onchainJobId && (
           <button

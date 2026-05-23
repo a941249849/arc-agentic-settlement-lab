@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type {
+  AgentReview,
   ArcAgentIdentity,
   ArcSettlementJob,
   ArcSettlementReceipt,
@@ -73,9 +74,9 @@ const SECTION_COPY: Record<WorkspaceSection, { eyebrow: string; title: string; b
     body: "Coordinate buyer, supplier, and evaluator agents through USDC escrow, delivery proof, final approval, and a portable receipt.",
   },
   Agents: {
-    eyebrow: "Identity workspace",
-    title: "Verified agent identities",
-    body: "Prepare ERC-8004 registration calldata and verify existing Arc Testnet agent ownership before attaching an identity to a settlement.",
+    eyebrow: "Agent workspace",
+    title: "Identity and evaluator agents",
+    body: "Attach an ERC-8004 identity, then run the evaluator agent against invoice context, delivery proof, and Arc execution evidence before release.",
   },
   Receipts: {
     eyebrow: "Evidence workspace",
@@ -302,6 +303,139 @@ function SettlementActivity({ job }: { job: ArcSettlementJob }) {
   );
 }
 
+function reviewStyles(verdict: AgentReview["verdict"]) {
+  if (verdict === "approve") {
+    return {
+      panel: "border-emerald-200 bg-emerald-50",
+      text: "text-emerald-800",
+      badge: "bg-emerald-600 text-white",
+    };
+  }
+  if (verdict === "reject") {
+    return {
+      panel: "border-red-200 bg-red-50",
+      text: "text-red-800",
+      badge: "bg-red-600 text-white",
+    };
+  }
+  return {
+    panel: "border-amber-200 bg-amber-50",
+    text: "text-amber-800",
+    badge: "bg-amber-500 text-white",
+  };
+}
+
+function checkDot(status: AgentReview["checks"][number]["status"]) {
+  if (status === "pass") return "bg-emerald-500";
+  if (status === "fail") return "bg-red-500";
+  return "bg-amber-500";
+}
+
+function AgentReviewPanel({
+  job,
+  deliverableHash,
+  onUpdate,
+}: {
+  job: ArcSettlementJob;
+  deliverableHash: string;
+  onUpdate: (job: ArcSettlementJob) => void;
+}) {
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const review = job.agentReview;
+  const styles = review ? reviewStyles(review.verdict) : null;
+  const canReview =
+    job.status === "submitted" ||
+    job.status === "settled" ||
+    Boolean(deliverableHash.trim() || job.deliverableHash);
+
+  async function runReview() {
+    setRunning(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/agent-review", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          job,
+          deliverableHash: deliverableHash || job.deliverableHash || "",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      const updated = await updateJob(job.id, { agentReview: data.review as AgentReview });
+      onUpdate(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Evaluator review failed");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <section
+      className={`rounded-lg border p-4 ${
+        styles?.panel ?? "border-slate-200 bg-white"
+      }`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-slate-950">AI evaluator agent</div>
+          <p className="mt-1 text-xs text-slate-500">
+            Reviews invoice context, delivery proof, budget, identity, and Arc execution evidence
+            before release.
+          </p>
+        </div>
+        <button
+          onClick={runReview}
+          disabled={running || !canReview}
+          className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {running ? "Reviewing..." : review ? "Rerun review" : "Run review"}
+        </button>
+      </div>
+
+      {!canReview && (
+        <p className="mt-3 text-xs text-slate-500">
+          Submit or enter a deliverable hash before the evaluator can make a release decision.
+        </p>
+      )}
+
+      {review && styles && (
+        <div className="mt-4 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${styles.badge}`}>
+              {review.verdict.replace("_", " ")}
+            </span>
+            <span className={`text-xs font-semibold ${styles.text}`}>
+              {Math.round(review.confidence * 100)}% confidence
+            </span>
+            <code className="break-all text-xs text-slate-500">{review.reviewHash}</code>
+          </div>
+          <p className="text-sm text-slate-700">{review.summary}</p>
+          <div className="grid gap-2">
+            {review.checks.map((check) => (
+              <div key={`${check.label}-${check.status}`} className="flex gap-2 text-xs">
+                <span className={`mt-1.5 h-2 w-2 rounded-full ${checkDot(check.status)}`} />
+                <div>
+                  <div className="font-semibold text-slate-900">{check.label}</div>
+                  <div className="text-slate-500">{check.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg border border-white/70 bg-white/70 p-3 text-xs text-slate-600">
+            <div className="font-semibold text-slate-950">Release condition</div>
+            <div className="mt-1">{review.conditions.join(" ")}</div>
+          </div>
+        </div>
+      )}
+
+      {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
+    </section>
+  );
+}
+
 function ReceiptSummary({
   jobs,
   onSelect,
@@ -339,6 +473,12 @@ function ReceiptSummary({
               <div className="mt-2 text-sm font-semibold text-slate-950">{job.description}</div>
               <div className="mt-1 text-xs text-slate-500">
                 {job.tradeProfile?.invoiceId ?? job.id.slice(0, 8)} · {job.amount} USDC
+              </div>
+              <div className="mt-2 text-xs text-slate-500">
+                Evaluator:{" "}
+                <span className="font-semibold text-slate-800">
+                  {job.agentReview?.verdict ?? "not reviewed"}
+                </span>
               </div>
             </div>
             <div className="text-right text-xs text-slate-500">
@@ -402,6 +542,10 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
       setActionError("Enter a deliverable hash before submitting.");
       return;
     }
+    if (nextStatus === "settled" && job.agentReview?.verdict !== "approve") {
+      setActionError("Run the AI evaluator and get approval before completing settlement.");
+      return;
+    }
     try {
       const patch: Partial<ArcSettlementJob> = { status: nextStatus };
       if (nextStatus === "budgeted") patch.budgetAmount = job.amount;
@@ -440,7 +584,10 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
     onDeleted();
   }
 
-  const actions = NEXT_ACTIONS[job.status] ?? [];
+  const reviewApproved = job.agentReview?.verdict === "approve";
+  const actions = (NEXT_ACTIONS[job.status] ?? []).filter(
+    (action) => action.nextStatus !== "settled" || reviewApproved
+  );
   const txCount = LIFECYCLE.filter((step) => jobTx(job, step.key)).length;
   const route = job.tradeProfile
     ? `${job.tradeProfile.buyerCountry} → ${job.tradeProfile.supplierCountry}`
@@ -558,6 +705,12 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
                 </div>
               )}
 
+              <AgentReviewPanel
+                job={job}
+                deliverableHash={deliverableHash}
+                onUpdate={onUpdate}
+              />
+
               <section className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -598,6 +751,12 @@ function JobCard({ job, onUpdate, onDeleted, verifiedIdentity, defaultExpanded }
                     </button>
                   ))}
                 </section>
+              )}
+
+              {job.status === "submitted" && !reviewApproved && (
+                <p className="text-xs text-amber-700">
+                  AI evaluator approval is required before local or onchain completion.
+                </p>
               )}
 
               {actionError && <p className="text-xs text-red-600">{actionError}</p>}
@@ -652,7 +811,7 @@ export default function JobConsole() {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<WorkspaceSection>("Settlements");
 
-  const verifiedCount = jobs.filter((job) => job.settlementMode === "onchain-verified").length;
+  const approvedReviewCount = jobs.filter((job) => job.agentReview?.verdict === "approve").length;
   const totalValue = jobs.reduce((sum, job) => sum + Number(job.amount || 0), 0);
   const section = SECTION_COPY[activeSection];
 
@@ -751,7 +910,7 @@ export default function JobConsole() {
                   <div className="mb-6 grid md:grid-cols-3 gap-3">
                     {[
                       ["Settlements", jobs.length.toString()],
-                      ["Verified receipts", verifiedCount.toString()],
+                      ["AI approved", approvedReviewCount.toString()],
                       [
                         "Tracked value",
                         `$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 3 })}`,
@@ -846,10 +1005,11 @@ export default function JobConsole() {
               </section>
 
               <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm font-semibold text-slate-950">What makes it different</div>
+                <div className="text-sm font-semibold text-slate-950">Release controls</div>
                 <div className="mt-3 space-y-3 text-sm text-slate-600">
-                  <p>It is not a balance wallet or checkout page.</p>
-                  <p>Every payment is tied to a trade context, agent roles, escrow state, delivery proof, and final receipt.</p>
+                  <p>Funds are released only after the evaluator agent approves the delivery evidence.</p>
+                  <p>The receipt records trade context, agent verdict, review hash, and Arc transaction evidence.</p>
+                  <p>Arc Testnet execution can be run from the same settlement record when wallet signing is available.</p>
                 </div>
               </section>
             </aside>

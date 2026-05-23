@@ -83,17 +83,17 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
   }
 
   return (
-    <section className={`rounded-lg border border-slate-200 bg-slate-50 space-y-4 ${compact ? "p-3" : "p-4"}`}>
+    <section className={`glass-panel rounded-xl space-y-4 ${compact ? "p-3" : "p-4"}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold text-slate-950">ERC-8004 Agent Identity</h2>
-          <p className="text-xs text-slate-500 mt-1">
+          <h2 className="text-base font-semibold text-slate-100">ERC-8004 Agent Identity</h2>
+          <p className="text-xs text-slate-405 mt-1 leading-relaxed">
             Prepare `register(string)` calldata, then verify an existing Arc Testnet agent by
             reading `ownerOf` and `tokenURI` from IdentityRegistry.
           </p>
         </div>
         {!compact && (
-          <span className="px-2 py-1 rounded-lg text-xs bg-sky-50 text-sky-700 border border-sky-200 whitespace-nowrap">
+          <span className="px-2 py-0.5 rounded text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold uppercase tracking-wider whitespace-nowrap">
             Identity proof
           </span>
         )}
@@ -102,17 +102,17 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
       <div className={`grid gap-4 ${compact ? "" : "md:grid-cols-2"}`}>
         <div className="space-y-3">
           <label className="block space-y-1">
-            <span className="text-xs text-slate-500">Metadata URI</span>
+            <span className="text-xs text-slate-400">Metadata URI</span>
             <input
               value={metadataURI}
               onChange={(e) => setMetadataURI(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-950 text-sm font-mono focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-100 text-sm font-mono focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all"
             />
           </label>
           <button
             onClick={prepare}
             disabled={loading === "prepare"}
-            className="px-4 py-2 rounded-lg bg-slate-950 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 text-sm font-semibold hover:bg-slate-700 disabled:opacity-50 transition-colors cursor-pointer"
           >
             {loading === "prepare" ? "Preparing..." : compact ? "Prepare calldata" : "Prepare Register Calldata"}
           </button>
@@ -121,115 +121,115 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
         <div className="space-y-3">
           <div className={`grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
             <label className="block space-y-1">
-              <span className="text-xs text-slate-500">Agent ID</span>
+              <span className="text-xs text-slate-400">Agent ID</span>
               <input
                 value={agentId}
                 onChange={(e) => setAgentId(e.target.value)}
                 placeholder="e.g. 12"
-                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-950 text-sm font-mono focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-100 text-sm font-mono focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all"
               />
             </label>
             <label className="block space-y-1">
-              <span className="text-xs text-slate-500">Expected owner</span>
+              <span className="text-xs text-slate-400">Expected owner</span>
               <input
                 value={expectedOwnerAddress}
                 onChange={(e) => setExpectedOwnerAddress(e.target.value)}
                 placeholder="0x..."
-                className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-950 text-sm font-mono focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-100 text-sm font-mono focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all"
               />
             </label>
           </div>
           <label className="block space-y-1">
-            <span className="text-xs text-slate-500">Register tx hash</span>
+            <span className="text-xs text-slate-400">Register tx hash</span>
             <input
               value={registerTxHash}
               onChange={(e) => setRegisterTxHash(e.target.value)}
               placeholder="0x... optional"
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-950 text-sm font-mono focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-100 text-sm font-mono focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all"
             />
           </label>
-          <label className="flex items-center gap-2 text-xs text-slate-500">
+          <label className="flex items-center gap-2 text-xs text-slate-405 select-none cursor-pointer">
             <input
               type="checkbox"
               checked={compareMetadata}
               onChange={(e) => setCompareMetadata(e.target.checked)}
-              className="accent-emerald-600"
+              className="accent-sky-500"
             />
             Compare metadata URI during verification
           </label>
           <button
             onClick={verify}
             disabled={loading === "verify"}
-            className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-sky-600 text-white text-sm font-semibold hover:bg-sky-500 disabled:opacity-50 transition-colors shadow-lg shadow-sky-500/10 cursor-pointer"
           >
             {loading === "verify" ? "Verifying..." : "Verify Agent Onchain"}
           </button>
         </div>
       </div>
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-red-400">{error}</p>}
 
       {registration && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-2">
-          <div className="text-sm font-semibold text-slate-950">Registration Call</div>
+        <div className="rounded-lg border border-slate-900 bg-slate-900/30 p-4 space-y-2">
+          <div className="text-sm font-semibold text-slate-200">Registration Call</div>
           <div className="grid md:grid-cols-2 gap-2 text-xs">
             <div>
               <span className="text-slate-500">Network: </span>
-              <span className="text-slate-950">
+              <span className="text-slate-350">
                 {registration.network} ({registration.chainId})
               </span>
             </div>
             <div>
               <span className="text-slate-500">Function: </span>
-              <code className="text-sky-700">{registration.abiFunctionSignature}</code>
+              <code className="text-sky-400">{registration.abiFunctionSignature}</code>
             </div>
           </div>
           <div className="text-xs">
             <span className="text-slate-500">Contract: </span>
-            <code className="text-sky-700 break-all">{registration.contractAddress}</code>
+            <code className="text-sky-400 break-all">{registration.contractAddress}</code>
           </div>
           <div className="text-xs">
             <span className="text-slate-500">Calldata: </span>
-            <code className="text-emerald-700 break-all">{registration.calldata}</code>
+            <code className="text-emerald-450 break-all">{registration.calldata}</code>
           </div>
         </div>
       )}
 
       {identity && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+        <div className="rounded-lg border border-emerald-500/10 bg-emerald-500/5 p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="text-sm font-semibold text-emerald-800">
+            <div className="text-sm font-semibold text-emerald-400">
               Verified ERC-8004 Agent #{identity.agentId}
             </div>
             {onVerified && (
-              <span className="text-xs text-slate-500 font-medium">Available for new jobs in this session</span>
+              <span className="text-xs text-slate-450 font-medium">Available for new jobs in this session</span>
             )}
           </div>
           <div className="grid md:grid-cols-2 gap-2 text-xs">
             <div className="min-w-0">
-              <span className="text-slate-500">Owner: </span>
-              <code className="block text-sky-700 truncate" title={identity.ownerAddress}>
+              <span className="text-slate-550">Owner: </span>
+              <code className="block text-sky-450 truncate" title={identity.ownerAddress}>
                 {identity.ownerAddress}
               </code>
             </div>
             <div className="min-w-0">
-              <span className="text-slate-500">Metadata: </span>
-              <code className="block text-sky-700 truncate" title={identity.metadataURI}>
+              <span className="text-slate-550">Metadata: </span>
+              <code className="block text-sky-450 truncate" title={identity.metadataURI}>
                 {identity.metadataURI}
               </code>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-3 text-xs pt-3 border-t border-emerald-100">
+          <div className="grid md:grid-cols-2 gap-3 text-xs pt-3 border-t border-slate-900">
             <div>
               <span className="text-slate-500 block mb-1">Attested Reputation Score:</span>
               {identity.reputationScore !== undefined ? (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-bold text-emerald-700">{identity.reputationScore}</span>
-                  <span className="text-slate-400">({identity.feedbackCount} feedbacks in 10k blocks)</span>
+                  <span className="text-sm font-bold text-emerald-400">{identity.reputationScore}</span>
+                  <span className="text-slate-500">({identity.feedbackCount} feedbacks in 10k blocks)</span>
                 </div>
               ) : (
-                <span className="text-slate-600 italic">No feedback found (last 10k blocks)</span>
+                <span className="text-slate-500 italic">No feedback found (last 10k blocks)</span>
               )}
             </div>
             <div>
@@ -237,8 +237,8 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
               <div className="flex items-center gap-1.5">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                   identity.validationStatus === "Validated"
-                    ? "bg-emerald-100 text-emerald-850 border border-emerald-205"
-                    : "bg-slate-200 text-slate-600 border border-slate-300"
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    : "bg-slate-900 text-slate-500 border border-slate-800"
                 }`}>
                   {identity.validationStatus || "Unverified"}
                 </span>
@@ -257,8 +257,8 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
                 <span
                   className={`px-2 py-0.5 rounded border ${
                     checks.ownerMatches
-                      ? "border-emerald-300 text-emerald-800"
-                      : "border-red-300 text-red-700"
+                      ? "border-emerald-500/20 text-emerald-400"
+                      : "border-red-500/20 text-red-400"
                   }`}
                 >
                   Owner match: {checks.ownerMatches ? "yes" : "no"}
@@ -268,8 +268,8 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
                 <span
                   className={`px-2 py-0.5 rounded border ${
                     checks.metadataMatches
-                      ? "border-emerald-300 text-emerald-800"
-                      : "border-red-300 text-red-700"
+                      ? "border-emerald-500/20 text-emerald-400"
+                      : "border-red-500/20 text-red-400"
                   }`}
                 >
                   Metadata match: {checks.metadataMatches ? "yes" : "no"}
@@ -281,7 +281,7 @@ export default function IdentityConsole({ compact = false, onVerified }: Props) 
       )}
 
       {!compact && (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 leading-relaxed">
           This page does not create wallets or submit transactions. Live registration still requires
           a wallet/Circle flow. The verifier only marks an identity as proven after Arc Testnet
           contract reads succeed.

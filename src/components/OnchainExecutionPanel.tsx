@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ArcSettlementJob } from "@/lib/types";
 import { updateJob } from "@/hooks/useJobs";
 import { ARC_TESTNET_EXPLORER, arcTestnet } from "@/lib/arc-chain";
@@ -10,9 +10,24 @@ type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
 
+type WalletProvider = {
+  info: {
+    uuid: string;
+    name: string;
+    icon?: string;
+    rdns?: string;
+  };
+  provider: EthereumProvider;
+};
+
+type Eip6963ProviderEvent = Event & {
+  detail?: WalletProvider;
+};
+
 declare global {
   interface Window {
     ethereum?: EthereumProvider;
+    okxwallet?: EthereumProvider;
   }
 }
 
@@ -90,6 +105,8 @@ function recommendedActions(job: ArcSettlementJob): ArcCommerceAction[] {
 }
 
 export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }: Props) {
+  const [wallets, setWallets] = useState<WalletProvider[]>([]);
+  const [selectedWalletId, setSelectedWalletId] = useState<string>("");
   const [account, setAccount] = useState<string | null>(null);
   const [chainId, setChainId] = useState<string | null>(null);
   const [running, setRunning] = useState<ArcCommerceAction | "verify" | "connect" | "switch" | "add" | null>(null);
@@ -106,22 +123,70 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
 
   const arcChainIdHex = `0x${arcTestnet.id.toString(16)}`;
 
+  useEffect(() => {
+    const discovered = new Map<string, WalletProvider>();
+
+    function addWallet(wallet: WalletProvider) {
+      discovered.set(wallet.info.uuid, wallet);
+      setWallets(Array.from(discovered.values()));
+      setSelectedWalletId((current) => current || wallet.info.uuid);
+    }
+
+    if (window.ethereum) {
+      addWallet({
+        info: { uuid: "legacy-window-ethereum", name: "Injected Wallet" },
+        provider: window.ethereum,
+      });
+    }
+
+    if (window.okxwallet) {
+      addWallet({
+        info: { uuid: "legacy-okx-wallet", name: "OKX Wallet" },
+        provider: window.okxwallet,
+      });
+    }
+
+    function onProvider(event: Event) {
+      const detail = (event as Eip6963ProviderEvent).detail;
+      if (detail?.provider && detail.info?.uuid) addWallet(detail);
+    }
+
+    window.addEventListener("eip6963:announceProvider", onProvider);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+    return () => window.removeEventListener("eip6963:announceProvider", onProvider);
+  }, []);
+
+  const activeProvider = useMemo(() => {
+    return wallets.find((wallet) => wallet.info.uuid === selectedWalletId)?.provider ?? null;
+  }, [selectedWalletId, wallets]);
+
+  const selectedWallet = wallets.find((wallet) => wallet.info.uuid === selectedWalletId);
+
+  function requireProvider() {
+    const provider = activeProvider ?? window.okxwallet ?? window.ethereum;
+    if (!provider) {
+      throw new Error(
+        "No injected wallet found. Enable OKX Wallet, MetaMask, Tempo Wallet, or another EIP-1193 wallet for this site, then reload."
+      );
+    }
+    return provider;
+  }
+
   async function refreshChainId() {
-    if (!window.ethereum) return null;
-    const id = (await window.ethereum.request({ method: "eth_chainId" })) as string;
+    const provider = activeProvider ?? window.okxwallet ?? window.ethereum;
+    if (!provider) return null;
+    const id = (await provider.request({ method: "eth_chainId" })) as string;
     setChainId(id);
     return id;
   }
 
   async function addArcNetwork() {
-    if (!window.ethereum) {
-      setError("No injected wallet found. Use OKX Wallet, MetaMask, or another EIP-1193 wallet.");
-      return;
-    }
     setRunning("add");
     setError(null);
     try {
-      await window.ethereum.request({
+      const provider = requireProvider();
+      await provider.request({
         method: "wallet_addEthereumChain",
         params: [
           {
@@ -142,14 +207,11 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
   }
 
   async function switchToArcNetwork() {
-    if (!window.ethereum) {
-      setError("No injected wallet found. Use OKX Wallet, MetaMask, or another EIP-1193 wallet.");
-      return;
-    }
     setRunning("switch");
     setError(null);
     try {
-      await window.ethereum.request({
+      const provider = requireProvider();
+      await provider.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: arcChainIdHex }],
       });
@@ -169,16 +231,12 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
   async function connectWallet() {
     setRunning("connect");
     setError(null);
-    if (!window.ethereum) {
-      setError("No injected wallet found. Use OKX Wallet, MetaMask, or another EIP-1193 wallet.");
-      setRunning(null);
-      return;
-    }
     try {
-    const accounts = (await window.ethereum.request({
-      method: "eth_requestAccounts",
-    })) as string[];
-    setAccount(accounts[0] ?? null);
+      const provider = requireProvider();
+      const accounts = (await provider.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      setAccount(accounts[0] ?? null);
       await refreshChainId();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wallet connection failed.");
@@ -203,11 +261,12 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
     setError(null);
     setRunning(action);
     try {
-      if (!window.ethereum || !account) {
+      if (!activeProvider || !account) {
         await connectWallet();
       }
-      const from = account ?? (((await window.ethereum?.request({ method: "eth_accounts" })) as string[])?.[0]);
-      if (!window.ethereum || !from) throw new Error("Wallet account is not connected.");
+      const provider = requireProvider();
+      const from = account ?? (((await provider.request({ method: "eth_accounts" })) as string[])?.[0]);
+      if (!from) throw new Error("Wallet account is not connected.");
       const currentChainId = await refreshChainId();
       if (currentChainId?.toLowerCase() !== arcChainIdHex.toLowerCase()) {
         throw new Error("Wallet is not on Arc Testnet. Use 'Switch to Arc' before signing.");
@@ -233,7 +292,7 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       const preparedData = await prepared.json();
       if (!prepared.ok) throw new Error(preparedData.error ?? `HTTP ${prepared.status}`);
 
-      const hash = (await window.ethereum.request({
+      const hash = (await provider.request({
         method: "eth_sendTransaction",
         params: [{ from, ...preparedData.tx }],
       })) as string;
@@ -285,6 +344,19 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       </div>
 
       <div className="flex flex-wrap gap-2">
+        {wallets.length > 0 && (
+          <select
+            value={selectedWalletId}
+            onChange={(event) => setSelectedWalletId(event.target.value)}
+            className="px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-xs text-gray-200"
+          >
+            {wallets.map((wallet) => (
+              <option key={wallet.info.uuid} value={wallet.info.uuid}>
+                {wallet.info.name}
+              </option>
+            ))}
+          </select>
+        )}
         <button
           onClick={connectWallet}
           disabled={running !== null}
@@ -339,6 +411,12 @@ export default function OnchainExecutionPanel({ job, deliverableHash, onUpdate }
       </div>
 
       <div className="grid md:grid-cols-3 gap-2 text-xs">
+        <div>
+          <span className="text-gray-500">Wallet: </span>
+          <span className={selectedWallet ? "text-white" : "text-yellow-300"}>
+            {selectedWallet?.info.name ?? "not detected"}
+          </span>
+        </div>
         <div>
           <span className="text-gray-500">Wallet chain: </span>
           <span className={chainId?.toLowerCase() === arcChainIdHex.toLowerCase() ? "text-green-300" : "text-yellow-300"}>

@@ -92,10 +92,12 @@ function walletRank(wallet: WalletProvider) {
   const label = `${wallet.info.name} ${wallet.info.rdns ?? ""}`.toLowerCase();
   if (label.includes("okx")) return 0;
   if (label.includes("metamask")) return 1;
-  if (label.includes("tempo")) return 2;
-  if (label.includes("binance")) return 3;
-  if (label.includes("keplr")) return 8;
   return 5;
+}
+
+function isSupportedWallet(wallet: WalletProvider) {
+  const label = `${wallet.info.name} ${wallet.info.rdns ?? ""}`.toLowerCase();
+  return label.includes("okx") || label.includes("metamask");
 }
 
 export function ArcWalletProvider({ children }: { children: ReactNode }) {
@@ -116,6 +118,8 @@ export function ArcWalletProvider({ children }: { children: ReactNode }) {
     }
 
     function addWallet(wallet: WalletProvider) {
+      if (!isSupportedWallet(wallet)) return;
+
       const incomingIsLegacy = isLegacyWallet(wallet);
       const incomingName = wallet.info.name.toLowerCase();
       const incomingRdns = wallet.info.rdns?.toLowerCase();
@@ -195,7 +199,7 @@ export function ArcWalletProvider({ children }: { children: ReactNode }) {
       (typeof window !== "undefined" ? window.okxwallet ?? window.ethereum : undefined);
     if (!provider) {
       throw new Error(
-        "No injected wallet found. Enable OKX Wallet, MetaMask, or another EIP-1193 wallet for this site, then reload."
+        "No supported wallet found. Enable OKX Wallet or MetaMask for this site, then reload."
       );
     }
     return provider;

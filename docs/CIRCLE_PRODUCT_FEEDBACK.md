@@ -41,9 +41,9 @@ USYC and StableFX are treated as gated or enterprise extensions. They are releva
 ## Recommendations
 
 1. Publish an official Agentic Economy reference app combining Circle Wallets, Gateway/Nanopayments, ERC-8004 identity, and ERC-8183 escrow settlement.
-2. Provide a standard challenge-ready sandbox with test identities, faucet status, funded wallets, and reproducible tx hashes.
+2. Provide a standard builder-ready sandbox with test identities, faucet status, funded wallets, and reproducible tx hashes.
 3. Add a recommended settlement receipt schema for stablecoin commerce workflows.
-4. Clarify which products are public testnet-ready, gated, enterprise-only, or conceptual during hackathon windows.
+4. Clarify which products are public testnet-ready, gated, enterprise-only, or conceptual during public builder programs.
 5. Include a troubleshooting guide for wallet RPC submission, receipt polling, and explorer indexing delays.
 
 ## Current Project Boundary

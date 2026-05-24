@@ -20,6 +20,6 @@ ArcEscrow demo video. Dark product UI, sharp commercial workflow framing, restra
 ## What NOT to Do
 
 - Do not present unrecorded tx hashes as completed.
-- Do not over-explain the hackathon/challenge to end users.
+- Do not over-explain the submission context to end users.
 - Do not use decorative abstract animation instead of product flow.
 - Do not make the video longer than needed.

@@ -290,7 +290,7 @@ Build now:
 - offchain job lifecycle;
 - deterministic receipt export;
 - visible labels for `Blueprint`, `Simulated`, and `Onchain verified`;
-- local documentation for Copilot or other agents.
+- local documentation for reviewers and builders.
 
 ### Phase 3: ERC-8183 Onchain Settlement
 
@@ -340,4 +340,3 @@ The MVP should not claim:
 - live App Kit execution without verified credentials and wallet flow;
 - StableFX execution without official API/contract path and a completed testnet transaction;
 - grant eligibility or token expectation.
-

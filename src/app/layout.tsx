@@ -21,7 +21,7 @@ export default function RootLayout({
           <Navbar />
           <main className="flex-1">{children}</main>
           <footer className="py-6 text-center text-xs text-slate-500 border-t border-slate-900 bg-black/10 backdrop-blur-sm">
-            ArcEscrow · Agentic Letter of Credit · Arc Testnet · Not financial advice
+            ArcEscrow · Agentic Letter of Credit · Arc Testnet
           </footer>
         </ArcWalletProvider>
       </body>

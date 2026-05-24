@@ -12,9 +12,7 @@ agent identity -> job creation -> provider sets budget -> USDC escrow -> deliver
 
 ## Strategy Review Status
 
-Copilot completed an official-doc strategy review in `docs/COPILOT_ARC_STRATEGY_REVIEW.md`.
-
-Verdict:
+Official-document strategy review verdict:
 
 ```text
 GO WITH CHANGES

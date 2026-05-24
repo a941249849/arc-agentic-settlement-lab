@@ -94,7 +94,7 @@ const FEEDBACK = [
     title: "Recommendations",
     points: [
       "Publish an end-to-end Agentic Economy reference app combining Wallets, Gateway/Nanopayments, ERC-8004, and ERC-8183.",
-      "Provide test identities, funded test wallets, and deterministic sample jobs for hackathon teams.",
+      "Provide test identities, funded test wallets, and deterministic sample jobs for builder teams.",
       "Add a standard settlement receipt schema for stablecoin commerce workflows.",
     ],
   },

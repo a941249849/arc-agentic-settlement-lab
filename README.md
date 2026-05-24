@@ -1,6 +1,6 @@
-# ArcEscrow - Agentic Letter of Credit (ALC) for Cross-Border SME Trade
+# ArcEscrow - Agentic Letter of Credit for Cross-Border SME Trade
 
-**ArcEscrow** is a decentralized, programmatic escrow platform built on Circle's Arc Settlement Protocol. It replaces slow and costly traditional bank Letters of Credit (L/C) with programmatically settled USDC escrows, gated by verifiable **ERC-8004 AI logistics-audit agents** and **ERC-8183 settlement lifecycles**.
+**ArcEscrow** is a programmatic escrow product for cross-border SME trade on Arc Testnet. It turns a supplier payment into a proof-gated commercial settlement: USDC is locked in an ERC-8183 lifecycle, agent identity is checked through ERC-8004, delivery evidence is reviewed, and the final receipt binds trade context with transaction evidence.
 
 ```text
 [Buyer/Party A] ➔ Create Escrow (USDC) ➔ [Supplier/Party B] ➔ Upload Delivery Proof ➔ [AI Evaluator/Party C] ➔ Verify & Release ➔ Settled Receipt
@@ -11,9 +11,11 @@
 - **App**: https://arc-agentic-settlement-lab.vercel.app
 - **Deal Room Console**: https://arc-agentic-settlement-lab.vercel.app/jobs
 - **Agent Proof Directory**: https://arc-agentic-settlement-lab.vercel.app/identity
+- **Submission Pack**: https://arc-agentic-settlement-lab.vercel.app/challenge
 - **Demo Video**: https://arc-agentic-settlement-lab.vercel.app/demo/arc-escrow-demo.mp4
 - **Arcscan**: https://testnet.arcscan.app
 - **Arc Docs**: https://docs.arc.network
+- **Repository**: https://github.com/a941249849/arc-agentic-settlement-lab
 
 ---
 
@@ -88,7 +90,7 @@ flowchart LR
 - `/` - product overview for proof-gated USDC escrow on Arc.
 - `/jobs` - deal room for creating and advancing escrow-backed settlement deals.
 - `/identity` - optional ERC-8004 agent proof preparation and verifier.
-- `/challenge` - hidden submission pack for external review contexts; not part of the user flow.
+- `/challenge` - submission evidence pack for reviewers.
 
 ## API Surface
 
@@ -122,6 +124,7 @@ Open `http://localhost:3000`.
 ```bash
 npm run lint
 npm run build
+npm run demo:check
 ```
 
 Production smoke test:
@@ -137,6 +140,13 @@ NODE
 ```
 
 ## External Review Notes
+
+Submission status:
+
+```text
+Ready for initial submission as a functional Arc Testnet MVP.
+The strongest remaining evidence upgrade is one complete wallet-signed ERC-8183 run with tx hashes.
+```
 
 Recommended track:
 
@@ -184,4 +194,3 @@ Recommended products to treat as gated or conceptual unless access is granted:
 - Do not claim Circle Wallets, Gateway, CCTP, USYC, or StableFX execution unless a working integration is present.
 - A draft settlement is only a local deal record. Do not treat it as settled until Arc transaction hashes are recorded.
 - Only mark `onchain-verified` after every relevant ERC-8183 tx hash is recorded.
-- Not financial advice. Not a production financial system.

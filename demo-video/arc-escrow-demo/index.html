@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #030712;
+        color: #f8fafc;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 76% 18%, rgba(14, 165, 233, 0.14), transparent 36%),
+          linear-gradient(135deg, #030712 0%, #07111f 58%, #030712 100%);
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        padding: 72px 84px;
+        display: grid;
+        grid-template-columns: 1fr 470px;
+        gap: 48px;
+        align-items: center;
+      }
+
+      .scene.reverse {
+        grid-template-columns: 470px 1fr;
+      }
+
+      .screen {
+        position: relative;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 28px;
+        background: #020617;
+        box-shadow: 0 32px 90px rgba(0, 0, 0, 0.38);
+        overflow: hidden;
+      }
+
+      .screen img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .screen-frame {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 16px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+        background: rgba(15, 23, 42, 0.95);
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #334155;
+      }
+
+      .dot:nth-child(1) {
+        background: #ef4444;
+      }
+
+      .dot:nth-child(2) {
+        background: #f59e0b;
+      }
+
+      .dot:nth-child(3) {
+        background: #10b981;
+      }
+
+      .url {
+        margin-left: 12px;
+        color: #94a3b8;
+        font-size: 16px;
+        font-weight: 650;
+      }
+
+      .copy {
+        border-radius: 28px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(7, 17, 31, 0.82);
+        padding: 34px;
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(14, 165, 233, 0.36);
+        background: rgba(14, 165, 233, 0.12);
+        color: #7dd3fc;
+        font-size: 18px;
+        font-weight: 750;
+      }
+
+      h1,
+      h2 {
+        margin: 22px 0 0;
+        line-height: 0.96;
+        letter-spacing: 0;
+        color: #f8fafc;
+      }
+
+      h1 {
+        font-size: 74px;
+      }
+
+      h2 {
+        font-size: 58px;
+      }
+
+      p {
+        margin: 20px 0 0;
+        color: #cbd5e1;
+        font-size: 27px;
+        line-height: 1.35;
+      }
+
+      .point-list {
+        margin-top: 28px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .point {
+        display: grid;
+        grid-template-columns: 34px 1fr;
+        gap: 13px;
+        align-items: start;
+        color: #dbeafe;
+        font-size: 24px;
+        line-height: 1.25;
+      }
+
+      .num,
+      .check {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-size: 17px;
+        font-weight: 850;
+        background: rgba(14, 165, 233, 0.14);
+        color: #38bdf8;
+        border: 1px solid rgba(14, 165, 233, 0.3);
+      }
+
+      .check {
+        color: #6ee7b7;
+        border-color: rgba(16, 185, 129, 0.34);
+        background: rgba(16, 185, 129, 0.12);
+      }
+
+      .rail {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .stage {
+        min-height: 84px;
+        border-radius: 18px;
+        border: 1px solid rgba(14, 165, 233, 0.28);
+        background: rgba(15, 23, 42, 0.9);
+        padding: 16px 12px;
+        text-align: center;
+      }
+
+      .stage strong {
+        display: block;
+        color: #f8fafc;
+        font-size: 21px;
+      }
+
+      .stage span {
+        display: block;
+        margin-top: 6px;
+        color: #94a3b8;
+        font-size: 15px;
+        line-height: 1.15;
+      }
+
+      .receipt {
+        margin-top: 22px;
+        border-radius: 18px;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        background: rgba(16, 185, 129, 0.1);
+        padding: 18px 20px;
+        color: #d1fae5;
+        font-family: "Courier New", monospace;
+        font-size: 18px;
+        line-height: 1.45;
+      }
+
+      .label {
+        position: absolute;
+        left: 28px;
+        bottom: 24px;
+        padding: 12px 16px;
+        border-radius: 16px;
+        background: rgba(2, 6, 23, 0.88);
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        color: #e2e8f0;
+        font-size: 18px;
+        font-weight: 750;
+      }
+
+      .pointer {
+        position: absolute;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: rgba(14, 165, 233, 0.88);
+        box-shadow: 0 0 0 16px rgba(14, 165, 233, 0.2);
+      }
+
+      .footer {
+        position: absolute;
+        left: 84px;
+        right: 84px;
+        bottom: 38px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #cbd5e1;
+        font-size: 18px;
+      }
+
+      .brand {
+        color: #38bdf8;
+        font-weight: 800;
+      }
+
+      .transition {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(14, 165, 233, 0.25) 45%, #030712 52%, transparent 100%);
+        opacity: 0;
+        transform: translateX(-100%);
+        pointer-events: none;
+      }
+
+      .final-card {
+        width: 100%;
+        border-radius: 28px;
+        border: 1px solid rgba(16, 185, 129, 0.32);
+        background: rgba(7, 17, 31, 0.92);
+        padding: 34px;
+        box-shadow: 0 34px 110px rgba(0, 0, 0, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="45"
+      data-width="1920"
+      data-height="1080"
+    >
+      <section id="scene-1" class="scene clip" data-start="0" data-duration="8" data-track-index="1">
+        <div class="screen shot">
+          <div class="screen-frame"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">arc-agentic-settlement-lab.vercel.app</span></div>
+          <img src="assets/01-home.png" alt="ArcEscrow home screen" />
+          <div class="pointer" style="left: 230px; top: 506px"></div>
+          <div class="label">Start with the business workflow</div>
+        </div>
+        <div class="copy textblock">
+          <div class="eyebrow">ArcEscrow demo</div>
+          <h1>Not a normal transfer.</h1>
+          <p>ArcEscrow turns a supplier payment into a proof-gated letter of credit on Arc.</p>
+          <div class="point-list">
+            <div class="point"><span class="num">1</span><span>Buyer opens a settlement room.</span></div>
+            <div class="point"><span class="num">2</span><span>Funds are locked before release.</span></div>
+            <div class="point"><span class="num">3</span><span>Proof and evaluator decision become receipt evidence.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-2" class="scene reverse clip" data-start="7.6" data-duration="8" data-track-index="2">
+        <div class="copy textblock">
+          <div class="eyebrow">Deal room</div>
+          <h2>Create one settlement request.</h2>
+          <p>The user defines buyer, supplier, evaluator, invoice context, amount, and release condition.</p>
+          <div class="point-list">
+            <div class="point"><span class="check">✓</span><span>Cross-border trade context</span></div>
+            <div class="point"><span class="check">✓</span><span>USDC amount and Arc rail</span></div>
+            <div class="point"><span class="check">✓</span><span>Evaluator agent selected before release</span></div>
+          </div>
+        </div>
+        <div class="screen shot">
+          <div class="screen-frame"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">/jobs</span></div>
+          <img src="assets/03-form.png" alt="ArcEscrow settlement request form" />
+          <div class="pointer" style="left: 690px; top: 372px"></div>
+          <div class="label">Create deal room</div>
+        </div>
+      </section>
+
+      <section id="scene-3" class="scene clip" data-start="15.2" data-duration="8.5" data-track-index="1">
+        <div class="screen shot">
+          <div class="screen-frame"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">/jobs · lifecycle</span></div>
+          <img src="assets/02-jobs.png" alt="ArcEscrow settlement lifecycle screen" />
+          <div class="pointer" style="left: 530px; top: 438px"></div>
+          <div class="label">Escrow lifecycle, not one-click pay</div>
+        </div>
+        <div class="copy textblock">
+          <div class="eyebrow">Settlement lifecycle</div>
+          <h2>Every payment has a state.</h2>
+          <p>The UI guides the operator through the required Arc actions.</p>
+          <div class="rail">
+            <div class="stage"><strong>Open</strong><span>create deal</span></div>
+            <div class="stage"><strong>Budget</strong><span>confirm amount</span></div>
+            <div class="stage"><strong>Approve</strong><span>authorize USDC</span></div>
+            <div class="stage"><strong>Fund</strong><span>lock escrow</span></div>
+            <div class="stage"><strong>Proof</strong><span>submit delivery</span></div>
+            <div class="stage"><strong>Release</strong><span>after review</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-4" class="scene reverse clip" data-start="23.3" data-duration="8.5" data-track-index="2">
+        <div class="copy textblock">
+          <div class="eyebrow">Evaluator gate</div>
+          <h2>AI review unlocks release.</h2>
+          <p>The evaluator checks deal terms, escrow evidence, delivery proof, and agent identity before settlement.</p>
+          <div class="point-list">
+            <div class="point"><span class="check">✓</span><span>Proof submitted before release</span></div>
+            <div class="point"><span class="check">✓</span><span>Verdict and confidence recorded</span></div>
+            <div class="point"><span class="check">✓</span><span>Manual wallet signing remains explicit</span></div>
+          </div>
+        </div>
+        <div class="screen shot">
+          <div class="screen-frame"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">/jobs · evaluator</span></div>
+          <img src="assets/04-ai-agent.png" alt="ArcEscrow evaluator screen" />
+          <div class="pointer" style="left: 730px; top: 318px"></div>
+          <div class="label">Run evaluator</div>
+        </div>
+      </section>
+
+      <section id="scene-5" class="scene clip" data-start="31.4" data-duration="7.5" data-track-index="1">
+        <div class="screen shot">
+          <div class="screen-frame"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">/identity</span></div>
+          <img src="assets/05-identity.png" alt="ArcEscrow agent identity screen" />
+          <div class="pointer" style="left: 560px; top: 334px"></div>
+          <div class="label">Agent proof layer</div>
+        </div>
+        <div class="copy textblock">
+          <div class="eyebrow">Agent identity</div>
+          <h2>Wallet action becomes business evidence.</h2>
+          <p>ERC-8004 identity reads give the evaluator and finance team an auditable actor behind the workflow.</p>
+          <div class="receipt">identity.registry = 0x8004...BD9e<br />agent.ownerOf(id) → wallet<br />tokenURI(id) → metadata</div>
+        </div>
+      </section>
+
+      <section id="scene-6" class="scene reverse clip" data-start="38.4" data-duration="6.6" data-track-index="2">
+        <div class="final-card textblock">
+          <div class="eyebrow">Submission evidence</div>
+          <h2>Working product + evidence pack.</h2>
+          <p>The demo shows the business workflow, Arc actions, evaluator gate, receipt hash, and submission materials.</p>
+          <div class="receipt">receiptHash binds deal + proof + review<br />challenge pack links demo, GitHub, architecture, and feedback</div>
+        </div>
+        <div class="screen shot">
+          <div class="screen-frame"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">/challenge</span></div>
+          <img src="assets/06-challenge.png" alt="ArcEscrow challenge submission pack screen" />
+          <div class="pointer" style="left: 610px; top: 498px"></div>
+          <div class="label">Review package</div>
+        </div>
+      </section>
+
+      <div id="transition-1" class="transition clip" data-start="7.4" data-duration="0.7" data-track-index="10"></div>
+      <div id="transition-2" class="transition clip" data-start="15" data-duration="0.7" data-track-index="11"></div>
+      <div id="transition-3" class="transition clip" data-start="23.1" data-duration="0.7" data-track-index="12"></div>
+      <div id="transition-4" class="transition clip" data-start="31.2" data-duration="0.7" data-track-index="13"></div>
+      <div id="transition-5" class="transition clip" data-start="38.2" data-duration="0.7" data-track-index="14"></div>
+
+      <div id="footer" class="footer clip" data-start="0" data-duration="45" data-track-index="20">
+        <span><span class="brand">ArcEscrow</span> · Agentic Letter of Credit on Arc</span>
+        <span>45-second product demo</span>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      const starts = [0, 7.6, 15.2, 23.3, 31.4, 38.4];
+      starts.forEach((start, index) => {
+        const scene = `#scene-${index + 1}`;
+        tl.from(`${scene} .shot`, { opacity: 0, y: 34, scale: 0.985, duration: 0.7, ease: "power3.out" }, start + 0.15);
+        tl.from(`${scene} .textblock`, { opacity: 0, y: 28, duration: 0.7, ease: "power3.out" }, start + 0.32);
+        tl.from(`${scene} .eyebrow`, { opacity: 0, x: -18, duration: 0.45, ease: "power2.out" }, start + 0.52);
+        tl.from(`${scene} h1, ${scene} h2`, { opacity: 0, y: 24, duration: 0.55, ease: "power3.out" }, start + 0.68);
+        tl.from(`${scene} .point, ${scene} .stage, ${scene} .receipt`, { opacity: 0, y: 16, stagger: 0.06, duration: 0.45, ease: "power2.out" }, start + 1.15);
+        tl.from(`${scene} .pointer`, { opacity: 0, scale: 0.4, duration: 0.35, ease: "back.out(1.8)" }, start + 1.4);
+      });
+
+      [1, 2, 3, 4, 5].forEach((item) => {
+        tl.fromTo(`#transition-${item}`, { opacity: 0, x: "-100%" }, { opacity: 1, x: "100%", duration: 0.7, ease: "power2.inOut" }, [7.4, 15, 23.1, 31.2, 38.2][item - 1]);
+      });
+
+      tl.to("#root", { opacity: 0, duration: 0.45, ease: "power2.in" }, 44.5);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
